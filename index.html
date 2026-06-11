@@ -630,26 +630,36 @@ function nameHash(s) {
 }
 
 function calcAsianOdds(homeN, awayN, p) {
-  const diff = p.hW - p.aW; // -100..100
-  const absDiff = Math.abs(diff);
-  const homeFav = diff > 0;
   const seed = nameHash(homeN + awayN);
 
-  // ── Handicap line ──
-  let hcLabel;
-  if(absDiff < 6)       hcLabel = '0';
-  else if(absDiff < 14) hcLabel = '0/0.5';
-  else if(absDiff < 22) hcLabel = '0.5';
-  else if(absDiff < 32) hcLabel = '0.5/1';
-  else if(absDiff < 44) hcLabel = '1';
-  else if(absDiff < 56) hcLabel = '1/1.5';
-  else if(absDiff < 68) hcLabel = '1.5';
-  else                   hcLabel = '1.5/2';
+  // ── Handicap: driven by predicted score diff, refined by xG margin ──
+  const hXGf = parseFloat(p.hXG), aXGf = parseFloat(p.aXG);
+  const xgDiff = hXGf - aXGf;
+  const scoreDiff = p.pHome - p.pAway; // integer, from Poisson prediction
+  const homeFav = scoreDiff > 0 || (scoreDiff === 0 && xgDiff > 0);
+  const absXGDiff = Math.abs(xgDiff);
+  const absScore = Math.abs(scoreDiff);
 
-  // Favored team shows as negative (gives goals)
-  const hcDisplay = homeFav
-    ? `-${hcLabel}`        // home gives handicap
-    : `+${hcLabel === '0' ? '0' : hcLabel}`; // away gets handicap
+  // Handicap maps to "how many goals the stronger team gives"
+  let hcLabel;
+  if(absScore === 0 && absXGDiff < 0.25)       hcLabel = '0';
+  else if(absScore === 0 && absXGDiff < 0.55)  hcLabel = '0/0.5';
+  else if(absScore === 0)                       hcLabel = '0.5';
+  else if(absScore === 1 && absXGDiff < 0.8)   hcLabel = '0.5';
+  else if(absScore === 1)                       hcLabel = '0.5/1';
+  else if(absScore === 2 && absXGDiff < 1.5)   hcLabel = '1';
+  else if(absScore === 2)                       hcLabel = '1/1.5';
+  else if(absScore === 3)                       hcLabel = '1.5/2';
+  else                                          hcLabel = '2';
+
+  // Display: favored team's line. '0/0.5' when home favored → '0/-0.5'
+  let hcDisplay;
+  if(hcLabel === '0') hcDisplay = '0';
+  else if(homeFav) {
+    hcDisplay = hcLabel.startsWith('0/') ? `0/-${hcLabel.slice(2)}` : `-${hcLabel}`;
+  } else {
+    hcDisplay = hcLabel.startsWith('0/') ? `0/+${hcLabel.slice(2)}` : `+${hcLabel}`;
+  }
 
   // After handicap, market ~50/50 → odds ~0.88-0.97 each side with house edge
   // Slight tilt from residual probability imbalance
@@ -706,7 +716,7 @@ function oddsTableHTML(homeN, awayN, p) {
     </div>
     <div class="odds-body">
       <div class="odds-col">
-        <div class="odds-line">${o.hcDisplay === '+0' || o.hcDisplay === '-0' ? '0' : o.hcDisplay}</div>
+        <div class="odds-line">${o.hcDisplay}</div>
         <div class="odds-pair">
           <span class="odds-team">${hShort}</span>
           <span class="odds-num ${hAHClass}">${o.hAH}</span>
