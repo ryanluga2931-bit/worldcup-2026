@@ -228,25 +228,62 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .odds-val.long{color:#f87171}
 
 /* LIVE STATS PANEL */
-.live-stats{border-top:1px solid var(--border);background:rgba(0,0,0,0.18);padding:13px 15px}
-.ls-title{font-size:9px;font-weight:800;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-bottom:11px;text-align:center}
-.ls-xg{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px}
-.ls-xg-val{font-size:22px;font-weight:900;color:#c4b5fd}
+.live-stats{border-top:1px solid var(--border);background:rgba(0,0,0,0.22);padding:14px 13px}
+.ls-title{font-size:9px;font-weight:800;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-bottom:13px;text-align:center}
+
+/* 3 circular indicators */
+.ls-circles{display:flex;justify-content:space-around;margin-bottom:14px;align-items:center}
+.ls-circle-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+.ls-circle-wrap{position:relative;width:54px;height:54px}
+.ls-circle-wrap svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.ls-circle-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff}
+.ls-circle-nums{display:flex;align-items:center;gap:22px;font-size:13px;font-weight:800}
+.ls-circle-h{color:#4ade80}
+.ls-circle-a{color:#facc15}
+.ls-circle-lbl{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;text-align:center}
+
+/* Shots row */
+.ls-shots-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.05)}
+.ls-shots-side{display:flex;align-items:center;gap:4px}
+.ls-shots-val{font-size:16px;font-weight:900;color:var(--text)}
+.ls-shots-sep{font-size:12px;color:var(--muted)}
+.ls-shots-lbl{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-align:center;text-transform:uppercase}
+.ls-shots-bar-wrap{flex:1;margin:0 10px;height:4px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;position:relative}
+.ls-shots-bar-fill{height:100%;background:#22c55e;border-radius:4px;transition:width .8s ease}
+.ls-card-icons{display:flex;gap:3px;align-items:center}
+.ls-card-y{width:8px;height:11px;background:#fbbf24;border-radius:1.5px}
+.ls-card-r{width:8px;height:11px;background:#ef4444;border-radius:1.5px}
+
+/* Action areas pitch */
+.action-zones{margin-bottom:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)}
+.az-title{font-size:9px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
+.az-pitch{position:relative;background:linear-gradient(180deg,rgba(34,197,94,.08),rgba(34,197,94,.04));border:1px solid rgba(255,255,255,.09);border-radius:6px;height:52px;display:flex;overflow:hidden}
+.az-zone{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:rgba(255,255,255,.85);transition:flex .8s ease;position:relative}
+.az-zone-l{border-right:1px dashed rgba(255,255,255,.1);background:rgba(59,130,246,.12)}
+.az-zone-m{background:transparent}
+.az-zone-r{border-left:1px dashed rgba(255,255,255,.1);background:rgba(239,68,68,.1)}
+.az-goal-l,.az-goal-r{position:absolute;top:50%;transform:translateY(-50%);width:8px;height:22px;border:1px solid rgba(255,255,255,.25);border-radius:1px}
+.az-goal-l{left:0;border-left:none}
+.az-goal-r{right:0;border-right:none}
+.az-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;font-weight:700;color:var(--text2)}
+
+/* Stat rows (key passes, gk saves, passing acc) */
+.stat-bar{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:6px;margin-bottom:9px}
+.stat-bar:first-of-type{padding-top:8px;border-top:1px solid rgba(255,255,255,.05)}
+.stat-bar-lbl{font-size:12px;font-weight:800;text-align:center;color:var(--text)}
+.stat-bar-name{font-size:9px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:.5px;grid-column:1/-1;margin-bottom:3px}
+.stat-track{height:4px;border-radius:100px;background:rgba(255,255,255,.07);overflow:hidden;position:relative}
+.stat-bar-inner{display:flex;align-items:center;flex-direction:column;gap:3px}
+.stat-home-fill{position:absolute;left:0;top:0;height:100%;border-radius:100px;transition:width .8s ease}
+.stat-fill-green{background:#22c55e}
+.stat-fill-yellow{background:#fbbf24}
+.stat-fill-blue{background:#3b82f6}
+
+/* xG mini */
+.ls-xg{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.05)}
+.ls-xg-val{font-size:18px;font-weight:900;color:#c4b5fd}
 .ls-xg-lbl{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.8px;text-align:center}
 .ls-xg-sep{font-size:11px;color:var(--muted)}
-.stat-bar{display:grid;grid-template-columns:36px 1fr 36px;align-items:center;gap:6px;margin-bottom:8px}
-.stat-bar-lbl{font-size:11px;font-weight:800;text-align:center;color:var(--text)}
-.stat-bar-name{font-size:9px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:.5px;grid-column:1/-1;margin-bottom:2px}
-.stat-track{height:5px;border-radius:100px;background:rgba(255,255,255,.07);overflow:hidden;display:flex}
-.stat-home{height:100%;background:linear-gradient(90deg,#3b82f6,#60a5fa);border-radius:100px 0 0 100px;transition:width .8s ease}
-.stat-away{height:100%;background:linear-gradient(90deg,#f87171,#ef4444);border-radius:0 100px 100px 0;margin-left:auto;transition:width .8s ease}
-.action-zones{margin-top:11px}
-.az-title{font-size:9px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
-.az-bar{display:flex;height:8px;border-radius:6px;overflow:hidden;gap:2px}
-.az-left{background:linear-gradient(90deg,#3b82f6,#60a5fa);border-radius:6px 0 0 6px;transition:flex .8s ease}
-.az-mid{background:rgba(255,255,255,.15);transition:flex .8s ease}
-.az-right{background:linear-gradient(90deg,#f87171,#ef4444);border-radius:0 6px 6px 0;transition:flex .8s ease}
-.az-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;font-weight:700;color:var(--text2)}
 
 /* BOTTOM NAV */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(6,8,16,.93);backdrop-filter:blur(24px) saturate(1.8);-webkit-backdrop-filter:blur(24px) saturate(1.8);border-top:1px solid var(--border);padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:100}
@@ -508,63 +545,142 @@ function getStat(competitor, name) {
   return s ? (parseFloat(s.displayValue) || parseFloat(s.value) || 0) : null;
 }
 
+// ── CIRCULAR DONUT SVG ──
+function donutSVG(hVal, aVal, icon, color1='#4ade80', color2='#facc15') {
+  const tot = (hVal + aVal) || 1;
+  const hPct = hVal / tot;
+  const r = 22, cx = 27, cy = 27, circ = 2 * Math.PI * r;
+  const hDash = hPct * circ, gapDash = circ - hDash;
+  return `<svg width="54" height="54" viewBox="0 0 54 54">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="5"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color1}" stroke-width="5"
+      stroke-dasharray="${hDash.toFixed(1)} ${gapDash.toFixed(1)}" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color2}" stroke-width="5"
+      stroke-dasharray="${(gapDash).toFixed(1)} ${hDash.toFixed(1)}" stroke-dashoffset="${-hDash.toFixed(1)}" stroke-linecap="round"/>
+  </svg><div class="ls-circle-icon">${icon}</div>`;
+}
+
 // ── LIVE STATS PANEL HTML ──
 function liveStatsHTML(home, away, p) {
   const hPoss = getStat(home, 'possessionPct') ?? getStat(home, 'possession') ?? p.momentum;
-  const aPoss = getStat(away, 'possessionPct') ?? getStat(away, 'possession') ?? (100 - p.momentum);
+  const aPoss = 100 - hPoss;
   const hShots = getStat(home, 'totalShots') ?? getStat(home, 'shots') ?? null;
   const aShots = getStat(away, 'totalShots') ?? getStat(away, 'shots') ?? null;
-  const hSoT = getStat(home, 'shotsOnTarget') ?? null;
-  const aSoT = getStat(away, 'shotsOnTarget') ?? null;
-  const hAtk = getStat(home, 'totalAttacks') ?? getStat(home, 'attacks') ?? null;
-  const aAtk = getStat(away, 'totalAttacks') ?? getStat(away, 'attacks') ?? null;
-  const hCorner = getStat(home, 'cornerKicks') ?? getStat(home, 'corners') ?? null;
-  const aCorner = getStat(away, 'cornerKicks') ?? getStat(away, 'corners') ?? null;
+  const hSoT   = getStat(home, 'shotsOnTarget') ?? null;
+  const aSoT   = getStat(away, 'shotsOnTarget') ?? null;
+  const hAtk   = getStat(home, 'totalAttacks') ?? getStat(home, 'attacks') ?? null;
+  const aAtk   = getStat(away, 'totalAttacks') ?? getStat(away, 'attacks') ?? null;
+  const hDAtk  = getStat(home, 'dangerousAttacks') ?? null;
+  const aDAtk  = getStat(away, 'dangerousAttacks') ?? null;
+  const hKP    = getStat(home, 'keyPasses') ?? null;
+  const aKP    = getStat(away, 'keyPasses') ?? null;
+  const hGKS   = getStat(home, 'saves') ?? getStat(home, 'goalKeeperSaves') ?? null;
+  const aGKS   = getStat(away, 'saves') ?? getStat(away, 'goalKeeperSaves') ?? null;
+  const hPA    = getStat(home, 'passingAccuracy') ?? getStat(home, 'passAccuracy') ?? null;
+  const aPA    = getStat(away, 'passingAccuracy') ?? getStat(away, 'passAccuracy') ?? null;
+  const hYC    = getStat(home, 'yellowCards') ?? 0;
+  const aYC    = getStat(away, 'yellowCards') ?? 0;
+  const hRC    = getStat(home, 'redCards') ?? 0;
+  const aRC    = getStat(away, 'redCards') ?? 0;
 
-  const statRow = (lbl, hv, av) => {
-    if(hv === null && av === null) return '';
-    const hVal = parseFloat(hv)||0, aVal = parseFloat(av)||0;
-    const tot = hVal + aVal || 1;
-    const hPct = Math.round(hVal/tot*100), aPct = 100-hPct;
+  // Fallback estimated values when ESPN doesn't provide real data
+  const atkH = hAtk ?? Math.round(parseFloat(p.hXG) * 4 + 12);
+  const atkA = aAtk ?? Math.round(parseFloat(p.aXG) * 4 + 10);
+  const datkH = hDAtk ?? Math.round(atkH * 0.32);
+  const datkA = aDAtk ?? Math.round(atkA * 0.38);
+
+  // 3 circles section
+  const circlesHTML = `<div class="ls-circles">
+    <div class="ls-circle-item">
+      <div class="ls-circle-nums"><span class="ls-circle-h">${atkH}</span><span class="ls-circle-a">${atkA}</span></div>
+      <div class="ls-circle-wrap">${donutSVG(atkH, atkA, '›')}</div>
+      <div class="ls-circle-lbl">Tấn công</div>
+    </div>
+    <div class="ls-circle-item">
+      <div class="ls-circle-nums"><span class="ls-circle-h">${datkH}</span><span class="ls-circle-a">${datkA}</span></div>
+      <div class="ls-circle-wrap">${donutSVG(datkH, datkA, '»')}</div>
+      <div class="ls-circle-lbl">Nguy hiểm</div>
+    </div>
+    <div class="ls-circle-item">
+      <div class="ls-circle-nums"><span class="ls-circle-h">${Math.round(hPoss)}%</span><span class="ls-circle-a">${Math.round(aPoss)}%</span></div>
+      <div class="ls-circle-wrap">${donutSVG(hPoss, aPoss, '%')}</div>
+      <div class="ls-circle-lbl">Kiểm soát</div>
+    </div>
+  </div>`;
+
+  // Shots / On Target row
+  const hS = hShots ?? 0, aS = aShots ?? 0;
+  const hT = hSoT ?? 0, aT = aSoT ?? 0;
+  const totS = hS + aS || 1;
+  const hShotPct = Math.round(hS/totS*100);
+  const shotsHTML = `<div class="ls-shots-row">
+    <div class="ls-shots-side">
+      <div class="ls-card-icons">${[...Array(parseInt(hRC))].map(()=>'<div class="ls-card-r"></div>').join('')}${[...Array(parseInt(hYC))].map(()=>'<div class="ls-card-y"></div>').join('')}</div>
+      <span class="ls-shots-val">${hS}/${hT}</span>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">
+      <div class="ls-shots-lbl">Sút / Trúng đích</div>
+      <div class="ls-shots-bar-wrap"><div class="ls-shots-bar-fill" style="width:${hShotPct}%"></div></div>
+    </div>
+    <div class="ls-shots-side" style="flex-direction:row-reverse">
+      <div class="ls-card-icons">${[...Array(parseInt(aYC))].map(()=>'<div class="ls-card-y"></div>').join('')}${[...Array(parseInt(aRC))].map(()=>'<div class="ls-card-r"></div>').join('')}</div>
+      <span class="ls-shots-val">${aS}/${aT}</span>
+    </div>
+  </div>`;
+
+  // Action Areas pitch
+  const azL = Math.round(hPoss * 0.48), azR = Math.round(aPoss * 0.48), azM = 100 - azL - azR;
+  const homeShortN = home.team?.shortDisplayName || home.team?.abbreviation || '';
+  const awayShortN = away.team?.shortDisplayName || away.team?.abbreviation || '';
+  const pitchHTML = `<div class="action-zones">
+    <div class="az-title">Khu vực hoạt động</div>
+    <div class="az-pitch">
+      <div class="az-goal-l"></div>
+      <div class="az-zone az-zone-l" style="flex:${azL}">${azL}%</div>
+      <div class="az-zone az-zone-m" style="flex:${azM}">${azM}%</div>
+      <div class="az-zone az-zone-r" style="flex:${azR}">${azR}%</div>
+      <div class="az-goal-r"></div>
+    </div>
+    <div class="az-labels"><span>${homeShortN}</span><span style="color:var(--muted)">Trung tuyến</span><span>${awayShortN}</span></div>
+  </div>`;
+
+  // Stat rows helper
+  const statRow = (lbl, hv, av, colorClass='stat-fill-green') => {
+    if(hv===null && av===null) return '';
+    const hVal=parseFloat(hv)||0, aVal=parseFloat(av)||0;
+    const isPercent = lbl.includes('%') || lbl.includes('Chính xác');
+    const tot = isPercent ? 100 : (hVal+aVal||1);
+    const hPct = Math.min(100, Math.round(hVal/(isPercent?100:tot)*100));
+    const display = isPercent ? `${hVal}%` : hVal;
+    const displayA = isPercent ? `${aVal}%` : aVal;
     return `<div class="stat-bar">
-      <span class="stat-bar-lbl">${hVal}</span>
-      <div>
+      <span class="stat-bar-lbl">${display}</span>
+      <div class="stat-bar-inner">
         <div class="stat-bar-name">${lbl}</div>
-        <div class="stat-track">
-          <div class="stat-home" style="width:${hPct}%"></div>
-          <div class="stat-away" style="width:${aPct}%"></div>
+        <div class="stat-track" style="position:relative;width:100%;height:4px">
+          <div class="stat-home-fill ${colorClass}" style="width:${hPct}%"></div>
         </div>
       </div>
-      <span class="stat-bar-lbl">${aVal}</span>
+      <span class="stat-bar-lbl">${displayA}</span>
     </div>`;
   };
 
-  // Action zones: use possession to estimate zones
-  const azL = Math.round(hPoss * 0.55), azR = Math.round(aPoss * 0.55), azM = 100-azL-azR;
-  const homeShortN = home.team?.shortDisplayName || home.team?.abbreviation || '';
-  const awayShortN = away.team?.shortDisplayName || away.team?.abbreviation || '';
+  // xG line
+  const xgHTML = `<div class="ls-xg">
+    <div><div class="ls-xg-val">${p.hXG}</div><div class="ls-xg-lbl">xG</div></div>
+    <div class="ls-xg-sep">vs</div>
+    <div><div class="ls-xg-val">${p.aXG}</div><div class="ls-xg-lbl">xG</div></div>
+  </div>`;
 
   return `<div class="live-stats">
     <div class="ls-title">📊 Live Stats</div>
-    <div class="ls-xg">
-      <div><div class="ls-xg-val">${p.hXG}</div><div class="ls-xg-lbl">xG</div></div>
-      <div class="ls-xg-sep">vs</div>
-      <div><div class="ls-xg-val">${p.aXG}</div><div class="ls-xg-lbl">xG</div></div>
-    </div>
-    ${statRow('Kiểm soát bóng %', hPoss, aPoss)}
-    ${hShots!==null ? statRow('Cú sút', hShots, aShots) : ''}
-    ${hSoT!==null ? statRow('Sút trúng đích', hSoT, aSoT) : ''}
-    ${hAtk!==null ? statRow('Tấn công', hAtk, aAtk) : ''}
-    ${hCorner!==null ? statRow('Phạt góc', hCorner, aCorner) : ''}
-    <div class="action-zones">
-      <div class="az-title">Khu vực tấn công</div>
-      <div class="az-bar">
-        <div class="az-left" style="flex:${azL}"></div>
-        <div class="az-mid" style="flex:${azM}"></div>
-        <div class="az-right" style="flex:${azR}"></div>
-      </div>
-      <div class="az-labels"><span>${homeShortN} ${azL}%</span><span>${azM}%</span><span>${azR}% ${awayShortN}</span></div>
-    </div>
+    ${xgHTML}
+    ${circlesHTML}
+    ${shotsHTML}
+    ${pitchHTML}
+    ${statRow('Đường chuyền key', hKP, aKP, 'stat-fill-green')}
+    ${statRow('Cứu thua thủ môn', hGKS, aGKS, 'stat-fill-yellow')}
+    ${statRow('Chính xác chuyền %', hPA, aPA, 'stat-fill-green')}
   </div>`;
 }
 
@@ -665,8 +781,9 @@ function renderMatchCard(event) {
   if(!home||!away) return '';
   const status = comp.status;
   const sName = status?.type?.name||'';
-  const live = sName==='STATUS_IN_PROGRESS';
-  const finished = sName==='STATUS_FINAL'||sName==='STATUS_FULL_TIME';
+  const LIVE_S=['STATUS_IN_PROGRESS','STATUS_HALFTIME','STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_EXTRA_TIME','STATUS_OVERTIME','STATUS_SHOOTOUT'];
+  const live = LIVE_S.includes(sName);
+  const finished = ['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'].includes(sName);
   const upcoming = sName==='STATUS_SCHEDULED';
   const ht = sName==='STATUS_HALFTIME';
   const homeN = home.team?.displayName||'';
