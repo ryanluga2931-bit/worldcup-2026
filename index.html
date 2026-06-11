@@ -1101,7 +1101,7 @@ function utcDate(offset=0){
 async function fetchWithRetry(url, retries=3){
   for(let i=0;i<retries;i++){
     try{
-      const r=await fetch(url,{signal:AbortSignal.timeout?AbortSignal.timeout(8000):undefined});
+      const r=await fetch(url+'&_='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout?AbortSignal.timeout(8000):undefined});
       if(r.ok) return await r.json();
     }catch(e){
       if(i===retries-1) throw e;
