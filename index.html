@@ -681,8 +681,15 @@ function calcAsianOdds(homeN, awayN, p) {
   else if(totalXG < 3.9)  ouLine = '3';
   else                     ouLine = '3/3.5';
 
-  // Over prob from xG (Poisson approximation)
-  const overProb = 1 - Math.exp(-totalXG) * (1 + totalXG + totalXG*totalXG/2);
+  // Over prob: P(total goals > ouLine) using Poisson CDF
+  // For half-ball lines, average P of floor and ceil
+  const poissonCDF = (lambda, k) => {
+    let p=0, term=Math.exp(-lambda);
+    for(let i=0;i<=k;i++){p+=term;term*=lambda/(i+1);}
+    return p;
+  };
+  const ouMid = parseFloat(ouLine.split('/')[0]);
+  const overProb = 1 - poissonCDF(totalXG, Math.floor(ouMid));
   const tOdds = Math.max(0.72, Math.min(1.05, 1/(overProb*1.06))).toFixed(2);
   const xOdds = Math.max(0.72, Math.min(1.05, 1/((1-overProb)*1.06))).toFixed(2);
 
@@ -827,7 +834,7 @@ function liveStatsHTML(home, away, p) {
   const hShotPct = Math.round(hS/totS*100);
   const shotsHTML = `<div class="ls-shots-row">
     <div class="ls-shots-side">
-      <div class="ls-card-icons">${[...Array(parseInt(hRC))].map(()=>'<div class="ls-card-r"></div>').join('')}${[...Array(parseInt(hYC))].map(()=>'<div class="ls-card-y"></div>').join('')}</div>
+      <div class="ls-card-icons">${'<div class="ls-card-r"></div>'.repeat(Math.max(0,parseInt(hRC)||0))}${'<div class="ls-card-y"></div>'.repeat(Math.max(0,parseInt(hYC)||0))}</div>
       <span class="ls-shots-val">${hS}/${hT}</span>
     </div>
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">
@@ -835,7 +842,7 @@ function liveStatsHTML(home, away, p) {
       <div class="ls-shots-bar-wrap"><div class="ls-shots-bar-fill" style="width:${hShotPct}%"></div></div>
     </div>
     <div class="ls-shots-side" style="flex-direction:row-reverse">
-      <div class="ls-card-icons">${[...Array(parseInt(aYC))].map(()=>'<div class="ls-card-y"></div>').join('')}${[...Array(parseInt(aRC))].map(()=>'<div class="ls-card-r"></div>').join('')}</div>
+      <div class="ls-card-icons">${'<div class="ls-card-y"></div>'.repeat(Math.max(0,parseInt(aYC)||0))}${'<div class="ls-card-r"></div>'.repeat(Math.max(0,parseInt(aRC)||0))}</div>
       <span class="ls-shots-val">${aS}/${aT}</span>
     </div>
   </div>`;
