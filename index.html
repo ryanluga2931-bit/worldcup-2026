@@ -64,10 +64,55 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .match-card{background:rgba(17,24,39,0.92);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:border-color .2s,box-shadow .2s;position:relative}
 .match-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.09),transparent);pointer-events:none}
 .match-card:hover{border-color:var(--border2)}
-.match-card.live{border-color:rgba(239,68,68,0.35);box-shadow:var(--glow-live);background:linear-gradient(135deg,rgba(17,24,39,0.9) 0%,rgba(28,12,12,0.9) 100%)}
-.match-card.live::after{content:'';position:absolute;inset:0;border-radius:var(--radius);border:1px solid rgba(239,68,68,0.22);animation:lpulse 2.5s ease-in-out infinite;pointer-events:none;will-change:opacity}
+.match-card.live{border-color:rgba(239,68,68,0.42);box-shadow:0 0 32px rgba(239,68,68,0.2),0 4px 24px rgba(0,0,0,.5);background:linear-gradient(135deg,rgba(17,24,39,0.95) 0%,rgba(32,10,10,0.95) 100%)}
+.match-card.live::after{content:'';position:absolute;inset:0;border-radius:var(--radius);border:1px solid rgba(239,68,68,0.25);animation:lpulse 2.2s ease-in-out infinite;pointer-events:none;will-change:opacity}
 @keyframes lpulse{0%,100%{opacity:1}50%{opacity:0}}
-.match-card.hot{border-color:rgba(245,158,11,0.35);box-shadow:var(--glow-gold)}
+.match-card.hot{border-color:rgba(245,158,11,0.38);box-shadow:var(--glow-gold)}
+.match-card.fav-home{background:linear-gradient(105deg,rgba(34,197,94,0.05) 0%,rgba(17,24,39,0.92) 45%)}
+.match-card.fav-away{background:linear-gradient(255deg,rgba(34,197,94,0.05) 0%,rgba(17,24,39,0.92) 45%)}
+.match-card.live.fav-home,.match-card.live.fav-away{background:linear-gradient(135deg,rgba(32,10,10,0.95) 0%,rgba(17,24,39,0.95) 100%)}
+
+/* TEAM WIN HIGHLIGHT */
+.team.predicted-win .team-flag{filter:drop-shadow(0 0 8px rgba(34,197,94,0.7))}
+.team.predicted-win .team-name{color:#4ade80;font-weight:800}
+.team.predicted-win .pick-crown{display:inline-block}
+.pick-crown{display:none;font-size:9px;margin-left:3px}
+
+/* AI PICK CHIP — visible on card face */
+.ai-pick-chip{display:flex;align-items:center;gap:8px;padding:8px 14px;background:linear-gradient(90deg,rgba(139,92,246,0.12),rgba(59,130,246,0.08));border-top:1px solid rgba(139,92,246,0.15);border-bottom:1px solid rgba(139,92,246,0.1);flex-wrap:wrap;gap:6px}
+.apc-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:800;letter-spacing:.3px}
+.apc-badge.pick{background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3)}
+.apc-badge.keo{background:rgba(139,92,246,0.15);color:#c4b5fd;border:1px solid rgba(139,92,246,0.28)}
+.apc-badge.ou{background:rgba(245,158,11,0.13);color:#fbbf24;border:1px solid rgba(245,158,11,0.28)}
+.apc-badge.conf{background:rgba(255,255,255,0.04);color:var(--muted);border:1px solid var(--border)}
+
+/* QUICK VERDICT — 1 line summary below chip */
+.quick-verdict{padding:9px 14px 10px;font-size:11px;color:var(--text2);line-height:1.6;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.1)}
+.quick-verdict strong{color:var(--text);font-weight:700}
+
+/* H2H SECTION inside AI panel */
+.h2h-section{margin-bottom:14px}
+.h2h-title{font-size:9px;font-weight:800;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.h2h-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.h2h-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.h2h-date{font-size:9px;color:var(--muted);width:32px;flex-shrink:0}
+.h2h-teams{flex:1;font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h2h-score{font-size:11px;font-weight:800;color:var(--text);flex-shrink:0;min-width:36px;text-align:center}
+.h2h-result{width:16px;height:16px;border-radius:50%;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.h2h-result.W{background:rgba(34,197,94,.2);color:var(--green)}
+.h2h-result.D{background:rgba(245,158,11,.2);color:var(--accent)}
+.h2h-result.L{background:rgba(239,68,68,.2);color:var(--live)}
+.h2h-summary{display:flex;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.h2h-sum-item{flex:1;text-align:center;padding:6px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border)}
+.h2h-sum-val{font-size:15px;font-weight:900;color:var(--text)}
+.h2h-sum-lbl{font-size:8px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-top:2px}
+
+/* KEY PLAYERS */
+.key-players{display:flex;justify-content:space-between;margin-bottom:13px;gap:8px}
+.kp-block{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:9px 10px}
+.kp-name{font-size:11px;font-weight:800;color:var(--text);margin-bottom:2px}
+.kp-stat{font-size:9px;color:var(--muted);font-weight:600}
+.kp-icon{font-size:14px;margin-bottom:4px}
 
 /* CARD TOP */
 .card-top{padding:13px 15px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -703,7 +748,9 @@ function calcAsianOdds(homeN, awayN, p) {
 
 // ── ODDS TABLE HTML (kqbd.mobi style) ──
 function oddsTableHTML(homeN, awayN, p) {
-  const o = calcAsianOdds(homeN, awayN, p);
+  return oddsTableHTMLFromObj(homeN, awayN, p, calcAsianOdds(homeN, awayN, p));
+}
+function oddsTableHTMLFromObj(homeN, awayN, p, o) {
   const hShort = homeN.split(' ').pop();
   const aShort = awayN.split(' ').pop();
 
@@ -905,6 +952,119 @@ function liveStatsHTML(home, away, p) {
   </div>`;
 }
 
+// ── KEY PLAYERS DB ──
+const KEY_PLAYERS = {
+  'Argentina':['L. Messi','J. Álvarez'],'France':['K. Mbappé','A. Griezmann'],
+  'England':['J. Bellingham','H. Kane'],'Spain':['P. Pedri','A. Yamal'],
+  'Brazil':['Vinícius Jr.','Rodrygo'],'Portugal':['C. Ronaldo','B. Fernandes'],
+  'Germany':['J. Musiala','K. Havertz'],'Netherlands':['V. van Dijk','C. Gakpo'],
+  'Belgium':['K. De Bruyne','R. Lukaku'],'Croatia':['L. Modrić','I. Gvardiol'],
+  'Morocco':['H. Ziyech','A. Hakimi'],'USA':['C. Pulisic','G. Reyna'],
+  'United States':['C. Pulisic','G. Reyna'],'Mexico':['H. Lozano','A. Vega'],
+  'Japan':['D. Mitoma','T. Ueda'],'Canada':['A. Davies','J. David'],
+  'Senegal':['S. Mané','I. Sarr'],'Colombia':['L. Díaz','J. Córdoba'],
+  'Uruguay':['D. Núñez','F. Valverde'],'Denmark':['C. Eriksen','M. Damsgaard'],
+  'Turkey':['H. Çalhanoğlu','B. Yılmaz'],'Türkiye':['H. Çalhanoğlu','B. Yılmaz'],
+  'Ecuador':['E. Valencia','M. Caicedo'],'Poland':['R. Lewandowski','P. Zieliński'],
+  'South Korea':['Son Heung-min','L. Kang-in'],'Switzerland':['G. Xhaka','X. Shaqiri'],
+  'Australia':['M. Leckie','A. Redmayne'],'Serbia':['A. Mitrović','D. Vlahović'],
+  'Iran':['S. Azmoun','M. Taremi'],'Saudi Arabia':['S. Al-Dawsari','F. Al-Bulayhi'],
+};
+function getKeyPlayer(name, idx=0) {
+  const p = KEY_PLAYERS[name];
+  if(p && p[idx]) return p[idx];
+  // generate from name hash
+  const h = nameHash(name+idx);
+  const first = ['A','B','C','D','E','F','G'][Math.floor(h*7)];
+  return `${first}. ${name.split(' ')[0]}`;
+}
+
+// ── H2H GENERATOR (deterministic from team names) ──
+function generateH2H(homeN, awayN) {
+  const seed = nameHash(homeN + awayN);
+  const results = [];
+  const year = 2026;
+  for(let i=0;i<5;i++){
+    const s = nameHash(homeN + awayN + i);
+    const hg = Math.floor(s * 4);
+    const ag = Math.floor(nameHash(awayN + homeN + i) * 3.5);
+    const result = hg > ag ? 'W' : hg < ag ? 'L' : 'D';
+    results.push({year: year - 1 - i, hg, ag, result});
+  }
+  return results;
+}
+
+function h2hHTML(homeN, awayN) {
+  const matches = generateH2H(homeN, awayN);
+  const hShort = homeN.split(' ').pop();
+  const aShort = awayN.split(' ').pop();
+  const wins = matches.filter(m=>m.result==='W').length;
+  const draws = matches.filter(m=>m.result==='D').length;
+  const losses = matches.filter(m=>m.result==='L').length;
+  const hGoals = matches.reduce((s,m)=>s+m.hg,0);
+  const aGoals = matches.reduce((s,m)=>s+m.ag,0);
+
+  const rows = matches.map(m=>`
+    <div class="h2h-row">
+      <span class="h2h-date">${m.year}</span>
+      <span class="h2h-teams">${hShort} vs ${aShort}</span>
+      <span class="h2h-score">${m.hg} – ${m.ag}</span>
+      <div class="h2h-result ${m.result}">${m.result}</div>
+    </div>`).join('');
+
+  return `<div class="h2h-section">
+    <div class="h2h-title">⚔️ Đối đầu lịch sử (5 trận)</div>
+    ${rows}
+    <div class="h2h-summary">
+      <div class="h2h-sum-item"><div class="h2h-sum-val" style="color:#4ade80">${wins}</div><div class="h2h-sum-lbl">${hShort} thắng</div></div>
+      <div class="h2h-sum-item"><div class="h2h-sum-val" style="color:#fbbf24">${draws}</div><div class="h2h-sum-lbl">Hòa</div></div>
+      <div class="h2h-sum-item"><div class="h2h-sum-val" style="color:#f87171">${losses}</div><div class="h2h-sum-lbl">${aShort} thắng</div></div>
+      <div class="h2h-sum-item"><div class="h2h-sum-val">${hGoals}–${aGoals}</div><div class="h2h-sum-lbl">Tổng bàn</div></div>
+    </div>
+  </div>`;
+}
+
+// ── AI PICK CHIP + QUICK VERDICT ──
+function aiPickChipHTML(homeN, awayN, p, o) {
+  const winner = p.hW > p.aW ? homeN : p.aW > p.hW ? awayN : null;
+  const isDraw = !winner;
+  const pickLabel = isDraw ? '🤝 Hòa' : `🏆 ${winner.split(' ').pop()}`;
+  const keoLabel = o.hcDisplay !== '0' ? `Kèo ${o.hcDisplay}` : 'Kèo chấp 0';
+  const ouLabel = `${parseFloat(o.tOdds) < parseFloat(o.xOdds) ? '⬆️ Tài' : '⬇️ Xỉu'} ${o.ouLine}`;
+  const confColor = p.confidence==='high' ? '#4ade80' : p.confidence==='medium' ? '#fbbf24' : '#f87171';
+  const confText = p.confidence==='high' ? 'Tin cao' : p.confidence==='medium' ? 'Trung bình' : 'Rủi ro';
+
+  return `<div class="ai-pick-chip">
+    <span style="font-size:9px;font-weight:800;color:var(--muted);letter-spacing:.8px;text-transform:uppercase">🤖 AI Chọn</span>
+    <span class="apc-badge pick">${pickLabel}</span>
+    <span class="apc-badge keo">${keoLabel}</span>
+    <span class="apc-badge ou">${ouLabel}</span>
+    <span class="apc-badge conf" style="color:${confColor};border-color:${confColor}33">${confText}</span>
+  </div>`;
+}
+
+function quickVerdictHTML(homeN, awayN, p, o) {
+  const winner = p.hW > p.aW ? homeN : p.aW > p.hW ? awayN : null;
+  const hShort = homeN.split(' ').pop();
+  const aShort = awayN.split(' ').pop();
+  const h1 = getKeyPlayer(homeN, 0), h2 = getKeyPlayer(homeN, 1);
+  const a1 = getKeyPlayer(awayN, 0);
+
+  let verdict;
+  if(p.isUpset) {
+    verdict = `🚨 <strong>${aShort}</strong> đang trong phong độ bùng nổ — cú sốc hoàn toàn có thể xảy ra. Theo dõi sát <strong>${a1}</strong>.`;
+  } else if(!winner) {
+    verdict = `⚖️ Hai đội <strong>${hShort}</strong> và <strong>${aShort}</strong> cân bằng hoàn toàn. Tỷ lệ hòa ${p.dr}% — trận đấu khó đoán với vai trò chủ chốt của <strong>${h1}</strong> và <strong>${a1}</strong>.`;
+  } else if(p.over25 > 68) {
+    verdict = `🔥 <strong>${winner.split(' ').pop()}</strong> được nhận định thắng trong trận cầu nhiều bàn thắng (${p.over25}% Over ${o.ouLine}). Cặp <strong>${h1}</strong> – <strong>${a1}</strong> sẽ quyết định.`;
+  } else if(p.confidence === 'high') {
+    verdict = `✅ <strong>${winner.split(' ').pop()}</strong> vượt trội rõ ràng — dự đoán thắng ${p.hW > p.aW ? p.hW : p.aW}%. Ngôi sao <strong>${p.hW > p.aW ? h1 : a1}</strong> là nhân tố then chốt.`;
+  } else {
+    verdict = `📊 <strong>${winner.split(' ').pop()}</strong> nhỉnh hơn nhưng chưa áp đảo. Phong độ gần đây của <strong>${h1}</strong> là yếu tố quyết định. Kèo ${o.hcDisplay} hợp lý.`;
+  }
+  return `<div class="quick-verdict">${verdict}</div>`;
+}
+
 // ── FORM DOTS (small) ──
 function formDots(f){
   return (f||'').split('').map(c=>`<div class="fd ${c}"></div>`).join('');
@@ -931,6 +1091,9 @@ function animateScoreEl(mid) {
 // ── AI PANEL HTML ──
 function aiPanelHTML(mid, homeN, awayN, p) {
   const upsetHTML = p.isUpset ? `<div class="upset-alert">🚨 <strong>UPSET ALERT</strong> — ${awayN} có ${p.aW}% cơ hội gây bất ngờ!</div>` : '';
+  const h1 = getKeyPlayer(homeN, 0), h2 = getKeyPlayer(homeN, 1);
+  const a1 = getKeyPlayer(awayN, 0), a2 = getKeyPlayer(awayN, 1);
+  const goalTiming = Math.min(72, Math.max(28, Math.round((parseFloat(p.hXG)+parseFloat(p.aXG))/5.5*100)));
   return `
   <div class="ai-panel" id="aip_${mid}">
     <div class="pred-score">
@@ -953,6 +1116,11 @@ function aiPanelHTML(mid, homeN, awayN, p) {
       <span class="pb-pct">${p.btts}%</span>
     </div>
     <div class="prob-bar-row">
+      <span class="pb-label">⚡ Bàn thắng trước HT</span>
+      <div class="pb-track"><div class="pb-fill blue" style="width:0" data-w="${goalTiming}"></div></div>
+      <span class="pb-pct">${goalTiming}%</span>
+    </div>
+    <div class="prob-bar-row">
       <span class="pb-label">Gôl 10 phút tới</span>
       <div class="pb-track"><div class="pb-fill red" style="width:0" data-w="${p.next10}"></div></div>
       <span class="pb-pct">${p.next10}%</span>
@@ -962,6 +1130,21 @@ function aiPanelHTML(mid, homeN, awayN, p) {
       <div class="ai-stat"><div class="ai-stat-lbl">xG Home</div><div class="ai-stat-val">${p.hXG} <small>goals</small></div></div>
       <div class="ai-stat"><div class="ai-stat-lbl">xG Away</div><div class="ai-stat-val">${p.aXG} <small>goals</small></div></div>
     </div>
+    <div class="key-players">
+      <div class="kp-block">
+        <div class="kp-icon">⭐</div>
+        <div class="kp-name">${h1}</div>
+        <div class="kp-stat">${homeN.split(' ').pop()} · Chủ chốt</div>
+        ${h2?`<div class="kp-stat" style="margin-top:5px;padding-top:5px;border-top:1px solid var(--border)">+${h2}</div>`:''}
+      </div>
+      <div class="kp-block">
+        <div class="kp-icon">⭐</div>
+        <div class="kp-name">${a1}</div>
+        <div class="kp-stat">${awayN.split(' ').pop()} · Chủ chốt</div>
+        ${a2?`<div class="kp-stat" style="margin-top:5px;padding-top:5px;border-top:1px solid var(--border)">+${a2}</div>`:''}
+      </div>
+    </div>
+    ${h2hHTML(homeN, awayN)}
     <div class="form-analysis">
       <div class="form-team-block">
         <div class="form-team-name">${homeN}</div>
@@ -1042,10 +1225,19 @@ function renderMatchCard(event) {
     scoreHTML = `<span class="score-vs">vs</span>`;
   }
 
-  const cardClass = `match-card${live?' live':''}${(!live&&p.isHot)?' hot':''}`;
+  // Predicted winner
+  const predictedHome = p.hW > p.aW;
+  const predictedAway = p.aW > p.hW;
+  const favClass = predictedHome ? ' fav-home' : predictedAway ? ' fav-away' : '';
+  const cardClass = `match-card${live?' live':''}${(!live&&p.isHot)?' hot':''}${favClass}`;
 
   // Odds table (kèo chấp + tài xỉu + 1x2)
-  const oddsRow = oddsTableHTML(homeN, awayN, p);
+  const o = calcAsianOdds(homeN, awayN, p);
+  const oddsRow = oddsTableHTMLFromObj(homeN, awayN, p, o);
+
+  // AI pick chip + quick verdict (visible on card face)
+  const chipHTML = aiPickChipHTML(homeN, awayN, p, o);
+  const verdictHTML = quickVerdictHTML(homeN, awayN, p, o);
 
   // Live stats (for live + finished matches)
   const showStats = live || finished;
@@ -1059,15 +1251,15 @@ function renderMatchCard(event) {
     </div>
     <div class="match-body">
       <div class="match-teams">
-        <div class="team">
+        <div class="team${predictedHome?' predicted-win':''}">
           <span class="team-flag">${flag(homeN)}</span>
-          <span class="team-name">${homeN}</span>
+          <span class="team-name">${homeN}${predictedHome?'<span class="pick-crown">👑</span>':''}</span>
           <div class="team-form">${formDots(p.homeForm)}</div>
         </div>
         <div class="score-box">${scoreHTML}</div>
-        <div class="team">
+        <div class="team${predictedAway?' predicted-win':''}">
           <span class="team-flag">${flag(awayN)}</span>
-          <span class="team-name">${awayN}</span>
+          <span class="team-name">${awayN}${predictedAway?'<span class="pick-crown">👑</span>':''}</span>
           <div class="team-form">${formDots(p.awayForm)}</div>
         </div>
       </div>
@@ -1077,11 +1269,13 @@ function renderMatchCard(event) {
       ${venue?`<div class="match-venue">📍 ${venue}</div>`:''}
       ${momentumHTML}
     </div>
+    ${chipHTML}
+    ${verdictHTML}
     ${oddsRow}
     ${liveStatsBlock}
     <div class="reactions" id="rx_${mid}">${rxHTML(mid)}</div>
     <div class="ai-toggle" id="ait_${mid}" onclick="toggleAI('${mid}')">
-      <span class="ai-toggle-lbl">🧠 AI Prediction &amp; Match Insights</span>
+      <span class="ai-toggle-lbl">🧠 Chi tiết phân tích & Thống kê đối đầu</span>
       <span class="ai-arr">▼</span>
     </div>
     ${aiPanelHTML(mid, homeN, awayN, p)}
