@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>⚽ World Cup 2026 Live</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --card: #1a2236;
+      --card2: #1e2a40;
+      --border: rgba(255,255,255,0.07);
+      --accent: #f59e0b;
+      --accent2: #3b82f6;
+      --live: #ef4444;
+      --green: #22c55e;
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative;
+      text-align: center;
+      padding: 48px 20px 32px;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,158,11,0.18) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 20% 100%, rgba(59,130,246,0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .header-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(245,158,11,0.15);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 13px; font-weight: 600; color: var(--accent);
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    .live-dot {
+      width: 8px; height: 8px;
+      background: var(--live);
+      border-radius: 50%;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.4); }
+    }
+    header h1 {
+      font-size: clamp(28px, 6vw, 52px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #f59e0b 0%, #ffffff 50%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--muted); font-size: 15px;
+    }
+    #last-update {
+      display: inline-block;
+      margin-top: 12px;
+      font-size: 12px; color: var(--muted);
+    }
+
+    /* ── NAV TABS ── */
+    .tab-bar {
+      display: flex; gap: 8px;
+      padding: 0 16px 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      justify-content: center;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab {
+      flex-shrink: 0;
+      padding: 9px 20px;
+      border-radius: 100px;
+      font-size: 14px; font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
+    .tab:hover:not(.active) {
+      border-color: rgba(255,255,255,0.15);
+      color: var(--text);
+    }
+
+    /* ── MAIN ── */
+    main { padding: 0 16px 100px; max-width: 680px; margin: 0 auto; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── MATCH CARD ── */
+    .match-group-label {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin: 24px 0 10px;
+    }
+
+    .match-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 10px;
+      transition: transform .15s, border-color .15s;
+      cursor: default;
+    }
+    .match-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12); }
+
+    .match-card.live {
+      border-color: rgba(239,68,68,0.4);
+      background: linear-gradient(135deg, #1a2236 0%, #1f1520 100%);
+    }
+    .match-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .match-time {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+    }
+    .badge {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 3px 10px; border-radius: 100px;
+    }
+    .badge.live { background: rgba(239,68,68,0.2); color: var(--live); border: 1px solid rgba(239,68,68,0.4); }
+    .badge.ft   { background: rgba(100,116,139,0.2); color: var(--muted); border: 1px solid var(--border); }
+    .badge.ns   { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+    .badge.ht   { background: rgba(245,158,11,0.2); color: var(--accent); border: 1px solid rgba(245,158,11,0.3); }
+
+    .match-teams {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center; gap: 12px;
+    }
+    .team { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .team-flag { font-size: 32px; line-height: 1; }
+    .team-name {
+      font-size: 13px; font-weight: 600;
+      text-align: center; color: var(--text);
+      max-width: 90px;
+    }
+    .score-box {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .score {
+      font-size: 32px; font-weight: 800;
+      min-width: 32px; text-align: center;
+      color: var(--text);
+    }
+    .score-sep { font-size: 24px; color: var(--muted); font-weight: 300; }
+    .score-vs { font-size: 18px; color: var(--muted); font-weight: 400; }
+
+    .match-venue {
+      margin-top: 12px;
+      font-size: 11px; color: var(--muted);
+      text-align: center;
+    }
+
+    /* ── STREAM SECTION ── */
+    .stream-hero {
+      background: linear-gradient(135deg, #1a2236, #0f1a2e);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .stream-hero h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .stream-hero p { font-size: 13px; color: var(--muted); }
+
+    .stream-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stream-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; padding: 20px 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      text-decoration: none; color: var(--text);
+      transition: all .2s;
+    }
+    .stream-card:hover {
+      border-color: var(--accent);
+      background: var(--card2);
+      transform: translateY(-3px);
+    }
+    .stream-icon { font-size: 36px; }
+    .stream-name { font-size: 14px; font-weight: 700; }
+    .stream-tag {
+      font-size: 11px; color: var(--muted);
+      background: rgba(255,255,255,0.05);
+      padding: 2px 8px; border-radius: 100px;
+    }
+    .stream-free {
+      font-size: 11px; font-weight: 700;
+      color: var(--green);
+    }
+
+    .stream-section-title {
+      font-size: 13px; font-weight: 700; color: var(--muted);
+      letter-spacing: 1px; text-transform: uppercase;
+      margin: 20px 0 10px;
+    }
+
+    /* ── SCHEDULE TABLE ── */
+    .schedule-scroll {
+      overflow-x: auto; border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--card2);
+      padding: 12px 14px;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; color: var(--muted);
+      text-align: left; white-space: nowrap;
+    }
+    tbody tr {
+      border-top: 1px solid var(--border);
+      transition: background .15s;
+    }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody td {
+      padding: 13px 14px; font-size: 13px;
+      white-space: nowrap;
+    }
+    td.teams { font-weight: 600; white-space: normal; min-width: 160px; }
+    td.highlight { color: var(--accent); font-weight: 700; }
+
+    /* ── LOADING / EMPTY ── */
+    .loading {
+      text-align: center; padding: 48px 20px;
+      color: var(--muted); font-size: 14px;
+    }
+    .spinner {
+      display: inline-block; width: 32px; height: 32px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── BOTTOM NAV (mobile) ── */
+    .bottom-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: rgba(10,14,26,0.92);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border-top: 1px solid var(--border);
+      padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+      z-index: 100;
+    }
+    .bottom-nav-inner {
+      display: flex; justify-content: space-around;
+    }
+    .bnav-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 3px; padding: 6px 12px;
+      font-size: 10px; font-weight: 600;
+      color: var(--muted); cursor: pointer;
+      transition: color .2s;
+    }
+    .bnav-item.active { color: var(--accent); }
+    .bnav-icon { font-size: 22px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      header { padding: 44px 16px 24px; }
+      .tab-bar { display: none; }
+      .bottom-nav { display: block; }
+      .team-flag { font-size: 28px; }
+      .score { font-size: 28px; }
+      main { padding: 0 12px 90px; }
+    }
+    @media (min-width: 601px) {
+      .bottom-nav { display: none; }
+    }
+
+    /* ── REFRESH BTN ── */
+    .refresh-btn {
+      display: flex; align-items: center; gap: 6px;
+      margin: 0 auto 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px 18px;
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      cursor: pointer; transition: all .2s;
+    }
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .refresh-btn.spinning svg { animation: spin .7s linear infinite; }
+
+    /* ── GROUP STANDINGS PLACEHOLDER ── */
+    .group-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .group-header {
+      background: var(--card2);
+      padding: 12px 16px;
+      font-size: 13px; font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+    .group-table { width: 100%; border-collapse: collapse; }
+    .group-table th {
+      padding: 8px 12px;
+      font-size: 11px; color: var(--muted);
+      font-weight: 600; text-align: center;
+    }
+    .group-table th:first-child { text-align: left; }
+    .group-table td {
+      padding: 10px 12px;
+      font-size: 13px; text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    .group-table td:first-child { text-align: left; font-weight: 600; }
+    .qualify { background: rgba(34,197,94,0.08); }
+
+    /* error */
+    .error-box {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 13px; color: #fca5a5;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-badge">
+    <span class="live-dot"></span>
+    LIVE SCORES
+  </div>
+  <h1>⚽ World Cup 2026</h1>
+  <p>🇺🇸 USA &nbsp;·&nbsp; 🇨🇦 Canada &nbsp;·&nbsp; 🇲🇽 Mexico &nbsp;&nbsp;|&nbsp;&nbsp; 48 đội · 104 trận</p>
+  <span id="last-update">Đang tải...</span>
+</header>
+
+<!-- DESKTOP TABS -->
+<div class="tab-bar">
+  <div class="tab active" data-tab="scores">🔴 Live & Kết quả</div>
+  <div class="tab" data-tab="schedule">📅 Lịch thi đấu</div>
+  <div class="tab" data-tab="groups">🏆 Bảng xếp hạng</div>
+  <div class="tab" data-tab="stream">📺 Xem trực tiếp</div>
+</div>
+
+<!-- MAIN CONTENT -->
+<main>
+
+  <!-- SCORES TAB -->
+  <section id="scores" class="section active">
+    <button class="refresh-btn" id="refreshBtn" onclick="loadScores()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+      </svg>
+      Làm mới
+    </button>
+    <div id="scores-content">
+      <div class="loading"><div class="spinner"></div><br>Đang tải kết quả...</div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE TAB -->
+  <section id="schedule" class="section">
+    <div id="schedule-content">
+      <div class="loading"><div class="spinner"></div><br>Đang tải lịch thi đấu...</div>
+    </div>
+  </section>
+
+  <!-- GROUPS TAB -->
+  <section id="groups" class="section">
+    <div id="groups-content">
+      <div class="loading"><div class="spinner"></div><br>Đang tải bảng xếp hạng...</div>
+    </div>
+  </section>
+
+  <!-- STREAM TAB -->
+  <section id="stream" class="section">
+    <div class="stream-hero">
+      <h2>📺 Xem World Cup 2026</h2>
+      <p>Các kênh phát sóng chính thức tại Việt Nam</p>
+    </div>
+
+    <div class="stream-section-title">🟢 Miễn phí</div>
+    <div class="stream-grid">
+      <a href="https://vtvgo.vn/trang-chu.html" target="_blank" rel="noopener" class="stream-card">
+        <span class="stream-icon">📡</span>
+        <span class="stream-name">VTV Go</span>
+        <span class="stream-tag">VTV3 · VTV2</span>
+        <span class="stream-free">MIỄN PHÍ</span>
+      </a>
+      <a href="https://vtv.vn/truyen-hinh-truc-tuyen/vtv3.htm" target="_blank" rel="noopener" class="stream-card">
+        <span class="stream-icon">🎬</span>
+        <span class="stream-name">VTV3 Live</span>
+        <span class="stream-tag">Web trực tiếp</span>
+        <span class="stream-free">MIỄN PHÍ</span>
+      </a>
+      <a href="https://vtv.vn/truyen-hinh-truc-tuyen/vtv2.htm" target="_blank" rel="noopener" class="stream-card">
+        <span class="stream-icon">📺</span>
+        <span class="stream-name">VTV2 Live</span>
+        <span class="stream-tag">Web trực tiếp</span>
+        <span class="stream-free">MIỄN PHÍ</span>
+      </a>
+    </div>
+
+    <div class="stream-section-title">💎 Premium</div>
+    <div class="stream-grid">
+      <a href="https://fptplay.vn" target="_blank" rel="noopener" class="stream-card">
+        <span class="stream-icon">🚀</span>
+        <span class="stream-name">FPT Play</span>
+        <span class="stream-tag">Full HD</span>
+        <span style="font-size:11px;color:var(--accent)">Miễn phí cơ bản</span>
+      </a>
+      <a href="https://tv360.vn" target="_blank" rel="noopener" class="stream-card">
+        <span class="stream-icon">📱</span>
+        <span class="stream-name">TV360</span>
+        <span class="stream-tag">Viettel</span>
+        <span style="font-size:11px;color:var(--muted)">Trả phí</span>
+      </a>
+      <a href="https://www.sctv.com.vn" target="_blank" rel="noopener" class="stream-card">
+        <span class="stream-icon">🛰️</span>
+        <span class="stream-name">SCTV</span>
+        <span class="stream-tag">Cáp · Vệ tinh</span>
+        <span style="font-size:11px;color:var(--muted)">Trả phí</span>
+      </a>
+    </div>
+
+    <div class="stream-section-title">🌍 Quốc tế</div>
+    <div class="stream-grid">
+      <a href="https://www.foxsports.com/soccer/fifa-world-cup" target="_blank" rel="noopener" class="stream-card">
+        <span class="stream-icon">🦊</span>
+        <span class="stream-name">FOX Sports</span>
+        <span class="stream-tag">EN · USA</span>
+        <span style="font-size:11px;color:var(--muted)">VPN cần</span>
+      </a>
+      <a href="https://www.bbc.co.uk/sport/football/world-cup" target="_blank" rel="noopener" class="stream-card">
+        <span class="stream-icon">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+        <span class="stream-name">BBC Sport</span>
+        <span class="stream-tag">EN · UK</span>
+        <span style="font-size:11px;color:var(--muted)">VPN cần</span>
+      </a>
+      <a href="https://www.fifa.com/fifaplus" target="_blank" rel="noopener" class="stream-card">
+        <span class="stream-icon">🏆</span>
+        <span class="stream-name">FIFA+</span>
+        <span class="stream-tag">Official</span>
+        <span style="font-size:11px;color:var(--green)">Miễn phí</span>
+      </a>
+    </div>
+
+    <div style="margin-top:20px; padding:14px 16px; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:var(--radius-sm); font-size:13px; color:#fcd34d;">
+      💡 <strong>Tip:</strong> Dùng VTV Go app trên iPhone/iPad để xem miễn phí chất lượng Full HD, không cần VPN.
+    </div>
+  </section>
+
+</main>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <div class="bnav-item active" data-tab="scores">
+      <span class="bnav-icon">🔴</span>Live
+    </div>
+    <div class="bnav-item" data-tab="schedule">
+      <span class="bnav-icon">📅</span>Lịch
+    </div>
+    <div class="bnav-item" data-tab="groups">
+      <span class="bnav-icon">🏆</span>BXH
+    </div>
+    <div class="bnav-item" data-tab="stream">
+      <span class="bnav-icon">📺</span>Xem
+    </div>
+  </div>
+</nav>
+
+<script>
+// ── CONFIG ──
+const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world';
+const CORS_PROXY = 'https://api.allorigins.win/get?url=';
+let refreshTimer = null;
+
+// Flag map
+const FLAGS = {
+  'Mexico':'🇲🇽','South Africa':'🇿🇦','Brazil':'🇧🇷','Germany':'🇩🇪',
+  'France':'🇫🇷','Argentina':'🇦🇷','Spain':'🇪🇸','England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'Netherlands':'🇳🇱','Portugal':'🇵🇹','Italy':'🇮🇹','Japan':'🇯🇵',
+  'USA':'🇺🇸','United States':'🇺🇸','Canada':'🇨🇦','Morocco':'🇲🇦',
+  'Senegal':'🇸🇳','Australia':'🇦🇺','Turkey':'🇹🇷','Türkiye':'🇹🇷',
+  'Switzerland':'🇨🇭','Qatar':'🇶🇦','Serbia':'🇷🇸','Croatia':'🇭🇷',
+  'Denmark':'🇩🇰','Belgium':'🇧🇪','Uruguay':'🇺🇾','Ecuador':'🇪🇨',
+  'Colombia':'🇨🇴','Chile':'🇨🇱','Poland':'🇵🇱','South Korea':'🇰🇷',
+  'Iran':'🇮🇷','Saudi Arabia':'🇸🇦','Ghana':'🇬🇭','Cameroon':'🇨🇲',
+  'Tunisia':'🇹🇳','Nigeria':'🇳🇬','Algeria':'🇩🇿','Egypt':'🇪🇬',
+  'Paraguay':'🇵🇾','Bolivia':'🇧🇴','Peru':'🇵🇪','Venezuela':'🇻🇪',
+  'Costa Rica':'🇨🇷','Honduras':'🇭🇳','Panama':'🇵🇦','Jamaica':'🇯🇲',
+  'Scotland':'🏴󠁧󠁢󠁸󠁣󠁴󠁿','Wales':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','Haiti':'🇭🇹','Bosnia and Herzegovina':'🇧🇦',
+  'Bosnia & Herzegovina':'🇧🇦','Ivory Coast':'🇨🇮','New Zealand':'🇳🇿',
+  'Curacao':'🇨🇼','Curaçao':'🇨🇼','Guatemala':'🇬🇹','Cuba':'🇨🇺',
+  'Dominican Republic':'🇩🇴',
+};
+
+function flag(name) { return FLAGS[name] || '🏳️'; }
+
+function statusBadge(status, clock) {
+  if (!status) return '';
+  const s = status.type?.name || '';
+  const desc = status.type?.description || '';
+  if (s === 'STATUS_IN_PROGRESS') {
+    const min = status.displayClock || clock || '';
+    return `<span class="badge live">🔴 ${min}</span>`;
+  }
+  if (s === 'STATUS_HALFTIME') return `<span class="badge ht">HT</span>`;
+  if (s === 'STATUS_FINAL' || s === 'STATUS_FULL_TIME') return `<span class="badge ft">FT</span>`;
+  return `<span class="badge ns">${desc || 'Sắp diễn ra'}</span>`;
+}
+
+function timeVN(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit', timeZone:'Asia/Ho_Chi_Minh'})
+    + ' · '
+    + d.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', timeZone:'Asia/Ho_Chi_Minh'});
+}
+
+function renderMatchCard(event) {
+  const comp = event.competitions?.[0];
+  if (!comp) return '';
+  const home = comp.competitors?.find(c => c.homeAway === 'home');
+  const away = comp.competitors?.find(c => c.homeAway === 'away');
+  if (!home || !away) return '';
+
+  const status = comp.status;
+  const live = status?.type?.name === 'STATUS_IN_PROGRESS';
+  const finished = status?.type?.name === 'STATUS_FINAL';
+  const homeScore = home.score ?? '';
+  const awayScore = away.score ?? '';
+  const hasScore = homeScore !== '' && awayScore !== '';
+  const venue = comp.venue?.fullName || event.venue?.fullName || '';
+
+  return `
+    <div class="match-card ${live ? 'live' : ''}">
+      <div class="match-meta">
+        <span class="match-time">${timeVN(event.date)}</span>
+        ${statusBadge(status)}
+      </div>
+      <div class="match-teams">
+        <div class="team">
+          <span class="team-flag">${flag(home.team?.displayName)}</span>
+          <span class="team-name">${home.team?.displayName || ''}</span>
+        </div>
+        <div class="score-box">
+          ${hasScore
+            ? `<span class="score">${homeScore}</span><span class="score-sep">–</span><span class="score">${awayScore}</span>`
+            : `<span class="score-vs">vs</span>`}
+        </div>
+        <div class="team">
+          <span class="team-flag">${flag(away.team?.displayName)}</span>
+          <span class="team-name">${away.team?.displayName || ''}</span>
+        </div>
+      </div>
+      ${venue ? `<div class="match-venue">📍 ${venue}</div>` : ''}
+    </div>`;
+}
+
+// ── LOAD SCORES (today + recent) ──
+async function loadScores() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+
+  const today = new Date();
+  const fmt = (d) => d.toISOString().slice(0,10).replace(/-/g,'');
+  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
+  const tomorrow  = new Date(today); tomorrow.setDate(today.getDate()+1);
+  const dateRange = `${fmt(yesterday)}-${fmt(tomorrow)}`;
+
+  try {
+    const url = `${ESPN_BASE}/scoreboard?limit=50&dates=${dateRange}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('ESPN API lỗi');
+    const data = await res.json();
+    renderScores(data.events || []);
+  } catch(e) {
+    document.getElementById('scores-content').innerHTML =
+      `<div class="error-box">⚠️ Không thể tải kết quả. Kiểm tra kết nối mạng.<br><small>${e.message}</small></div>`;
+  }
+
+  btn.classList.remove('spinning');
+  document.getElementById('last-update').textContent =
+    '🔄 Cập nhật: ' + new Date().toLocaleTimeString('vi-VN', {timeZone:'Asia/Ho_Chi_Minh'});
+
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(loadScores, 60000);
+}
+
+function renderScores(events) {
+  const el = document.getElementById('scores-content');
+  if (!events.length) {
+    el.innerHTML = '<div class="loading">Không có trận đấu hôm nay.</div>';
+    return;
+  }
+
+  const live    = events.filter(e => e.competitions?.[0]?.status?.type?.name === 'STATUS_IN_PROGRESS' || e.competitions?.[0]?.status?.type?.name === 'STATUS_HALFTIME');
+  const done    = events.filter(e => e.competitions?.[0]?.status?.type?.name === 'STATUS_FINAL');
+  const upcoming= events.filter(e => e.competitions?.[0]?.status?.type?.name === 'STATUS_SCHEDULED');
+
+  let html = '';
+
+  if (live.length) {
+    html += '<div class="match-group-label">🔴 Đang diễn ra</div>';
+    live.forEach(e => html += renderMatchCard(e));
+  }
+  if (upcoming.length) {
+    html += '<div class="match-group-label">⏳ Sắp đấu</div>';
+    upcoming.forEach(e => html += renderMatchCard(e));
+  }
+  if (done.length) {
+    html += '<div class="match-group-label">✅ Đã kết thúc</div>';
+    done.forEach(e => html += renderMatchCard(e));
+  }
+
+  el.innerHTML = html || '<div class="loading">Không có trận hôm nay.</div>';
+}
+
+// ── LOAD SCHEDULE ──
+async function loadSchedule() {
+  try {
+    const today = new Date();
+    const fmt = (d) => d.toISOString().slice(0,10).replace(/-/g,'');
+    const end = new Date('2026-07-20');
+    const url = `${ESPN_BASE}/scoreboard?limit=200&dates=${fmt(today)}-${fmt(end)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    renderSchedule(data.events || []);
+  } catch(e) {
+    document.getElementById('schedule-content').innerHTML =
+      `<div class="error-box">⚠️ Không thể tải lịch thi đấu.</div>`;
+  }
+}
+
+function renderSchedule(events) {
+  const el = document.getElementById('schedule-content');
+  if (!events.length) { el.innerHTML = '<div class="loading">Không có dữ liệu.</div>'; return; }
+
+  // Group by date
+  const byDate = {};
+  events.forEach(e => {
+    const d = new Date(e.date).toLocaleDateString('vi-VN', {
+      weekday:'short', day:'2-digit', month:'2-digit', timeZone:'Asia/Ho_Chi_Minh'
+    });
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(e);
+  });
+
+  let html = '';
+  Object.entries(byDate).forEach(([date, evs]) => {
+    html += `<div class="match-group-label">📅 ${date}</div>`;
+    evs.forEach(e => html += renderMatchCard(e));
+  });
+
+  el.innerHTML = html;
+}
+
+// ── LOAD STANDINGS ──
+async function loadGroups() {
+  try {
+    const url = `${ESPN_BASE}/standings`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    renderGroups(data);
+  } catch(e) {
+    document.getElementById('groups-content').innerHTML =
+      `<div class="error-box">⚠️ Bảng xếp hạng chưa có dữ liệu (giải đấu mới bắt đầu).<br>Quay lại sau khi vòng bảng có kết quả nhé!</div>
+       <div style="margin-top:16px;color:var(--muted);font-size:13px;text-align:center">
+         👀 Xem bảng xếp hạng chi tiết tại:<br><br>
+         <a href="https://www.fifa.com/fifaplus/en/tournament-hub/worldcup" target="_blank"
+            style="color:var(--accent);text-decoration:none;font-weight:600">fifa.com ↗</a>
+         &nbsp;&nbsp;·&nbsp;&nbsp;
+         <a href="https://www.espn.com/soccer/standings/_/league/fifa.world" target="_blank"
+            style="color:var(--accent);text-decoration:none;font-weight:600">ESPN ↗</a>
+       </div>`;
+  }
+}
+
+function renderGroups(data) {
+  const el = document.getElementById('groups-content');
+  const groups = data.standings || data.children || [];
+
+  if (!groups.length) {
+    el.innerHTML = `<div class="error-box">Chưa có dữ liệu bảng xếp hạng.</div>`;
+    return;
+  }
+
+  let html = '';
+  groups.forEach(group => {
+    const name = group.name || group.abbreviation || 'Bảng';
+    const entries = group.standings?.entries || group.entries || [];
+
+    html += `<div class="group-card">
+      <div class="group-header">🏆 ${name}</div>
+      <table class="group-table">
+        <thead><tr>
+          <th>Đội</th><th>Trận</th><th>T</th><th>H</th><th>B</th><th>GĐ</th><th>Điểm</th>
+        </tr></thead><tbody>`;
+
+    entries.forEach((entry, i) => {
+      const stats = entry.stats || [];
+      const get = (name) => stats.find(s => s.name === name || s.abbreviation === name)?.value ?? '-';
+      const qualify = i < 2 ? 'qualify' : '';
+      html += `<tr class="${qualify}">
+        <td>${i<2?'🟢':''} ${flag(entry.team?.displayName)} ${entry.team?.displayName || ''}</td>
+        <td>${get('gamesPlayed')}</td>
+        <td>${get('wins')}</td>
+        <td>${get('ties')}</td>
+        <td>${get('losses')}</td>
+        <td>${get('pointDifferential')}</td>
+        <td><strong>${get('points')}</strong></td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+  });
+
+  el.innerHTML = html;
+}
+
+// ── TAB NAVIGATION ──
+function switchTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab, .bnav-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === name);
+  });
+  document.getElementById(name)?.classList.add('active');
+
+  if (name === 'schedule' && document.getElementById('schedule-content').innerHTML.includes('spinner')) loadSchedule();
+  if (name === 'groups'   && document.getElementById('groups-content').innerHTML.includes('spinner'))   loadGroups();
+}
+
+document.querySelectorAll('[data-tab]').forEach(el => {
+  el.addEventListener('click', () => switchTab(el.dataset.tab));
+});
+
+// ── INIT ──
+loadScores();
+</script>
+</body>
+</html>
