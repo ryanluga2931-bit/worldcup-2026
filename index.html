@@ -1142,12 +1142,14 @@ async function loadScores() {
       if(seen.has(e.id)) return false;
       seen.add(e.id); return true;
     });
-    renderScores(events);
+    const scoreChanged = renderScores(events);
     updateTicker(events);
     _retryCount=0;
-    // Adaptive refresh: 15s when live matches, 60s otherwise
     const hasLive=events.some(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
-    _nextInterval = hasLive ? 15 : 60;
+    // Goal just detected → fetch again in 5s to confirm & get updated stats
+    // Live but no goal → 10s
+    // No live → 60s
+    _nextInterval = scoreChanged ? 5 : hasLive ? 10 : 60;
   } catch(e) {
     if(_firstLoad){
       document.getElementById('scores-content').innerHTML=`
@@ -1171,7 +1173,7 @@ async function loadScores() {
 // ── RENDER SCORES (no-flicker: preserve AI panels, score flip, live clocks) ──
 function renderScores(events) {
   const el=document.getElementById('scores-content');
-  if(!events.length){el.innerHTML='<div class="loading">Không có trận đấu hôm nay.</div>';return;}
+  if(!events.length){el.innerHTML='<div class="loading">Không có trận đấu hôm nay.</div>';return false;}
 
   const live=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
   const done=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
@@ -1206,6 +1208,7 @@ function renderScores(events) {
     if(c.upcoming && c.date) startCountdown(c.mid, c.date);
     if(c.live) registerLiveClock(c.mid, c.displayClock, c.ht);
   });
+  return cards.some(c=>c.scoreChanged);
 }
 
 // ── TICKER UPDATE (uses all LIVE_STATUSES) ──
