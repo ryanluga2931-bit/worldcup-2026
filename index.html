@@ -43,7 +43,7 @@ header p{position:relative;color:var(--text2);font-size:14px}
 /* TABS */
 .tab-bar{display:flex;gap:7px;padding:0 16px 14px;overflow-x:auto;scrollbar-width:none;justify-content:center}
 .tab-bar::-webkit-scrollbar{display:none}
-.tab{flex-shrink:0;padding:8px 18px;border-radius:100px;font-size:13px;font-weight:600;border:1px solid var(--border);background:rgba(17,24,39,0.6);backdrop-filter:blur(10px);color:var(--text2);cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab{flex-shrink:0;padding:8px 18px;border-radius:100px;font-size:13px;font-weight:600;border:1px solid var(--border);background:rgba(17,24,39,0.85);color:var(--text2);cursor:pointer;transition:all .2s;white-space:nowrap}
 .tab.active{background:var(--accent);border-color:var(--accent);color:#000;box-shadow:0 4px 18px rgba(245,158,11,0.38)}
 .tab:hover:not(.active){border-color:var(--border2);color:var(--text)}
 
@@ -60,12 +60,12 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .match-group-label{font-size:10px;font-weight:800;letter-spacing:1.8px;color:var(--muted);text-transform:uppercase;margin:22px 0 9px;display:flex;align-items:center;gap:8px}
 .match-group-label::after{content:'';flex:1;height:1px;background:var(--border)}
 
-/* MATCH CARD */
-.match-card{background:var(--glass);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s;position:relative}
+/* MATCH CARD — no backdrop-filter (too expensive on iPhone with 20+ cards) */
+.match-card{background:rgba(17,24,39,0.92);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:border-color .2s,box-shadow .2s;position:relative}
 .match-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.09),transparent);pointer-events:none}
-.match-card:hover{transform:translateY(-2px);border-color:var(--border2)}
+.match-card:hover{border-color:var(--border2)}
 .match-card.live{border-color:rgba(239,68,68,0.35);box-shadow:var(--glow-live);background:linear-gradient(135deg,rgba(17,24,39,0.9) 0%,rgba(28,12,12,0.9) 100%)}
-.match-card.live::after{content:'';position:absolute;inset:0;border-radius:var(--radius);border:1px solid rgba(239,68,68,0.12);animation:lpulse 2.5s ease-in-out infinite;pointer-events:none}
+.match-card.live::after{content:'';position:absolute;inset:0;border-radius:var(--radius);border:1px solid rgba(239,68,68,0.22);animation:lpulse 2.5s ease-in-out infinite;pointer-events:none;will-change:opacity}
 @keyframes lpulse{0%,100%{opacity:1}50%{opacity:0}}
 .match-card.hot{border-color:rgba(245,158,11,0.35);box-shadow:var(--glow-gold)}
 
@@ -202,14 +202,14 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .stream-hero p{font-size:12px;color:var(--text2)}
 .stream-sec-title{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin:18px 0 9px}
 .stream-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:9px;margin-bottom:18px}
-.stream-card{display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 9px;background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .2s}
+.stream-card{display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 9px;background:rgba(17,24,39,0.88);border:1px solid var(--border);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:border-color .2s,transform .2s,box-shadow .2s}
 .stream-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:var(--glow-gold)}
 .stream-icon{font-size:30px}.stream-name{font-size:12px;font-weight:700}
 .stream-tag{font-size:9px;color:var(--muted);background:rgba(255,255,255,.05);padding:2px 7px;border-radius:100px}
 .stream-free{font-size:10px;font-weight:800;color:var(--green)}
 
 /* GROUPS */
-.group-card{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:13px;overflow:hidden}
+.group-card{background:rgba(17,24,39,0.92);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:13px;overflow:hidden}
 .group-header{background:rgba(245,158,11,.07);padding:11px 15px;font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.8px;border-bottom:1px solid var(--border)}
 .group-table{width:100%;border-collapse:collapse}
 .group-table th{padding:7px 11px;font-size:9px;color:var(--muted);font-weight:700;text-align:center;letter-spacing:.8px}
@@ -283,8 +283,8 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .az-labels{display:flex;justify-content:space-between;margin-top:4px;font-size:10px;font-weight:700;color:var(--text2)}
 
 /* Stat rows (key passes, gk saves, passing acc) */
+.stat-rows{padding-top:8px;border-top:1px solid rgba(255,255,255,.05)}
 .stat-bar{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;gap:6px;margin-bottom:9px}
-.stat-bar:first-of-type{padding-top:8px;border-top:1px solid rgba(255,255,255,.05)}
 .stat-bar-lbl{font-size:12px;font-weight:800;text-align:center;color:var(--text)}
 .stat-bar-name{font-size:9px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:.5px;grid-column:1/-1;margin-bottom:3px}
 .stat-track{height:4px;border-radius:100px;background:rgba(255,255,255,.07);overflow:hidden;position:relative}
@@ -312,8 +312,10 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .ptr-indicator.visible{transform:translateX(-50%) translateY(12px)}
 .ptr-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
 
-/* PERFORMANCE: hint compositing for animated elements */
-.match-card{will-change:transform}.score{will-change:color,transform}.momentum-fill{will-change:width}.pb-fill{will-change:width}
+/* PERFORMANCE: only hint compositing where animation actually happens */
+.score{will-change:transform}.momentum-fill{will-change:width}.pb-fill{will-change:width}
+/* match-card hover: apply transform only on hover to avoid always-on GPU layer */
+.match-card:hover{transform:translateY(-2px)}
 
 /* Smooth touch scroll */
 main{-webkit-overflow-scrolling:touch}
@@ -578,19 +580,18 @@ function restoreOpenPanels(ids){
   });
 }
 
-// ── AUTO-REFRESH COUNTDOWN ──
+// ── AUTO-REFRESH COUNTDOWN (reads element fresh each tick — no stale ref) ──
 let _nextRefreshAt = 0;
 let _refreshCountdownTimer = null;
 function startRefreshCountdown(secs){
   _nextRefreshAt = Date.now() + secs*1000;
   if(_refreshCountdownTimer) clearInterval(_refreshCountdownTimer);
   _refreshCountdownTimer = setInterval(()=>{
-    const el=document.getElementById('last-update');
+    const el=document.getElementById('last-update'); // fresh lookup each tick
     if(!el) return;
     const remain=Math.max(0,Math.round((_nextRefreshAt-Date.now())/1000));
-    if(remain>0) el.dataset.suffix=` · làm mới sau ${remain}s`;
-    else el.dataset.suffix='';
-    el.textContent=(el.dataset.base||'')+( el.dataset.suffix||'');
+    const base=el.dataset.base||'';
+    el.textContent=remain>0?`${base} · ${remain}s`:base;
   },1000);
 }
 
@@ -876,9 +877,11 @@ function liveStatsHTML(home, away, p) {
     ${circlesHTML}
     ${shotsHTML}
     ${pitchHTML}
-    ${statRow('Đường chuyền key', hKP, aKP, 'stat-fill-green')}
-    ${statRow('Cứu thua thủ môn', hGKS, aGKS, 'stat-fill-yellow')}
-    ${statRow('Chính xác chuyền %', hPA, aPA, 'stat-fill-green')}
+    <div class="stat-rows">
+      ${statRow('Đường chuyền key', hKP, aKP, 'stat-fill-green')}
+      ${statRow('Cứu thua thủ môn', hGKS, aGKS, 'stat-fill-yellow')}
+      ${statRow('Chính xác chuyền %', hPA, aPA, 'stat-fill-green')}
+    </div>
   </div>`;
 }
 
@@ -1072,6 +1075,7 @@ function renderMatchCard(event) {
 const LIVE_STATUSES=['STATUS_IN_PROGRESS','STATUS_HALFTIME','STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_EXTRA_TIME','STATUS_OVERTIME','STATUS_SHOOTOUT'];
 const DONE_STATUSES=['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'];
 let _firstLoad = true;
+let _isLoading = false; // guard against concurrent fetches
 let _retryCount = 0;
 let _nextInterval = 60;
 
@@ -1098,6 +1102,8 @@ async function fetchWithRetry(url, retries=3){
 
 // ── LOAD SCORES ──
 async function loadScores() {
+  if(_isLoading) return; // prevent overlapping fetches
+  _isLoading = true;
   const btn=document.getElementById('refreshBtn');
   btn?.classList.add('spinning');
 
@@ -1138,9 +1144,10 @@ async function loadScores() {
         <br><button onclick="loadScores()" style="margin-top:9px;padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button></div>`;
     }
     _nextInterval = 30;
+  } finally {
+    _isLoading = false;
+    btn?.classList.remove('spinning');
   }
-
-  btn?.classList.remove('spinning');
   const now=new Date().toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
   const luEl=document.getElementById('last-update');
   if(luEl){ luEl.dataset.base=`🔄 ${now}`; luEl.textContent=`🔄 ${now}`; }
@@ -1207,17 +1214,21 @@ function updateTicker(events) {
   el.innerHTML=items+items;
 }
 
-// ── LOAD SCHEDULE ──
+// ── LOAD SCHEDULE (fetch next 7 days as separate requests — ESPN doesn't support date ranges) ──
 async function loadSchedule() {
+  document.getElementById('schedule-content').innerHTML='<div class="loading"><div class="spinner"></div><br>Đang tải lịch thi đấu...</div>';
   try {
-    const fmt=d=>d.toISOString().slice(0,10).replace(/-/g,'');
-    const url=`${ESPN_BASE}/scoreboard?limit=200&dates=${fmt(new Date())}-20260720`;
-    const res=await fetch(url);
-    if(!res.ok) throw new Error();
-    const data=await res.json();
-    renderSchedule(data.events||[]);
+    const offsets=[0,1,2,3,4,5,6];
+    const results=await Promise.all(
+      offsets.map(i=>fetchWithRetry(`${ESPN_BASE}/scoreboard?limit=50&dates=${utcDate(i)}`).catch(()=>({events:[]})))
+    );
+    const seen=new Set();
+    const events=results.flatMap(r=>r.events||[]).filter(e=>{
+      if(seen.has(e.id)) return false; seen.add(e.id); return true;
+    });
+    renderSchedule(events);
   } catch(e) {
-    document.getElementById('schedule-content').innerHTML=`<div class="error-box">⚠️ Không thể tải lịch thi đấu.</div>`;
+    document.getElementById('schedule-content').innerHTML=`<div class="error-box">⚠️ Không thể tải lịch thi đấu.<br><button onclick="loadSchedule()" style="margin-top:8px;padding:5px 12px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button></div>`;
   }
 }
 
