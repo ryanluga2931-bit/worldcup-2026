@@ -292,6 +292,17 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .bnav-item.active{color:var(--accent)}
 .bnav-icon{font-size:21px}
 
+/* PULL TO REFRESH */
+.ptr-indicator{position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-60px);z-index:200;background:var(--card);border:1px solid var(--border);border-radius:100px;padding:7px 18px;font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:7px;transition:transform .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.ptr-indicator.visible{transform:translateX(-50%) translateY(12px)}
+.ptr-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+
+/* PERFORMANCE: hint compositing for animated elements */
+.match-card{will-change:transform}.score{will-change:color,transform}.momentum-fill{will-change:width}.pb-fill{will-change:width}
+
+/* Smooth touch scroll */
+main{-webkit-overflow-scrolling:touch}
+
 @media(max-width:600px){header{padding:32px 13px 18px}.tab-bar{display:none}.bottom-nav{display:block}.team-flag{font-size:28px}.score{font-size:28px}main{padding:0 9px 88px}}
 @media(min-width:601px){.bottom-nav{display:none}}
 </style>
@@ -482,7 +493,6 @@ function aiComment(homeN, awayN, p) {
 
 // ── REACTIONS ──
 const REMOJIS = ['🔥','⚽','😱','👏','💔'];
-const RLABELS = ['Đỉnh','Gôl!','Shock','Hay','Tiếc'];
 function getRx(id){ return JSON.parse(localStorage.getItem('rx_'+id)||'[0,0,0,0,0]'); }
 function getMyRx(id){ const v=localStorage.getItem('mrx_'+id); return v===null?-1:parseInt(v); }
 function doReact(id,i){
@@ -499,27 +509,84 @@ function rxHTML(id){
   return REMOJIS.map((e,i)=>`<button class="rbtn${my===i?' active':''}" onclick="doReact('${id}',${i})">${e}<span>${rx[i]>0?rx[i]:''}</span></button>`).join('');
 }
 
-// ── COUNTDOWNS ──
+// ── COUNTDOWNS (self-cleaning) ──
 const countdownTimers = {};
+function clearAllCountdowns() {
+  Object.keys(countdownTimers).forEach(id=>{clearInterval(countdownTimers[id]);delete countdownTimers[id];});
+}
 function startCountdown(id, dateStr){
   if(countdownTimers[id]) clearInterval(countdownTimers[id]);
   countdownTimers[id]=setInterval(()=>{
-    const el=document.getElementById('cd_'+id); if(!el){clearInterval(countdownTimers[id]);return;}
+    const el=document.getElementById('cd_'+id);
+    if(!el){clearInterval(countdownTimers[id]);delete countdownTimers[id];return;}
     const diff=new Date(dateStr)-Date.now();
-    if(diff<=0){el.textContent='Đang bắt đầu...';clearInterval(countdownTimers[id]);return;}
+    if(diff<=0){el.textContent='Đang bắt đầu...';clearInterval(countdownTimers[id]);delete countdownTimers[id];return;}
     const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
     el.textContent=`⏱ Còn ${h>0?h+'g ':''}`+`${m}p ${s}s`;
   },1000);
 }
 
+// ── LIVE CLOCK (ticks every second between API calls) ──
+const liveClockData = {}; // {mid: {startedAt, initialSecs, isHT}}
+function registerLiveClock(mid, displayClock, isHT) {
+  if(isHT){liveClockData[mid]={startedAt:Date.now(),initialSecs:45*60,isHT:true};return;}
+  if(!displayClock) return;
+  const parts=displayClock.split(':');
+  const secs=parseInt(parts[0]||0)*60+parseInt(parts[1]||0);
+  liveClockData[mid]={startedAt:Date.now(),initialSecs:secs,isHT:false};
+}
+function tickLiveClocks(){
+  Object.entries(liveClockData).forEach(([mid,data])=>{
+    const el=document.getElementById('clk_'+mid);
+    if(!el){delete liveClockData[mid];return;}
+    if(data.isHT){el.textContent='HT';return;}
+    const elapsed=Math.floor((Date.now()-data.startedAt)/1000);
+    const total=data.initialSecs+elapsed;
+    const mins=Math.floor(total/60), secs=total%60;
+    el.textContent=`${mins}:${String(secs).padStart(2,'0')}`;
+  });
+}
+setInterval(tickLiveClocks, 1000);
+
+// ── SAVE / RESTORE AI PANEL STATE ──
+function saveOpenPanels(){
+  return new Set([...document.querySelectorAll('.ai-panel.open')].map(el=>el.id.replace('aip_','')));
+}
+function restoreOpenPanels(ids){
+  ids.forEach(id=>{
+    const panel=document.getElementById('aip_'+id);
+    const toggle=document.getElementById('ait_'+id);
+    if(!panel||panel.classList.contains('open')) return;
+    panel.classList.add('open');
+    toggle?.classList.add('open');
+    panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});
+  });
+}
+
+// ── AUTO-REFRESH COUNTDOWN ──
+let _nextRefreshAt = 0;
+let _refreshCountdownTimer = null;
+function startRefreshCountdown(secs){
+  _nextRefreshAt = Date.now() + secs*1000;
+  if(_refreshCountdownTimer) clearInterval(_refreshCountdownTimer);
+  _refreshCountdownTimer = setInterval(()=>{
+    const el=document.getElementById('last-update');
+    if(!el) return;
+    const remain=Math.max(0,Math.round((_nextRefreshAt-Date.now())/1000));
+    if(remain>0) el.dataset.suffix=` · làm mới sau ${remain}s`;
+    else el.dataset.suffix='';
+    el.textContent=(el.dataset.base||'')+( el.dataset.suffix||'');
+  },1000);
+}
+
 // ── STATUS BADGE ──
-function statusBadge(status){
+function statusBadge(status, mid){
   if(!status) return '';
   const s=status.type?.name||'';
   const min=status.displayClock||'';
-  if(['STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_IN_PROGRESS'].includes(s)) return `<span class="badge live">🔴 ${min}</span>`;
-  if(s==='STATUS_HALFTIME') return `<span class="badge ht">⏸ HT</span>`;
-  if(['STATUS_EXTRA_TIME','STATUS_OVERTIME'].includes(s)) return `<span class="badge live">🔴 ET ${min}</span>`;
+  if(['STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_IN_PROGRESS'].includes(s)) return `<span class="badge live">🔴 <span id="clk_${mid}">${min}</span></span>`;
+  if(s==='STATUS_HALFTIME') return `<span class="badge ht">⏸ <span id="clk_${mid}">HT</span></span>`;
+  if(['STATUS_EXTRA_TIME','STATUS_OVERTIME'].includes(s)) return `<span class="badge live">🔴 ET <span id="clk_${mid}">${min}</span></span>`;
   if(s==='STATUS_SHOOTOUT') return `<span class="badge live">🔴 PKS</span>`;
   if(['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'].includes(s)) return `<span class="badge ft">✅ FT</span>`;
   return `<span class="badge ns">${status.type?.description||'Sắp đấu'}</span>`;
@@ -693,16 +760,18 @@ function formCircles(f){
   return (f||'').split('').map(c=>`<div class="fc ${c}">${c}</div>`).join('');
 }
 
-// ── SCORE PREV STATE (for flip animation) ──
-function updateScoreEls(mid, hs, as_) {
+// ── SCORE PREV STATE (track changes, animate after DOM update) ──
+function checkScoreChanged(mid, hs, as_) {
   const prev = _prevScores[mid];
-  if(prev && (prev.hs !== hs || prev.as !== as_)) {
-    ['h','a'].forEach(t=>{
-      const el=document.getElementById(`sc_${t}_${mid}`);
-      if(el){el.classList.remove('scored');void el.offsetWidth;el.classList.add('scored');}
-    });
-  }
-  _prevScores[mid]={hs,as:as_};
+  const changed = prev && (prev.hs !== hs || prev.as !== as_);
+  _prevScores[mid] = {hs, as:as_};
+  return changed;
+}
+function animateScoreEl(mid) {
+  ['h','a'].forEach(t=>{
+    const el=document.getElementById(`sc_${t}_${mid}`);
+    if(el){el.classList.remove('scored');void el.offsetWidth;el.classList.add('scored');}
+  });
 }
 
 // ── AI PANEL HTML ──
@@ -810,11 +879,11 @@ function renderMatchCard(event) {
   // Countdown for upcoming
   const countdownHTML = upcoming ? `<div class="countdown" id="cd_${mid}"></div>` : '';
 
-  // Score HTML
-  let scoreHTML;
+  // Score HTML (checkScoreChanged stores state; animation fires post-render)
+  let scoreHTML, _scoreChanged = false;
   if(hasScore) {
+    _scoreChanged = checkScoreChanged(mid, homeScore, awayScore);
     scoreHTML = `<span class="score" id="sc_h_${mid}">${homeScore}</span><span class="score-sep">–</span><span class="score" id="sc_a_${mid}">${awayScore}</span>`;
-    updateScoreEls(mid, homeScore, awayScore);
   } else {
     scoreHTML = `<span class="score-vs">vs</span>`;
   }
@@ -839,7 +908,7 @@ function renderMatchCard(event) {
   <div class="${cardClass}" id="mc_${mid}">
     <div class="card-top">
       <span class="match-time">${timeVN(event.date)}</span>
-      <div class="card-badges">${statusBadge(status)}${hotBadge}${upsetBadge}</div>
+      <div class="card-badges">${statusBadge(status,mid)}${hotBadge}${upsetBadge}</div>
     </div>
     <div class="match-body">
       <div class="match-teams">
@@ -871,43 +940,61 @@ function renderMatchCard(event) {
     ${aiPanelHTML(mid, homeN, awayN, p)}
   </div>`;
 
-  // start countdown after render
-  if(upcoming && event.date) {
-    setTimeout(()=>startCountdown(mid, event.date), 100);
-  }
-
-  return html;
+  return { html, mid, upcoming, date: event.date, live, ht: sName==='STATUS_HALFTIME',
+           displayClock: comp.status?.displayClock||'', scoreChanged: _scoreChanged };
 }
 
-// ── LOAD SCORES ──
-// Date as YYYYMMDD (UTC)
+// ── CONSTANTS ──
+const LIVE_STATUSES=['STATUS_IN_PROGRESS','STATUS_HALFTIME','STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_EXTRA_TIME','STATUS_OVERTIME','STATUS_SHOOTOUT'];
+const DONE_STATUSES=['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'];
+let _firstLoad = true;
+let _retryCount = 0;
+
+// ── DATE UTILS ──
 function utcDate(offset=0){
   const d=new Date();
   d.setUTCDate(d.getUTCDate()+offset);
   return d.toISOString().slice(0,10).replace(/-/g,'');
 }
 
+// ── FETCH WITH RETRY ──
+async function fetchWithRetry(url, retries=3){
+  for(let i=0;i<retries;i++){
+    try{
+      const r=await fetch(url,{signal:AbortSignal.timeout?AbortSignal.timeout(8000):undefined});
+      if(r.ok) return await r.json();
+    }catch(e){
+      if(i===retries-1) throw e;
+      await new Promise(r=>setTimeout(r,1500*(i+1)));
+    }
+  }
+  return {events:[]};
+}
+
+// ── LOAD SCORES ──
 async function loadScores() {
   const btn=document.getElementById('refreshBtn');
-  btn.classList.add('spinning');
-  document.getElementById('scores-content').innerHTML=[1,2,3].map(()=>`
-    <div class="skel-card">
-      <div class="skel-line" style="width:40%;height:10px"></div>
-      <div style="display:flex;justify-content:space-between;margin:14px 0">
-        <div class="skel-line" style="width:28%;height:40px"></div>
-        <div class="skel-line" style="width:20%;height:40px"></div>
-        <div class="skel-line" style="width:28%;height:40px"></div>
-      </div>
-      <div class="skel-line" style="width:60%;margin:0 auto;height:10px"></div>
-    </div>`).join('');
+  btn?.classList.add('spinning');
+
+  // Show skeleton only on first load to avoid flicker
+  if(_firstLoad){
+    document.getElementById('scores-content').innerHTML=[1,2,3].map(()=>`
+      <div class="skel-card">
+        <div class="skel-line" style="width:40%;height:10px"></div>
+        <div style="display:flex;justify-content:space-between;margin:14px 0">
+          <div class="skel-line" style="width:28%;height:40px"></div>
+          <div class="skel-line" style="width:20%;height:40px"></div>
+          <div class="skel-line" style="width:28%;height:40px"></div>
+        </div>
+        <div class="skel-line" style="width:60%;margin:0 auto;height:10px"></div>
+      </div>`).join('');
+  }
 
   try {
-    // Fetch hôm qua + hôm nay + ngày mai (3 request riêng để ESPN API nhận đúng)
     const dates=[utcDate(-1),utcDate(0),utcDate(1)];
     const results=await Promise.all(
-      dates.map(d=>fetch(`${ESPN_BASE}/scoreboard?limit=50&dates=${d}`).then(r=>r.ok?r.json():{events:[]}).catch(()=>({events:[]})))
+      dates.map(d=>fetchWithRetry(`${ESPN_BASE}/scoreboard?limit=50&dates=${d}`).catch(()=>({events:[]})))
     );
-    // Gộp & dedup theo event.id
     const seen=new Set();
     const events=results.flatMap(r=>r.events||[]).filter(e=>{
       if(seen.has(e.id)) return false;
@@ -915,33 +1002,68 @@ async function loadScores() {
     });
     renderScores(events);
     updateTicker(events);
+    _retryCount=0;
   } catch(e) {
-    document.getElementById('scores-content').innerHTML=`<div class="error-box">⚠️ Không thể tải kết quả. Kiểm tra kết nối mạng.<br><small>${e.message}</small></div>`;
+    if(_firstLoad){
+      document.getElementById('scores-content').innerHTML=`
+        <div class="error-box">⚠️ Không thể tải kết quả. Kiểm tra kết nối mạng.
+        <br><button onclick="loadScores()" style="margin-top:9px;padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button></div>`;
+    }
   }
-  btn.classList.remove('spinning');
-  document.getElementById('last-update').textContent='🔄 '+new Date().toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
+
+  btn?.classList.remove('spinning');
+  const now=new Date().toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
+  const luEl=document.getElementById('last-update');
+  if(luEl){ luEl.dataset.base=`🔄 ${now}`; luEl.textContent=`🔄 ${now}`; }
+  _firstLoad=false;
   clearTimeout(refreshTimer);
   refreshTimer=setTimeout(loadScores,60000);
+  startRefreshCountdown(60);
 }
 
+// ── RENDER SCORES (no-flicker: preserve AI panels, score flip, live clocks) ──
 function renderScores(events) {
   const el=document.getElementById('scores-content');
   if(!events.length){el.innerHTML='<div class="loading">Không có trận đấu hôm nay.</div>';return;}
-  const LIVE_STATUSES=['STATUS_IN_PROGRESS','STATUS_HALFTIME','STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_EXTRA_TIME','STATUS_OVERTIME','STATUS_SHOOTOUT'];
-  const DONE_STATUSES=['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'];
+
   const live=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
   const done=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
   const up=events.filter(e=>e.competitions?.[0]?.status?.type?.name==='STATUS_SCHEDULED');
-  let html='';
-  if(live.length){html+='<div class="match-group-label">🔴 Đang diễn ra</div>';live.forEach(e=>html+=renderMatchCard(e));}
-  if(up.length){html+='<div class="match-group-label">⏳ Sắp diễn ra</div>';up.forEach(e=>html+=renderMatchCard(e));}
-  if(done.length){html+='<div class="match-group-label">✅ Đã kết thúc</div>';done.forEach(e=>html+=renderMatchCard(e));}
-  el.innerHTML=html||'<div class="loading">Không có trận hôm nay.</div>';
+
+  // Save AI panel state before DOM update
+  const openPanels=saveOpenPanels();
+
+  // Build new HTML
+  const cards=[];
+  const buildGroup=(label,arr)=>{
+    if(!arr.length) return '';
+    let s=`<div class="match-group-label">${label}</div>`;
+    arr.forEach(e=>{
+      const result=renderMatchCard(e);
+      if(result){ cards.push(result); s+=result.html; }
+    });
+    return s;
+  };
+  let html=buildGroup('🔴 Đang diễn ra',live)+buildGroup('⏳ Sắp diễn ra',up)+buildGroup('✅ Đã kết thúc',done);
+  if(!html) html='<div class="loading">Không có trận hôm nay.</div>';
+
+  // Clear old countdowns before replacing DOM
+  clearAllCountdowns();
+
+  el.innerHTML=html;
+
+  // Post-render: restore panels, animate scores, start clocks
+  restoreOpenPanels(openPanels);
+  cards.forEach(c=>{
+    if(c.scoreChanged) animateScoreEl(c.mid);
+    if(c.upcoming && c.date) startCountdown(c.mid, c.date);
+    if(c.live) registerLiveClock(c.mid, c.displayClock, c.ht);
+  });
 }
 
-// ── TICKER UPDATE ──
+// ── TICKER UPDATE (uses all LIVE_STATUSES) ──
 function updateTicker(events) {
-  const live=events.filter(e=>e.competitions?.[0]?.status?.type?.name==='STATUS_IN_PROGRESS');
+  const live=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
   const el=document.getElementById('ticker-inner');
   if(!live.length){el.textContent='⚽ World Cup 2026 — Theo dõi kết quả live tại đây';return;}
   let items='';
@@ -951,9 +1073,8 @@ function updateTicker(events) {
     const a=comp?.competitors?.find(c=>c.homeAway==='away');
     if(!h||!a) return;
     const min=comp?.status?.displayClock||'';
-    items+=`<span class="ti"><div class="ti-live"></div>${flag(h.team?.displayName)} <span class="ti-score">${h.score||0}–${a.score||0}</span> ${flag(a.team?.displayName)} ${h.team?.shortDisplayName||''} vs ${a.team?.shortDisplayName||''} ${min?'• '+min:''}</span>`;
+    items+=`<span class="ti"><div class="ti-live"></div>${flag(h.team?.displayName)} <span class="ti-score">${h.score||0}–${a.score||0}</span> ${flag(a.team?.displayName)} ${h.team?.shortDisplayName||''} vs ${a.team?.shortDisplayName||''} ${min?'· '+min:''}</span>`;
   });
-  // Duplicate for seamless loop
   el.innerHTML=items+items;
 }
 
@@ -980,12 +1101,13 @@ function renderSchedule(events) {
     if(!byDate[d]) byDate[d]=[];
     byDate[d].push(e);
   });
-  let html='';
+  let html=''; const cards=[];
   Object.entries(byDate).forEach(([date,evs])=>{
     html+=`<div class="match-group-label">📅 ${date}</div>`;
-    evs.forEach(e=>html+=renderMatchCard(e));
+    evs.forEach(e=>{const r=renderMatchCard(e);if(r){html+=r.html;cards.push(r);}});
   });
   el.innerHTML=html;
+  cards.forEach(c=>{if(c.upcoming&&c.date) startCountdown(c.mid,c.date);});
 }
 
 // ── LOAD GROUPS ──
@@ -1038,6 +1160,40 @@ function switchTab(name) {
   if(name==='groups'&&document.getElementById('groups-content').innerHTML.includes('spinner')) loadGroups();
 }
 document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>switchTab(el.dataset.tab)));
+
+// ── PULL TO REFRESH ──
+(function(){
+  const ptr=document.createElement('div');
+  ptr.className='ptr-indicator';
+  ptr.innerHTML='<div class="ptr-spinner"></div>Đang làm mới...';
+  document.body.appendChild(ptr);
+  let startY=0, pulling=false, triggered=false;
+  document.addEventListener('touchstart',e=>{
+    if(window.scrollY===0) startY=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!startY) return;
+    const dy=e.touches[0].clientY-startY;
+    if(dy>50&&window.scrollY===0){
+      pulling=true;
+      if(dy>100&&!triggered){ptr.classList.add('visible');}
+    }
+  },{passive:true});
+  document.addEventListener('touchend',()=>{
+    if(pulling&&ptr.classList.contains('visible')&&!triggered){
+      triggered=true;
+      loadScores();
+      setTimeout(()=>{ptr.classList.remove('visible');triggered=false;},1200);
+    }
+    startY=0;pulling=false;
+  },{passive:true});
+})();
+
+// ── VISIBILITY: pause refresh when tab hidden, resume on show ──
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ clearTimeout(refreshTimer); if(_refreshCountdownTimer) clearInterval(_refreshCountdownTimer); }
+  else { loadScores(); }
+});
 
 // ── INIT ──
 loadScores();
