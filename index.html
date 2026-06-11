@@ -1073,6 +1073,7 @@ const LIVE_STATUSES=['STATUS_IN_PROGRESS','STATUS_HALFTIME','STATUS_FIRST_HALF',
 const DONE_STATUSES=['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'];
 let _firstLoad = true;
 let _retryCount = 0;
+let _nextInterval = 60;
 
 // ── DATE UTILS ──
 function utcDate(offset=0){
@@ -1127,12 +1128,16 @@ async function loadScores() {
     renderScores(events);
     updateTicker(events);
     _retryCount=0;
+    // Adaptive refresh: 15s when live matches, 60s otherwise
+    const hasLive=events.some(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+    _nextInterval = hasLive ? 15 : 60;
   } catch(e) {
     if(_firstLoad){
       document.getElementById('scores-content').innerHTML=`
         <div class="error-box">⚠️ Không thể tải kết quả. Kiểm tra kết nối mạng.
         <br><button onclick="loadScores()" style="margin-top:9px;padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button></div>`;
     }
+    _nextInterval = 30;
   }
 
   btn?.classList.remove('spinning');
@@ -1141,8 +1146,8 @@ async function loadScores() {
   if(luEl){ luEl.dataset.base=`🔄 ${now}`; luEl.textContent=`🔄 ${now}`; }
   _firstLoad=false;
   clearTimeout(refreshTimer);
-  refreshTimer=setTimeout(loadScores,60000);
-  startRefreshCountdown(60);
+  refreshTimer=setTimeout(loadScores, _nextInterval*1000);
+  startRefreshCountdown(_nextInterval);
 }
 
 // ── RENDER SCORES (no-flicker: preserve AI panels, score flip, live clocks) ──
