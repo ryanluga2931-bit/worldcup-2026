@@ -477,13 +477,14 @@ function predict(homeN, awayN) {
   const tot = hW + dr + aW;
   hW = Math.round(hW/tot*100); aW = Math.round(aW/tot*100); dr = 100-hW-aW;
 
-  const hXG = Math.max(0.3, (h.a * 0.5 + (10-a.d)*0.5) / 10 * 2.2);
-  const aXG = Math.max(0.2, (a.a * 0.5 + (10-h.d)*0.5) / 10 * 1.85);
-  const pHome = Math.round(hXG * 0.88);
-  const pAway = Math.round(aXG * 0.88);
+  const hXG = Math.max(0.3, (h.a * 0.5 + (10-a.d)*0.5) / 10 * 3.2);
+  const aXG = Math.max(0.2, (a.a * 0.5 + (10-h.d)*0.5) / 10 * 2.7);
+  // Poisson mode = floor(λ) — most likely number of goals given expected λ
+  const pHome = Math.floor(hXG);
+  const pAway = Math.floor(aXG);
   const totalXG = hXG + aXG;
   const over25 = Math.min(88, Math.max(18, Math.round((1 - Math.exp(-totalXG/2.6)) * 100)));
-  const btts = Math.min(82, Math.max(12, Math.round((hXG/2.2) * (aXG/1.85) * 100)));
+  const btts = Math.min(82, Math.max(12, Math.round((1-Math.exp(-hXG)) * (1-Math.exp(-aXG)) * 100)));
   const next10 = Math.min(45, Math.max(5, Math.round(totalXG / 9 * 10 * 100)));
   const rdiff = Math.abs(diff);
   const confidence = rdiff > 200 ? 'high' : rdiff > 100 ? 'medium' : 'low';
