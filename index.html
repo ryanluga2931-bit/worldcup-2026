@@ -662,8 +662,7 @@ function calcAsianOdds(homeN, awayN, p) {
   }
 
   // After handicap, market ~50/50 → odds ~0.88-0.97 each side with house edge
-  // Slight tilt from residual probability imbalance
-  const residual = (absDiff % 12) / 120; // 0..0.1
+  const residual = (absXGDiff % 1.2) / 12; // 0..0.1
   const hAH = (0.87 + residual + seed * 0.06).toFixed(2);
   const aAH = (0.87 + (0.1 - residual) + (1 - seed) * 0.06).toFixed(2);
 
@@ -1099,16 +1098,19 @@ function utcDate(offset=0){
 
 // ── FETCH WITH RETRY ──
 async function fetchWithRetry(url, retries=3){
+  let lastErr;
   for(let i=0;i<retries;i++){
     try{
       const r=await fetch(url+'&_='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout?AbortSignal.timeout(8000):undefined});
       if(r.ok) return await r.json();
+      // non-ok (429, 503 etc) → retry after backoff
+      lastErr=new Error(`HTTP ${r.status}`);
     }catch(e){
-      if(i===retries-1) throw e;
-      await new Promise(r=>setTimeout(r,1500*(i+1)));
+      lastErr=e;
     }
+    if(i<retries-1) await new Promise(r=>setTimeout(r,1500*(i+1)));
   }
-  return {events:[]};
+  throw lastErr;
 }
 
 // ── LOAD SCORES ──
@@ -1146,24 +1148,24 @@ async function loadScores() {
     updateTicker(events);
     _retryCount=0;
     const hasLive=events.some(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
-    // Goal just detected → fetch again in 5s to confirm & get updated stats
-    // Live but no goal → 10s
-    // No live → 60s
     _nextInterval = scoreChanged ? 5 : hasLive ? 10 : 60;
+    const now=new Date().toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
+    const luEl=document.getElementById('last-update');
+    if(luEl){ luEl.dataset.base=`🔄 ${now}`; luEl.textContent=`🔄 ${now}`; }
   } catch(e) {
-    if(_firstLoad){
-      document.getElementById('scores-content').innerHTML=`
-        <div class="error-box">⚠️ Không thể tải kết quả. Kiểm tra kết nối mạng.
-        <br><button onclick="loadScores()" style="margin-top:9px;padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button></div>`;
-    }
     _nextInterval = 30;
+    const errBtn=`<br><button onclick="loadScores()" style="margin-top:9px;padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button>`;
+    if(_firstLoad){
+      document.getElementById('scores-content').innerHTML=`<div class="error-box">⚠️ Không thể tải kết quả. Kiểm tra kết nối mạng.${errBtn}</div>`;
+    } else {
+      // Non-fatal: show toast-style banner instead of wiping existing scores
+      const luEl=document.getElementById('last-update');
+      if(luEl){ luEl.textContent='⚠️ Lỗi tải — đang thử lại...'; }
+    }
   } finally {
     _isLoading = false;
     btn?.classList.remove('spinning');
   }
-  const now=new Date().toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
-  const luEl=document.getElementById('last-update');
-  if(luEl){ luEl.dataset.base=`🔄 ${now}`; luEl.textContent=`🔄 ${now}`; }
   _firstLoad=false;
   clearTimeout(refreshTimer);
   refreshTimer=setTimeout(loadScores, _nextInterval*1000);
