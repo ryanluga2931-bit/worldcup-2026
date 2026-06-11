@@ -760,11 +760,17 @@ function renderMatchCard(event) {
 }
 
 // ── LOAD SCORES ──
+// Date in VN timezone as YYYYMMDD
+function vnDate(offset=0){
+  const d=new Date();
+  d.setDate(d.getDate()+offset);
+  return d.toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'}).replace(/-/g,'');
+}
+
 async function loadScores() {
   const btn=document.getElementById('refreshBtn');
   btn.classList.add('spinning');
-  // show skeleton
-  document.getElementById('scores-content').innerHTML = [1,2,3].map(()=>`
+  document.getElementById('scores-content').innerHTML=[1,2,3].map(()=>`
     <div class="skel-card">
       <div class="skel-line" style="width:40%;height:10px"></div>
       <div style="display:flex;justify-content:space-between;margin:14px 0">
@@ -775,18 +781,20 @@ async function loadScores() {
       <div class="skel-line" style="width:60%;margin:0 auto;height:10px"></div>
     </div>`).join('');
 
-  const fmt=d=>d.toISOString().slice(0,10).replace(/-/g,'');
-  const t=new Date();
-  const y=new Date(t); y.setDate(t.getDate()-1);
-  const tm=new Date(t); tm.setDate(t.getDate()+1);
-
   try {
-    const url=`${ESPN_BASE}/scoreboard?limit=50&dates=${fmt(y)}-${fmt(tm)}`;
-    const res=await fetch(url);
-    if(!res.ok) throw new Error('ESPN API lỗi');
-    const data=await res.json();
-    renderScores(data.events||[]);
-    updateTicker(data.events||[]);
+    // Fetch hôm qua + hôm nay + ngày mai (3 request riêng để ESPN API nhận đúng)
+    const dates=[vnDate(-1),vnDate(0),vnDate(1)];
+    const results=await Promise.all(
+      dates.map(d=>fetch(`${ESPN_BASE}/scoreboard?limit=50&dates=${d}`).then(r=>r.ok?r.json():{events:[]}).catch(()=>({events:[]})))
+    );
+    // Gộp & dedup theo event.id
+    const seen=new Set();
+    const events=results.flatMap(r=>r.events||[]).filter(e=>{
+      if(seen.has(e.id)) return false;
+      seen.add(e.id); return true;
+    });
+    renderScores(events);
+    updateTicker(events);
   } catch(e) {
     document.getElementById('scores-content').innerHTML=`<div class="error-box">⚠️ Không thể tải kết quả. Kiểm tra kết nối mạng.<br><small>${e.message}</small></div>`;
   }
