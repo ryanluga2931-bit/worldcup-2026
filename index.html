@@ -1235,9 +1235,14 @@ function updateTicker(events) {
     const a=comp?.competitors?.find(c=>c.homeAway==='away');
     if(!h||!a) return;
     const min=comp?.status?.displayClock||'';
-    items+=`<span class="ti"><div class="ti-live"></div>${flag(h.team?.displayName)} <span class="ti-score">${h.score||0}–${a.score||0}</span> ${flag(a.team?.displayName)} ${h.team?.shortDisplayName||''} vs ${a.team?.shortDisplayName||''} ${min?'· '+min:''}</span>`;
+    const hs=h.score??''; const as_=a.score??'';
+    const scoreStr=(hs!==''&&as_!=='')?`<span class="ti-score">${hs}–${as_}</span>`:'<span class="ti-score">vs</span>';
+    items+=`<span class="ti"><div class="ti-live"></div>${flag(h.team?.displayName)} ${scoreStr} ${flag(a.team?.displayName)} ${h.team?.shortDisplayName||''} vs ${a.team?.shortDisplayName||''} ${min?'· '+min:''}</span>`;
   });
-  el.innerHTML=items+items;
+  if(!items){el.textContent='⚽ World Cup 2026 — Theo dõi kết quả live tại đây';return;}
+  // Repeat enough times so ticker always fills viewport for smooth loop
+  const repeat=Math.max(2, Math.ceil(6/live.length));
+  el.innerHTML=items.repeat(repeat);
 }
 
 // ── LOAD SCHEDULE (fetch next 7 days as separate requests — ESPN doesn't support date ranges) ──
@@ -1337,23 +1342,25 @@ document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',
   document.body.appendChild(ptr);
   let startY=0, pulling=false, triggered=false;
   document.addEventListener('touchstart',e=>{
-    if(window.scrollY===0) startY=e.touches[0].clientY;
+    startY=(window.scrollY===0)?e.touches[0].clientY:0;
+    pulling=false;
   },{passive:true});
   document.addEventListener('touchmove',e=>{
     if(!startY) return;
     const dy=e.touches[0].clientY-startY;
-    if(dy>50&&window.scrollY===0){
+    if(dy>60&&window.scrollY===0){
       pulling=true;
-      if(dy>100&&!triggered){ptr.classList.add('visible');}
+      if(dy>110&&!triggered) ptr.classList.add('visible');
     }
   },{passive:true});
   document.addEventListener('touchend',()=>{
     if(pulling&&ptr.classList.contains('visible')&&!triggered){
       triggered=true;
       loadScores();
-      setTimeout(()=>{ptr.classList.remove('visible');triggered=false;},1200);
+      setTimeout(()=>{ptr.classList.remove('visible');triggered=false;pulling=false;},1200);
+    } else {
+      startY=0;pulling=false;
     }
-    startY=0;pulling=false;
   },{passive:true});
 })();
 
