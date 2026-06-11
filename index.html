@@ -479,9 +479,12 @@ function startCountdown(id, dateStr){
 function statusBadge(status){
   if(!status) return '';
   const s=status.type?.name||'';
-  if(s==='STATUS_IN_PROGRESS'){const min=status.displayClock||'';return `<span class="badge live">🔴 ${min}</span>`;}
+  const min=status.displayClock||'';
+  if(['STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_IN_PROGRESS'].includes(s)) return `<span class="badge live">🔴 ${min}</span>`;
   if(s==='STATUS_HALFTIME') return `<span class="badge ht">⏸ HT</span>`;
-  if(s==='STATUS_FINAL'||s==='STATUS_FULL_TIME') return `<span class="badge ft">✅ FT</span>`;
+  if(['STATUS_EXTRA_TIME','STATUS_OVERTIME'].includes(s)) return `<span class="badge live">🔴 ET ${min}</span>`;
+  if(s==='STATUS_SHOOTOUT') return `<span class="badge live">🔴 PKS</span>`;
+  if(['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'].includes(s)) return `<span class="badge ft">✅ FT</span>`;
   return `<span class="badge ns">${status.type?.description||'Sắp đấu'}</span>`;
 }
 
@@ -760,11 +763,11 @@ function renderMatchCard(event) {
 }
 
 // ── LOAD SCORES ──
-// Date in VN timezone as YYYYMMDD
-function vnDate(offset=0){
+// Date as YYYYMMDD (UTC)
+function utcDate(offset=0){
   const d=new Date();
-  d.setDate(d.getDate()+offset);
-  return d.toLocaleDateString('en-CA',{timeZone:'Asia/Ho_Chi_Minh'}).replace(/-/g,'');
+  d.setUTCDate(d.getUTCDate()+offset);
+  return d.toISOString().slice(0,10).replace(/-/g,'');
 }
 
 async function loadScores() {
@@ -783,7 +786,7 @@ async function loadScores() {
 
   try {
     // Fetch hôm qua + hôm nay + ngày mai (3 request riêng để ESPN API nhận đúng)
-    const dates=[vnDate(-1),vnDate(0),vnDate(1)];
+    const dates=[utcDate(-1),utcDate(0),utcDate(1)];
     const results=await Promise.all(
       dates.map(d=>fetch(`${ESPN_BASE}/scoreboard?limit=50&dates=${d}`).then(r=>r.ok?r.json():{events:[]}).catch(()=>({events:[]})))
     );
@@ -807,8 +810,10 @@ async function loadScores() {
 function renderScores(events) {
   const el=document.getElementById('scores-content');
   if(!events.length){el.innerHTML='<div class="loading">Không có trận đấu hôm nay.</div>';return;}
-  const live=events.filter(e=>['STATUS_IN_PROGRESS','STATUS_HALFTIME'].includes(e.competitions?.[0]?.status?.type?.name));
-  const done=events.filter(e=>['STATUS_FINAL','STATUS_FULL_TIME'].includes(e.competitions?.[0]?.status?.type?.name));
+  const LIVE_STATUSES=['STATUS_IN_PROGRESS','STATUS_HALFTIME','STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_EXTRA_TIME','STATUS_OVERTIME','STATUS_SHOOTOUT'];
+  const DONE_STATUSES=['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'];
+  const live=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+  const done=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
   const up=events.filter(e=>e.competitions?.[0]?.status?.type?.name==='STATUS_SCHEDULED');
   let html='';
   if(live.length){html+='<div class="match-group-label">🔴 Đang diễn ra</div>';live.forEach(e=>html+=renderMatchCard(e));}
