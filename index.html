@@ -561,7 +561,10 @@ function tickLiveClocks(){
     const elapsed=Math.floor((Date.now()-data.startedAt)/1000);
     const total=data.initialSecs+elapsed;
     const mins=Math.floor(total/60), secs=total%60;
-    el.textContent=`${mins}:${String(secs).padStart(2,'0')}`;
+    // Cap display at 90'+x or 120'+x format for stoppage time
+    if(mins>=90&&mins<120) el.textContent=`90'+${mins-90}`;
+    else if(mins>=120) el.textContent=`120'+${mins-120}`;
+    else el.textContent=`${mins}:${String(secs).padStart(2,'0')}`;
   });
 }
 setInterval(tickLiveClocks, 1000);
@@ -1243,6 +1246,7 @@ async function loadSchedule() {
       if(seen.has(e.id)) return false; seen.add(e.id); return true;
     });
     renderSchedule(events);
+    document.getElementById('schedule-content').dataset.loaded='1';
   } catch(e) {
     document.getElementById('schedule-content').innerHTML=`<div class="error-box">⚠️ Không thể tải lịch thi đấu.<br><button onclick="loadSchedule()" style="margin-top:8px;padding:5px 12px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button></div>`;
   }
@@ -1273,6 +1277,7 @@ async function loadGroups() {
     if(!res.ok) throw new Error();
     const data=await res.json();
     renderGroups(data);
+    document.getElementById('groups-content').dataset.loaded='1';
   } catch(e) {
     document.getElementById('groups-content').innerHTML=`
       <div class="error-box">⚠️ Bảng xếp hạng chưa có dữ liệu (giải đấu mới bắt đầu).<br>Quay lại sau khi vòng bảng có kết quả nhé!</div>
@@ -1312,8 +1317,8 @@ function switchTab(name) {
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.tab,.bnav-item').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
   document.getElementById(name)?.classList.add('active');
-  if(name==='schedule'&&document.getElementById('schedule-content').innerHTML.includes('spinner')) loadSchedule();
-  if(name==='groups'&&document.getElementById('groups-content').innerHTML.includes('spinner')) loadGroups();
+  if(name==='schedule'&&!document.getElementById('schedule-content').dataset.loaded) loadSchedule();
+  if(name==='groups'&&!document.getElementById('groups-content').dataset.loaded) loadGroups();
 }
 document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>switchTab(el.dataset.tab)));
 
