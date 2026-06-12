@@ -581,65 +581,156 @@ const TS = {
 };
 const getTS = n => TS[n] || {r:1450,a:6.0,d:6.0,f:'WWDLW'};
 
+// ── FORM HELPERS ──
+function formScore(f) {
+  return (f||'WDWDW').split('').reduce((s,c)=>s+(c==='W'?1:c==='D'?0.5:0),0)/5;
+}
+function formStreak(f) {
+  const arr=(f||'').split('');
+  if(!arr.length) return {type:'',len:0};
+  const last=arr[arr.length-1]; let len=0;
+  for(let i=arr.length-1;i>=0&&arr[i]===last;i--) len++;
+  return {type:last,len};
+}
+function formLabel(f, isStrong) {
+  const s=formStreak(f);
+  if(s.type==='W'&&s.len>=3) return `đang thăng hoa (${s.len} trận thắng liền)`;
+  if(s.type==='W'&&s.len===2) return 'phong độ tốt (2 thắng liên tiếp)';
+  if(s.type==='L'&&s.len>=3) return `đang sa sút (${s.len} trận thua liên tiếp)`;
+  if(s.type==='L'&&s.len===2) return 'phong độ giảm sút (2 thua gần nhất)';
+  if(s.type==='D') return 'phong độ thiếu ổn định (hòa gần nhất)';
+  return isStrong ? 'phong độ ổn định' : 'phong độ trung bình';
+}
+
+// Poisson inverse CDF: given λ and u ∈ [0,1], return k where P(X≤k) ≥ u
+function poissonInvCDF(lambda, u) {
+  const fact=[1,1,2,6,24,120,720,5040,40320];
+  let cdf=0,k=0;
+  while(k<=8){cdf+=Math.exp(-lambda)*Math.pow(lambda,k)/fact[k];if(u<=cdf)return k;k++;}
+  return 8;
+}
+
 // ── AI PREDICTION ENGINE ──
 function predict(homeN, awayN) {
   const h = getTS(homeN), a = getTS(awayN);
-  const diff = (h.r + 42) - a.r; // home advantage ~42 elo
-  const winP = 1 / (1 + Math.pow(10, -diff / 350));
-  const drawP = 0.27 * Math.exp(-Math.pow(diff / 290, 2) * 0.5);
+  const eloDiff = (h.r + 42) - a.r; // home advantage ~42 elo
+  const winP = 1 / (1 + Math.pow(10, -eloDiff / 350));
+  const drawP = 0.27 * Math.exp(-Math.pow(eloDiff / 290, 2) * 0.5);
   let hW = Math.max(5, Math.min(88, Math.round((winP - drawP/2) * 100)));
   let aW = Math.max(5, Math.min(88, Math.round(((1-winP) - drawP/2) * 100)));
   let dr = Math.max(5, Math.min(38, 100 - hW - aW));
   const tot = hW + dr + aW;
   hW = Math.round(hW/tot*100); aW = Math.round(aW/tot*100); dr = 100-hW-aW;
 
-  const hXG = Math.max(0.3, (h.a * 0.5 + (10-a.d)*0.5) / 10 * 3.2);
-  const aXG = Math.max(0.2, (a.a * 0.5 + (10-h.d)*0.5) / 10 * 2.7);
-  // Poisson mode = floor(λ) — most likely number of goals given expected λ
-  const pHome = Math.floor(hXG);
-  const pAway = Math.floor(aXG);
+  const hFm = formScore(h.f), aFm = formScore(a.f);
+  // xG with form modifier: in-form team +0.3 xG, out-of-form -0.3
+  const hXG = Math.max(0.4, (h.a*0.5+(10-a.d)*0.5)/10*3.2 + (hFm-0.6)*0.55);
+  const aXG = Math.max(0.25, (a.a*0.5+(10-h.d)*0.5)/10*2.7 + (aFm-0.6)*0.5);
+
+  // Seeded Poisson sampling: different matchups get different scores via nameHash
+  const u1 = nameHash(homeN + '##gh##' + awayN);
+  const u2 = nameHash(awayN + '##ga##' + homeN);
+  const pHome = poissonInvCDF(hXG, u1);
+  const pAway = poissonInvCDF(aXG, u2);
+
   const totalXG = hXG + aXG;
-  // Poisson P(goals > 2.5) = 1 - P(0) - P(1) - P(2) = 1 - e^-λ*(1 + λ + λ²/2)
-  const over25 = Math.min(88, Math.max(18, Math.round((1 - Math.exp(-totalXG)*(1+totalXG+totalXG*totalXG/2)) * 100)));
-  const btts = Math.min(82, Math.max(12, Math.round((1-Math.exp(-hXG)) * (1-Math.exp(-aXG)) * 100)));
-  // Poisson: P(≥1 goal in 10min) = 1 - e^(-λ*10/90)
-  const next10 = Math.min(42, Math.max(5, Math.round((1 - Math.exp(-totalXG * 10/90)) * 100)));
-  const rdiff = Math.abs(diff);
+  const over25 = Math.min(88, Math.max(18, Math.round((1-Math.exp(-totalXG)*(1+totalXG+totalXG*totalXG/2))*100)));
+  const btts = Math.min(82, Math.max(12, Math.round((1-Math.exp(-hXG))*(1-Math.exp(-aXG))*100)));
+  const next10 = Math.min(42, Math.max(5, Math.round((1-Math.exp(-totalXG*10/90))*100)));
+  const rdiff = Math.abs(eloDiff);
   const confidence = rdiff > 200 ? 'high' : rdiff > 100 ? 'medium' : 'low';
   const confLabel = {high:'Độ tin cao 🟢', medium:'Độ tin TB 🟡', low:'Độ tin thấp 🔴'}[confidence];
-  // Upset: home favorite but not dominant (hW 45-57%) despite 60+ elo advantage
   const isUpset = hW < 58 && hW > 44 && (h.r - a.r) > 60;
   const isHot = h.r > 1700 && a.r > 1680;
   const momentum = Math.round(hW);
   return { hW, dr, aW, hXG: hXG.toFixed(1), aXG: aXG.toFixed(1), pHome, pAway,
            over25, btts, next10, confidence, confLabel, isUpset, isHot, momentum,
-           homeForm: h.f, awayForm: a.f };
+           homeForm: h.f, awayForm: a.f, eloDiff: Math.abs(eloDiff) };
 }
 
 // ── VIETNAMESE AI COMMENTARY ──
 function aiComment(homeN, awayN, p, live=false, hs='', as_='') {
-  const stronger = p.hW > p.aW ? homeN : awayN;
-  const weaker = p.hW > p.aW ? awayN : homeN;
+  const winnerN = p.hW > p.aW ? homeN : p.aW > p.hW ? awayN : null;
+  const loserN  = p.hW > p.aW ? awayN : p.aW > p.hW ? homeN : null;
   const diff = Math.abs(p.hW - p.aW);
   const hShort = homeN.split(' ').pop(), aShort = awayN.split(' ').pop();
+  const wShort = winnerN ? winnerN.split(' ').pop() : hShort;
+  const lShort = loserN  ? loserN.split(' ').pop()  : aShort;
+  const totalXG = (parseFloat(p.hXG)+parseFloat(p.aXG)).toFixed(1);
+  const h1 = getKeyPlayer(homeN,0), a1 = getKeyPlayer(awayN,0);
+  const wXG  = p.hW >= p.aW ? p.hXG : p.aXG;
+  const lXG  = p.hW >= p.aW ? p.aXG : p.hXG;
+  const wForm = p.hW >= p.aW ? p.homeForm : p.awayForm;
+  const lForm = p.hW >= p.aW ? p.awayForm : p.homeForm;
+  const wFmLbl = formLabel(wForm, true);
+  const lFmLbl = formLabel(lForm, false);
 
-  // Live-score-aware commentary
+  // Seed: same matchup always gets same template index → consistent per match, varied across matches
+  const seed = Math.floor(nameHash(homeN+'|'+awayN+'|cmt')*9973) % 9973;
+  const pick = arr => arr[seed % arr.length];
+
+  // ── Live-aware commentary ──
   if(live && hs !== '' && as_ !== '') {
-    const hScore = parseInt(hs)||0, aScore = parseInt(as_)||0;
+    const hS=parseInt(hs)||0, aS=parseInt(as_)||0, tot=hS+aS;
     const predHome = p.hW > p.aW;
-    if(hScore > aScore && !predHome) return `😱 <strong>BẤT NGỜ ĐANG XẢY RA!</strong> ${hShort} đang dẫn ${hs}-${as_} dù AI dự đoán ${aShort} thắng. Liệu họ có giữ được không?`;
-    if(aScore > hScore && predHome) return `🚨 <strong>${aShort} đang tạo cú sốc!</strong> AI đã dự đoán ${hShort} thắng nhưng ${aShort} đang dẫn ${hs}-${as_}. Trận đấu hoàn toàn lật ngược!`;
-    if(hScore > 0 || aScore > 0) {
-      const total=hScore+aScore;
-      if(total>=3) return `⚡ Tỷ số ${hs}-${as_} — trận đấu đang rất căng thẳng! AI dự đoán ${p.pHome}-${p.pAway}. Còn nhiều bàn thắng có thể xảy ra với xG ${p.hXG}-${p.aXG}.`;
-    }
+    if(hS > aS && !predHome) return `😱 <strong>BẤT NGỜ ĐANG XẢY RA!</strong> ${hShort} đang dẫn ${hs}-${as_} dù AI đặt cửa ${aShort}. Khoảng cách ELO ${p.eloDiff} điểm đang bị xóa bỏ hoàn toàn!`;
+    if(aS > hS && predHome) return `🚨 <strong>${aShort} đang tạo cú sốc lịch sử!</strong> AI đặt ${hShort} thắng ${p.hW}% nhưng tỷ số nói điều ngược lại. Trận đấu hoàn toàn lật ngược!`;
+    if(tot>=4) return `⚡ ${hs}-${as_} — đây là trận đấu điên rồ nhất vòng này! AI dự báo xG tổng ${totalXG} nhưng thực tế đang vượt xa. Ai ghi tiếp sẽ định đoạt.`;
+    if(tot>=2) return `🔥 Tỷ số ${hs}-${as_} đang diễn ra đúng kịch bản Over (xG ${p.hXG}-${p.aXG}). Còn 45+ phút, bàn thắng thứ ${tot+1} hoàn toàn trong tầm tay.`;
+    if(tot===1) return `⏱ Bàn thắng đầu tiên đã đến (${hs}-${as_}). AI dự báo ${p.pHome}-${p.pAway} — ${winnerN ? wShort+' vẫn đang kiểm soát kịch bản' : 'mọi thứ vẫn còn mở'}.`;
+    return `⏱ Tỷ số vẫn ${hs}-${as_} — đúng kịch bản "chậm nổ" mà AI dự báo. ${wShort} đang giữ thế trận với xG ${wXG}.`;
   }
 
-  if (p.isUpset) return `🚨 Cảnh báo bất ngờ! ${weaker} đang trong phong độ tốt và có ${p.aW}% cơ hội tạo ra kết quả bất ngờ trước ${homeN}. Đừng chủ quan!`;
-  if (diff > 40) return `${stronger} là ứng cử viên nặng ký với ưu thế vượt trội. Dự đoán tỷ số ${p.pHome}-${p.pAway}, xG: ${p.hXG}-${p.aXG}. Kết quả gần như đã được định sẵn.`;
-  if (diff < 12) return `⚖️ Trận đấu cực kỳ cân bằng! Cả ${homeN} và ${awayN} đều có cơ hội như nhau. Tỷ số hòa ${p.dr}% là kịch bản hoàn toàn có thể xảy ra.`;
-  if (p.over25 > 70) return `🔥 Trận đấu hứa hẹn mãn nhãn với ${p.over25}% khả năng trên 2.5 bàn. Cả hai đội có lối chơi tấn công, xG tổng ${(parseFloat(p.hXG)+parseFloat(p.aXG)).toFixed(1)}.`;
-  return `${stronger} được đánh giá cao hơn với ${p.hW > p.aW ? p.hW : p.aW}% cơ hội thắng. xG dự đoán ${p.hXG}-${p.aXG}. Theo dõi sát phong độ 5 trận gần nhất của hai đội.`;
+  // ── Upset alert ──
+  if(p.isUpset) return pick([
+    `🚨 <strong>Cảnh báo UPSET!</strong> ${lShort} có đến <strong>${p.aW >= p.hW ? p.aW : p.hW - (p.hW-p.aW)}%</strong> cơ hội gây sốc dù kém ELO ${p.eloDiff} điểm. Lịch sử World Cup đầy những "Cameroon 1990" hay "Nhật Bản 2022" — hãy cẩn thận với cửa dưới.`,
+    `⚠️ ${wShort} là favorite nhưng biên độ quá hẹp. ${lFmLbl === 'phong độ thiếu ổn định (hòa gần nhất)' ? lShort+' đang bất ổn' : lShort+' '+lFmLbl} có thể là yếu tố thay đổi cuộc chơi. Kèo chấp nên cân nhắc kỹ.`,
+    `🎲 Mô hình cảnh báo rủi ro cao cho trận này. ${wShort} chỉ nhỉnh hơn ${diff}% — trong bóng đá, khoảng cách đó có thể bị xóa bỏ bởi một pha phạt đền hay một cú sút xa bất ngờ.`,
+  ]);
+
+  // ── Dominant favorite ──
+  if(diff > 38) return pick([
+    `${wShort} vượt trội toàn diện về mọi chỉ số: ELO +${p.eloDiff}, xG ${wXG} vs ${lXG}, ${wFmLbl}. Dự đoán ${p.pHome}-${p.pAway} — kết quả gần như đã được định đoạt trước khi trận bắt đầu.`,
+    `Cách biệt ELO ${p.eloDiff} điểm là thứ khó san phẳng trong 90 phút. ${wShort} (xG ${wXG}) có hàng công mạnh gấp đôi hàng thủ của ${lShort}. Nếu có bất ngờ, đó sẽ là tin tức lớn của giải.`,
+    `${p.hW > p.aW ? p.hW : p.aW}% — đây là tỷ lệ rất cao trong bóng đá, cho thấy ưu thế gần như tuyệt đối. ${wShort} trong thế ${wFmLbl}, còn ${lShort} ${lFmLbl}. Chỉ cần không bị sa sút tâm lý.`,
+    `Phân tích thẳng thắn: ${lShort} đến đây để học hỏi chứ chưa đủ sức cạnh tranh. xG ${lXG} quá thấp để đe dọa ${wShort}. Hãy tận hưởng những pha bóng đẹp từ đội mạnh hơn.`,
+  ]);
+
+  // ── Very tight / coin flip ──
+  if(diff < 10) return pick([
+    `⚖️ Trận cầu không thể dự đoán — ${p.hW}% vs ${p.aW}%, cách biệt ELO chỉ ${p.eloDiff} điểm. xG ${p.hXG} vs ${p.aXG} cũng không phân định. Hòa ${p.dr}% là kết quả hợp lý nhất khi hai đội thực sự "đồng cân đồng lạng".`,
+    `AI "bó tay" với trận này — mọi chỉ số từ ELO, xG đến form đều không cho thấy ưu thế rõ ràng. Người chơi kèo khôn ngoan sẽ nhắm vào Over/Under hoặc BTTS ${p.btts}% thay vì đặt cược kết quả.`,
+    `Khi ${p.hW}% đấu với ${p.aW}%, mọi dự đoán đều có thể sai. Trận này sẽ được định đoạt bởi set-piece, tình huống cố định, hay sai lầm cá nhân — chứ không phải chiến thuật. Đây là World Cup!`,
+    `Hiếm khi thấy hai đội cân bằng đến thế này trên bảng số liệu. ${h1} và ${a1} là hai nhân tố có thể tạo khác biệt — trận đấu của những ngôi sao cá nhân hơn là chiến lược tập thể.`,
+  ]);
+
+  // ── High scoring ──
+  if(p.over25 > 70) return pick([
+    `🔥 Đêm bàn thắng đang đến! Tổng xG ${totalXG} và Over 2.5 chiếm <strong>${p.over25}%</strong> theo phân phối Poisson. BTTS ${p.btts}% — cả hai khung thành đều trong tầm ngắm. Đây là trận để tận hưởng.`,
+    `Hai hàng công đang cực kỳ sắc bén: ${hShort} xG ${p.hXG}, ${aShort} xG ${p.aXG}. Mô hình dự báo <strong>Over 2.5 bàn ${p.over25}%</strong> — tức là trong 3 trận như vậy, 2 trận sẽ có ít nhất 3 bàn.`,
+    `BTTS ${p.btts}% + Over 2.5 ${p.over25}% — combo hấp dẫn nhất hôm nay. ${wShort} sẽ tấn công, ${lShort} sẽ phản công, và khán giả sẽ được hưởng lợi. Kịch bản dự đoán: ${p.pHome}-${p.pAway}.`,
+  ]);
+
+  // ── Low scoring / defensive ──
+  if(p.over25 < 38) return pick([
+    `Trận cầu thiên về chiến thuật — Xỉu 2.5 được mô hình ủng hộ (<strong>${100-p.over25}%</strong>). Tổng xG chỉ ${totalXG} phản ánh lối chơi thực dụng của cả hai. Ai ghi bàn trước, đội đó gần như thắng.`,
+    `Đây là trận "chess match" hơn là "street football". xG ${p.hXG} vs ${p.aXG} — hai hàng thủ sẽ thống trị. Bàn thắng nếu có sẽ đến từ pha đá phạt cố định, không phải từ lối chơi tấn công.`,
+    `Over 2.5 chỉ ${p.over25}% — con số thấp hiếm thấy. Trận này sẽ nghiêng về phía ai ghi bàn đầu tiên và giữ chắc sau đó. Dự đoán ${p.pHome}-${p.pAway} là kịch bản an toàn nhất.`,
+  ]);
+
+  // ── BTTS highlight ──
+  if(p.btts > 63) return pick([
+    `Cả hai đội đều nguy hiểm trước khung thành đối phương — BTTS <strong>${p.btts}%</strong>! ${hShort} xG ${p.hXG} và ${aShort} xG ${p.aXG} cho thấy không ai chịu ngồi yên phòng thủ. Trận đấu sẽ cởi mở từ đầu.`,
+    `BTTS ${p.btts}% là con số hấp dẫn — nghĩa là cả hai đội đều có cơ hội ghi bàn rất cao. ${wShort} sẽ dẫn điểm nhưng ${lShort} (xG ${lXG}) đủ sức phản công hiệu quả.`,
+  ]);
+
+  // ── Default: moderate advantage ──
+  return pick([
+    `${wShort} nhỉnh hơn với <strong>${p.hW > p.aW ? p.hW : p.aW}%</strong> win rate và xG ${wXG} — ưu thế rõ nhưng chưa áp đảo. ${wFmLbl} là tín hiệu tốt. Kèo chấp ${p.hW > p.aW ? '0/0.5' : '0/0.5'} hợp lý.`,
+    `ELO chênh lệch ${p.eloDiff} điểm — đủ để ${wShort} là favorit nhưng không phải "mồi ngon". ${lShort} đang ${lFmLbl} và hoàn toàn có thể cầm hòa nếu phòng thủ tốt. Dự đoán ${p.pHome}-${p.pAway}.`,
+    `Mô hình: ${wShort} ${p.hW > p.aW ? p.hW : p.aW}% · Hòa ${p.dr}% · ${lShort} ${p.hW > p.aW ? p.aW : p.hW}%. Trận này phụ thuộc nhiều vào phong độ cá nhân của ${p.hW>p.aW?h1:a1} — khi ngôi sao nổ, mọi tính toán đều thay đổi.`,
+    `${wFmLbl === 'phong độ ổn định' ? wShort+' vào trận với sự ổn định đáng tin' : wShort+' '+wFmLbl}. Còn ${lShort} ${lFmLbl}. xG ${p.hXG}-${p.aXG} dự báo trận đấu có bàn thắng ở cả hai phía — BTTS ${p.btts}% đáng chú ý.`,
+  ]);
 }
 
 // ── REACTIONS ──
@@ -1161,22 +1252,64 @@ function aiPickChipHTML(homeN, awayN, p, o) {
 
 function quickVerdictHTML(homeN, awayN, p, o) {
   const winner = p.hW > p.aW ? homeN : p.aW > p.hW ? awayN : null;
-  const hShort = homeN.split(' ').pop();
-  const aShort = awayN.split(' ').pop();
-  const h1 = getKeyPlayer(homeN, 0), h2 = getKeyPlayer(homeN, 1);
-  const a1 = getKeyPlayer(awayN, 0);
+  const loser  = p.hW > p.aW ? awayN : p.aW > p.hW ? homeN : null;
+  const hShort = homeN.split(' ').pop(), aShort = awayN.split(' ').pop();
+  const wShort = winner ? winner.split(' ').pop() : hShort;
+  const lShort = loser  ? loser.split(' ').pop()  : aShort;
+  const h1=getKeyPlayer(homeN,0), h2=getKeyPlayer(homeN,1);
+  const a1=getKeyPlayer(awayN,0), a2=getKeyPlayer(awayN,1);
+  const wStar = p.hW >= p.aW ? h1 : a1;
+  const lStar = p.hW >= p.aW ? a1 : h1;
+  const wForm = p.hW >= p.aW ? p.homeForm : p.awayForm;
+  const lForm = p.hW >= p.aW ? p.awayForm : p.homeForm;
+  const wFmLbl = formLabel(wForm, true);
+  const lFmLbl = formLabel(lForm, false);
+  const seed = Math.floor(nameHash(homeN+'|'+awayN+'|vrd')*7919) % 7919;
+  const pick = arr => arr[seed % arr.length];
+  const diff = Math.abs(p.hW - p.aW);
+  const ouLabel = parseFloat(o.tOdds||'2') < parseFloat(o.xOdds||'2') ? `Tài ${o.ouLine}` : `Xỉu ${o.ouLine}`;
 
   let verdict;
   if(p.isUpset) {
-    verdict = `🚨 <strong>${aShort}</strong> đang trong phong độ bùng nổ — cú sốc hoàn toàn có thể xảy ra. Theo dõi sát <strong>${a1}</strong>.`;
+    verdict = pick([
+      `🚨 Cảnh báo UPSET! <strong>${lShort}</strong> đang ${lFmLbl} — đội này có thể gây sốc hôm nay. Theo dõi sát <strong>${lStar}</strong>, cầu thủ có thể tạo khác biệt bất ngờ.`,
+      `⚠️ <strong>${wShort}</strong> là cửa trên nhưng biên độ quá hẹp (chênh ${diff}%). <strong>${lStar}</strong> của ${lShort} đang trong ${lFmLbl} — đủ để đảo lộn mọi dự đoán.`,
+      `🎲 Đây là trận AI "không dám chắc" — ${wShort} ${p.hW > p.aW ? p.hW : p.aW}% không đủ áp đảo. Cú phạt đền, thẻ đỏ hay sai lầm thủ môn là thứ quyết định ở những trận như vậy.`,
+    ]);
   } else if(!winner) {
-    verdict = `⚖️ Hai đội <strong>${hShort}</strong> và <strong>${aShort}</strong> cân bằng hoàn toàn. Tỷ lệ hòa ${p.dr}% — trận đấu khó đoán với vai trò chủ chốt của <strong>${h1}</strong> và <strong>${a1}</strong>.`;
+    verdict = pick([
+      `⚖️ Cân bằng tuyệt đối — <strong>${hShort}</strong> và <strong>${aShort}</strong> chia đều mọi chỉ số. Kịch bản hòa ${p.dr}% không phải ngẫu nhiên. <strong>${h1}</strong> vs <strong>${a1}</strong> sẽ là trận đấu trong trận đấu.`,
+      `🤝 AI không dám đặt cửa nào trong trận này — ${p.hW}% vs ${p.aW}% là sự cân bằng hiếm thấy. Over/Under ${ouLabel} là lựa chọn thông minh hơn khi kết quả quá khó đoán.`,
+      `📊 Khi ELO ngang nhau và form tương đồng, bàn thắng đầu tiên sẽ quyết định tất cả. <strong>${h1}</strong> và <strong>${a1}</strong> — ai ghi trước sẽ thắng tâm lý.`,
+    ]);
+  } else if(diff > 35) {
+    verdict = pick([
+      `✅ <strong>${wShort}</strong> áp đảo trên bảng số — ${p.hW > p.aW ? p.hW : p.aW}% win rate, xG ${p.hW >= p.aW ? p.hXG : p.aXG}, ELO +${p.eloDiff}. Nếu <strong>${wStar}</strong> vào phong độ tốt, đây là trận thắng cần thiết để mở màn.`,
+      `🏆 <strong>${wShort}</strong> mạnh hơn toàn diện — không cần bàn luận nhiều. <strong>${wStar}</strong> và <strong>${p.hW >= p.aW ? h2 : a2}</strong> là cặp đôi nguy hiểm nhất trận. Dự đoán ${p.pHome}-${p.pAway}.`,
+      `💪 <strong>${wShort}</strong> trong ${wFmLbl} — đây là lúc để khẳng định đẳng cấp. ${lShort} cần phép màu. Kèo chấp ${o.hcDisplay} hoàn toàn phù hợp với thực lực.`,
+    ]);
   } else if(p.over25 > 68) {
-    verdict = `🔥 <strong>${winner.split(' ').pop()}</strong> được nhận định thắng trong trận cầu nhiều bàn thắng (${p.over25}% Over ${o.ouLine}). Cặp <strong>${h1}</strong> – <strong>${a1}</strong> sẽ quyết định.`;
+    verdict = pick([
+      `🔥 <strong>${wShort}</strong> thắng trong trận cầu mãn nhãn — Over ${o.ouLine} ${p.over25}% được mô hình ủng hộ mạnh. <strong>${h1}</strong> và <strong>${a1}</strong> đều đủ nguy hiểm để ghi bàn. BTTS ${p.btts}%.`,
+      `⚡ Đây là trận để xem, không phải để tính toán — tổng xG ${(parseFloat(p.hXG)+parseFloat(p.aXG)).toFixed(1)} hứa hẹn nhiều bàn thắng. <strong>${wShort}</strong> sẽ thắng nhưng con đường đến đó không bằng phẳng.`,
+      `🎯 <strong>${wShort}</strong> tấn công mạnh (xG ${p.hW>=p.aW?p.hXG:p.aXG}) và ${lShort} cũng không phòng thủ thuần túy (xG ${p.hW>=p.aW?p.aXG:p.hXG}). Over ${o.ouLine} là lựa chọn khôn ngoan hôm nay.`,
+    ]);
+  } else if(p.over25 < 38) {
+    verdict = pick([
+      `🛡️ <strong>${wShort}</strong> thắng trong trận đấu kiên nhẫn — Xỉu ${o.ouLine} (${100-p.over25}%) là kịch bản AI ủng hộ. Set-piece và sai lầm cá nhân sẽ quyết định, không phải lối chơi tấn công.`,
+      `📉 Trận "thực dụng" — xG thấp, hai hàng thủ sẽ kiểm soát. <strong>${wStar}</strong> cần thêm hiệu suất để phá vỡ thế cân bằng. Ai ghi bàn trước, đội đó thắng 3 điểm.`,
+    ]);
   } else if(p.confidence === 'high') {
-    verdict = `✅ <strong>${winner.split(' ').pop()}</strong> vượt trội rõ ràng — dự đoán thắng ${p.hW > p.aW ? p.hW : p.aW}%. Ngôi sao <strong>${p.hW > p.aW ? h1 : a1}</strong> là nhân tố then chốt.`;
+    verdict = pick([
+      `✅ Độ tin cao — <strong>${wShort}</strong> vượt trội và ổn định (${wFmLbl}). <strong>${wStar}</strong> là chìa khóa mở khoá hàng thủ ${lShort}. Kèo ${o.hcDisplay} phản ánh đúng thực lực.`,
+      `📌 <strong>${wShort}</strong> là lựa chọn an toàn nhất hôm nay: ELO cao hơn, form tốt hơn, xG ${p.hW>=p.aW?p.hXG:p.aXG} vs ${p.hW>=p.aW?p.aXG:p.hXG}. Dự đoán ${p.pHome}-${p.pAway} với độ tin cao.`,
+    ]);
   } else {
-    verdict = `📊 <strong>${winner.split(' ').pop()}</strong> nhỉnh hơn nhưng chưa áp đảo. Phong độ gần đây của <strong>${h1}</strong> là yếu tố quyết định. Kèo ${o.hcDisplay} hợp lý.`;
+    verdict = pick([
+      `📊 <strong>${wShort}</strong> nhỉnh hơn nhưng chưa áp đảo (${diff}% cách biệt). <strong>${wStar}</strong> cần vào phong độ tốt. Kèo ${o.hcDisplay} hợp lý — ${lShort} ${lFmLbl}, đừng coi thường.`,
+      `🔍 Mô hình: <strong>${wShort}</strong> ${p.hW>p.aW?p.hW:p.aW}% · Hòa ${p.dr}% · <strong>${lShort}</strong> ${p.hW>p.aW?p.aW:p.hW}%. Trận cân sức — <strong>${wStar}</strong> và <strong>${lStar}</strong> là hai nhân tố quyết định. Theo dõi hiệp 1.`,
+      `⚡ <strong>${wShort}</strong> nhỉnh hơn về ELO (+${p.eloDiff}) và đang ${wFmLbl}. Tuy nhiên ${lShort} ${lFmLbl} — đừng bỏ qua khả năng bất ngờ. Phân tích: Tài/Xỉu ${ouLabel} có giá trị hơn cửa 1x2.`,
+    ]);
   }
   return `<div class="quick-verdict">${verdict}</div>`;
 }
