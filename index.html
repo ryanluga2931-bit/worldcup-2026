@@ -429,6 +429,30 @@ main{-webkit-overflow-scrolling:touch}
 
 @media(max-width:600px){header{padding:32px 13px 18px}.tab-bar{display:none}.bottom-nav{display:block}.team-flag{font-size:28px}.score{font-size:28px}main{padding:0 9px 88px}}
 @media(min-width:601px){.bottom-nav{display:none}}
+
+/* FEATURED HERO — top live match spotlight */
+#featured-hero{display:none}
+.fh-outer{padding:0 13px 10px;max-width:706px;margin:0 auto}
+.fh-wrap{background:linear-gradient(135deg,rgba(239,68,68,0.13) 0%,rgba(17,24,39,0.96) 60%,rgba(59,130,246,0.08) 100%);border:1px solid rgba(239,68,68,0.38);border-radius:var(--radius);padding:13px 18px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .2s}
+.fh-wrap:hover{border-color:rgba(239,68,68,0.6)}
+.fh-wrap::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(239,68,68,0.05),transparent);animation:featuredSlide 3s ease-in-out infinite;pointer-events:none}
+.fh-label{font-size:9px;font-weight:800;letter-spacing:1.5px;color:var(--live);text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.fh-teams{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:4px}
+.fh-team{font-size:14px;font-weight:800;color:var(--text)}
+.fh-score{font-size:28px;font-weight:900;color:var(--text);letter-spacing:4px;min-width:70px;text-align:center}
+.fh-stage{font-size:10px;color:var(--text2);text-align:center;margin-top:2px;font-weight:600}
+.fh-heat{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:100px;font-size:9px;font-weight:800}
+.fh-heat.critical{background:rgba(239,68,68,.22);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.fh-heat.high{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.32)}
+/* Stage badges on cards */
+.badge.stage{text-transform:uppercase;letter-spacing:.5px}
+.badge.stage-final{background:rgba(245,158,11,.18);color:var(--accent);border:1px solid rgba(245,158,11,.42)}
+.badge.stage-semi{background:rgba(139,92,246,.14);color:#c4b5fd;border:1px solid rgba(139,92,246,.32)}
+.badge.stage-qf{background:rgba(59,130,246,.12);color:#93c5fd;border:1px solid rgba(59,130,246,.28)}
+.badge.stage-r16{background:rgba(100,116,139,.1);color:var(--text2);border:1px solid var(--border2)}
+.badge.stage-group{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border)}
+/* Touch active state */
+.match-card:active{transform:translateY(0) scale(0.988);transition:transform .07s}
 </style>
 </head>
 <body>
@@ -447,6 +471,9 @@ main{-webkit-overflow-scrolling:touch}
   <p>🇺🇸 USA &nbsp;·&nbsp; 🇨🇦 Canada &nbsp;·&nbsp; 🇲🇽 Mexico &nbsp;&nbsp;|&nbsp;&nbsp; 48 đội · 104 trận</p>
   <span id="last-update">Đang tải...</span>
 </header>
+
+<!-- FEATURED LIVE MATCH HERO (populated by renderLive) -->
+<div id="featured-hero"></div>
 
 <!-- DESKTOP TABS -->
 <div class="tab-bar">
@@ -1496,6 +1523,19 @@ function animateScoreEl(mid) {
   setTimeout(()=>document.querySelector(`#mc_${mid} .score-box`)?.classList.remove('goal-flash'),1000);
 }
 
+// Parse ESPN round/group note into a clean display label
+function parseStageLabel(raw) {
+  if(!raw) return '';
+  const r = raw.toLowerCase();
+  if(r.includes('final')&&!r.includes('semi')&&!r.includes('quarter')&&!r.includes('round of')) return '🏆 CHUNG KẾT';
+  if(r.includes('semifinal')||r.includes('semi-final')||(r.includes('semi')&&r.includes('final'))) return '⚡ BÁN KẾT';
+  if(r.includes('quarterfinal')||r.includes('quarter-final')||(r.includes('quarter')&&r.includes('final'))) return '🎯 TỨ KẾT';
+  if(r.includes('round of 16')||r.includes('round of sixteen')) return '🎯 VÒNG 16';
+  const gm = raw.match(/Group [A-L]/i);
+  if(gm) return gm[0];
+  return raw.slice(0,20);
+}
+
 // Calculate live intensity level from match state
 function calcIntensity(clockStr, homeScore, awayScore, sName) {
   const mins = parseInt(clockStr) || 0;
@@ -1701,7 +1741,16 @@ function renderMatchCard(event) {
   const venue = comp.venue?.fullName||'';
   // Tournament round / group label from ESPN
   const groupName = event.season?.slug || comp.groups?.[0]?.name || comp.notes?.[0]?.headline || '';
-  const roundLabel = groupName.replace(/^.*(group [a-z]|round of|quarter|semi|final)/i, m => m).slice(0,22);
+  const stageLabel = parseStageLabel(groupName);
+  // Stage tier for badge color
+  const gn = groupName.toLowerCase();
+  let stageTier = '';
+  if(gn.includes('final')&&!gn.includes('semi')&&!gn.includes('quarter')&&!gn.includes('round of')) stageTier='final';
+  else if(gn.includes('semifinal')||gn.includes('semi-final')||(gn.includes('semi')&&gn.includes('final'))) stageTier='semi';
+  else if(gn.includes('quarterfinal')||gn.includes('quarter-final')||(gn.includes('quarter')&&gn.includes('final'))) stageTier='qf';
+  else if(gn.includes('round of 16')||gn.includes('round of sixteen')) stageTier='r16';
+  else if(gn.match(/group [a-l]/i)) stageTier='group';
+  const stageBadgeHTML = stageTier ? `<span class="badge stage stage-${stageTier}">${stageLabel||groupName.slice(0,14)}</span>` : '';
   const p = predict(homeN, awayN);
 
   // Hot match badge
@@ -1744,6 +1793,8 @@ function renderMatchCard(event) {
   const featuredStrip = (intensity==='critical'||intensity==='high') ? '<div class="featured-strip"></div>' : '';
   // Urgency: late game close matches — clock blinks
   const isUrgent = intensity==='critical';
+  // Heat badge — surface intensity level as visible text badge
+  const heatBadge = live && intensity ? `<span class="fh-heat ${intensity}" style="padding:2px 7px;font-size:9px">${intensity==='critical'?'🔥 CRITICAL':'⚡ HOT'}</span>` : '';
 
   // Odds table (kèo chấp + tài xỉu + 1x2)
   const o = calcAsianOdds(homeN, awayN, p);
@@ -1764,8 +1815,8 @@ function renderMatchCard(event) {
   <div class="${cardClass}" id="mc_${mid}">
     ${featuredStrip}
     <div class="card-top">
-      <span class="match-time">${timeVN(event.date)}${roundLabel?` · <span style="font-size:9px;color:var(--muted);font-weight:700">${roundLabel}</span>`:''}</span>
-      <div class="card-badges">${statusBadge(status,mid,isUrgent)}${hotBadge}${upsetBadge}</div>
+      <span class="match-time">${timeVN(event.date)}${stageLabel?` · <span style="font-size:9px;color:var(--muted);font-weight:700">${stageLabel}</span>`:''}</span>
+      <div class="card-badges">${statusBadge(status,mid,isUrgent)}${heatBadge}${hotBadge}${upsetBadge}${stageBadgeHTML}</div>
     </div>
     <div class="match-body">
       <div class="match-teams">
@@ -1927,6 +1978,8 @@ function renderLive(events) {
     }
     el.innerHTML=`<div class="loading" style="padding:44px 20px">😴 Hiện không có trận nào đang diễn ra.${nextMatchHTML}<span style="font-size:12px;margin-top:12px;display:block;color:var(--muted)">Kiểm tra tab <strong>Lịch thi đấu</strong> để xem toàn bộ lịch.</span></div>`;
     restoreOpenPanels(openPanels,'live-content');
+    const heroEl2=document.getElementById('featured-hero');
+    if(heroEl2) heroEl2.style.display='none';
     document.title='⚽ World Cup 2026 Live';
     document.querySelectorAll('[data-tab="live"]').forEach(t=>{
       t.innerHTML=t.classList.contains('bnav-item')
@@ -1963,6 +2016,42 @@ function renderLive(events) {
       ? `<span class="bnav-icon">🔴</span>Live<sup style="font-size:9px;color:#ef4444;font-weight:800;margin-left:2px">${liveEvents.length}</sup>`
       : `🔴 Live <sup style="font-size:9px;color:#ef4444;font-weight:800;vertical-align:top;margin-top:2px">${liveEvents.length}</sup>`;
   });
+  // Featured hero: spotlight the most intense live match above tabs
+  const heroEl = document.getElementById('featured-hero');
+  if(heroEl) {
+    const heroEv = liveEvents.reduce((best, e) => {
+      const comp2 = e.competitions?.[0];
+      const sN2 = comp2?.status?.type?.name||'';
+      const clk2 = comp2?.status?.displayClock||'';
+      const hc = comp2?.competitors?.find(c=>c.homeAway==='home');
+      const ac = comp2?.competitors?.find(c=>c.homeAway==='away');
+      const intens = calcIntensity(clk2, hc?.score||0, ac?.score||0, sN2);
+      const tier = intens==='critical'?3:intens==='high'?2:1;
+      return tier>(best.tier||0)?{e, tier}:best;
+    }, {}).e || liveEvents[0];
+    const hComp = heroEv.competitions?.[0];
+    const hHome = hComp?.competitors?.find(c=>c.homeAway==='home');
+    const hAway = hComp?.competitors?.find(c=>c.homeAway==='away');
+    const hN = hHome?.team?.displayName||'';
+    const aN = hAway?.team?.displayName||'';
+    const hClk = hComp?.status?.displayClock||'';
+    const hSN = hComp?.status?.type?.name||'';
+    const hIntens = calcIntensity(hClk, hHome?.score||0, hAway?.score||0, hSN);
+    const heatPill = hIntens?`<span class="fh-heat ${hIntens}">${hIntens==='critical'?'🔥 CRITICAL':'⚡ HOT'}</span>`:'';
+    const hGroup = heroEv.season?.slug||hComp?.groups?.[0]?.name||hComp?.notes?.[0]?.headline||'';
+    const hStage = parseStageLabel(hGroup)||'FIFA World Cup 2026';
+    const hMid = heroEv.id;
+    heroEl.innerHTML = `<div class="fh-outer"><div class="fh-wrap" onclick="switchTab('live');setTimeout(()=>document.getElementById('mc_${hMid}')?.scrollIntoView({behavior:'smooth'}),120)">
+      <div class="fh-label"><span class="live-dot" style="width:5px;height:5px;flex-shrink:0"></span>ĐANG PHÁT SÓNG ${heatPill}</div>
+      <div class="fh-teams">
+        <div class="fh-team">${flag(hN)} ${hN.split(' ').pop()}</div>
+        <div class="fh-score">${hHome?.score??'0'} – ${hAway?.score??'0'}</div>
+        <div class="fh-team">${flag(aN)} ${aN.split(' ').pop()}</div>
+      </div>
+      <div class="fh-stage">${hStage}</div>
+    </div></div>`;
+    heroEl.style.display='block';
+  }
   return anyGoal;
 }
 
@@ -2159,7 +2248,7 @@ document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',
 // ── VISIBILITY: pause refresh when tab hidden, resume on show ──
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){ clearTimeout(refreshTimer); if(_refreshCountdownTimer) clearInterval(_refreshCountdownTimer); }
-  else { loadScores(); }
+  else { _isLoading=false; loadScores(); } // reset guard in case fetch was in-flight when backgrounded
 });
 
 // ── INIT ──
