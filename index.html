@@ -1163,7 +1163,10 @@ function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p) {
     const typeText = (d.type?.text || d.type?.name || '').toLowerCase();
     const isGoal = typeText.includes('goal') || d.scoringPlay === true;
     if(!isGoal) return;
-    const min = d.clock?.displayValue || d.clock?.value ? `${Math.round(d.clock?.value||0)}'` : '';
+    // clock.value is seconds from ESPN; displayValue is "MM:SS" — prefer displayValue truncated
+    const min = d.clock?.displayValue
+      ? `${d.clock.displayValue.split(':')[0]}'`
+      : d.clock?.value ? `${Math.round((d.clock.value)/60)}'` : '';
     const player = d.athletesInvolved?.[0]?.shortName || d.athletesInvolved?.[0]?.displayName || '';
     const isOG = typeText.includes('own');
     const isPen = typeText.includes('penalty') || typeText.includes('pen');
