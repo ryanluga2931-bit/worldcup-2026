@@ -881,89 +881,95 @@ function nameHash(s) {
 }
 
 function calcAsianOdds(homeN, awayN, p) {
-  const seed = nameHash(homeN + awayN);
-
-  // ── Handicap: driven by predicted score diff, refined by xG margin ──
   const hXGf = parseFloat(p.hXG), aXGf = parseFloat(p.aXG);
-  const xgDiff = hXGf - aXGf;
-  const scoreDiff = p.pHome - p.pAway; // integer, from Poisson prediction
-  const homeFav = scoreDiff > 0 || (scoreDiff === 0 && xgDiff > 0);
-  const absXGDiff = Math.abs(xgDiff);
-  const absScore = Math.abs(scoreDiff);
+  const hW = p.hW, aW = p.aW;
+  const totalXG = hXGf + aXGf;
 
-  // Handicap maps to "how many goals the stronger team gives"
+  // Poisson helpers
+  const fact=[1,1,2,6,24,120,720,5040,40320];
+  const pPoi=(l,k)=>k<=8?Math.exp(-l)*Math.pow(l,k)/fact[k]:0;
+  // P(home goals - away goals >= d) via joint Poisson
+  const pDiffGte=(hL,aL,d)=>{let r=0;for(let h=0;h<=8;h++)for(let a=0;a<=8;a++)if(h-a>=d)r+=pPoi(hL,h)*pPoi(aL,a);return r;};
+  const poissonCDF=(lam,k)=>{let s=0,t=Math.exp(-lam);for(let i=0;i<=k;i++){s+=t;t*=lam/(i+1);}return s;};
+
+  // Favorite based on win probability (more accurate than score diff)
+  const homeFav = hW >= aW;
+  const winDiff = Math.abs(hW - aW);
+  const fL = homeFav ? hXGf : aXGf; // favorite's xG lambda
+  const uL = homeFav ? aXGf : hXGf; // underdog's xG lambda
+
+  // Handicap line determined by win% gap (calibrated to real bookmaker lines)
   let hcLabel;
-  if(absScore === 0 && absXGDiff < 0.25)       hcLabel = '0';
-  else if(absScore === 0 && absXGDiff < 0.55)  hcLabel = '0/0.5';
-  else if(absScore === 0)                       hcLabel = '0.5';
-  else if(absScore === 1 && absXGDiff < 0.8)   hcLabel = '0.5';
-  else if(absScore === 1)                       hcLabel = '0.5/1';
-  else if(absScore === 2 && absXGDiff < 1.5)   hcLabel = '1';
-  else if(absScore === 2)                       hcLabel = '1/1.5';
-  else if(absScore === 3)                       hcLabel = '1.5/2';
-  else                                          hcLabel = '2';
+  if(winDiff < 8)        hcLabel = '0';
+  else if(winDiff < 18)  hcLabel = '0/0.5';
+  else if(winDiff < 32)  hcLabel = '0.5';
+  else if(winDiff < 46)  hcLabel = '0.5/1';
+  else if(winDiff < 58)  hcLabel = '1';
+  else if(winDiff < 68)  hcLabel = '1/1.5';
+  else if(winDiff < 76)  hcLabel = '1.5';
+  else                   hcLabel = '1.5/2';
 
-  // Display: favored team's line. '0/0.5' when home favored → '0/-0.5'
-  let hcDisplay;
-  if(hcLabel === '0') hcDisplay = '0';
-  else if(homeFav) {
-    hcDisplay = hcLabel.startsWith('0/') ? `0/-${hcLabel.slice(2)}` : `-${hcLabel}`;
-  } else {
-    hcDisplay = hcLabel.startsWith('0/') ? `0/+${hcLabel.slice(2)}` : `+${hcLabel}`;
+  // Cover probabilities via joint Poisson (exact, not xG residual approximation)
+  const pW1=pDiffGte(fL,uL,1), pW2=pDiffGte(fL,uL,2), pW3=pDiffGte(fL,uL,3);
+  const pDr=pDiffGte(fL,uL,0)-pW1;
+  const AH_EDGE=0.02; // Asian market 2% edge (more competitive than 1x2)
+  const ahHK=(fc)=>Math.max(0.60,Math.min(1.50,((1-AH_EDGE)/Math.max(0.35,Math.min(0.65,fc)))-1));
+
+  let favHK, undHK;
+  if(hcLabel==='0') {
+    const pUW=pDiffGte(uL,fL,1); const fc=pW1/(pW1+pUW);
+    favHK=ahHK(fc); undHK=ahHK(1-fc);
+  } else if(hcLabel==='0/0.5') {
+    const fc=pW1+pDr*0.5; favHK=ahHK(fc); undHK=ahHK(1-fc);
+  } else if(hcLabel==='0.5') {
+    favHK=ahHK(pW1); undHK=ahHK(1-pW1);
+  } else if(hcLabel==='0.5/1') {
+    const fc=pW2+(pW1-pW2)*0.5; favHK=ahHK(fc); undHK=ahHK(1-fc);
+  } else if(hcLabel==='1') {
+    const pUW=1-pW1; const fc=pW2/(pW2+pUW);
+    favHK=ahHK(fc); undHK=ahHK(1-fc);
+  } else if(hcLabel==='1/1.5') {
+    const fc=pW3+(pW2-pW3)*0.5; favHK=ahHK(fc); undHK=ahHK(1-fc);
+  } else if(hcLabel==='1.5') {
+    favHK=ahHK(pW2); undHK=ahHK(1-pW2);
+  } else { // 1.5/2: wins by 3+ = full, wins by 2 = half
+    const fc=pW3+(pW2-pW3)*0.5; favHK=ahHK(fc); undHK=ahHK(1-fc);
   }
 
-  // ── AH water odds (HK format: profit per unit) ──
-  // Handicap is set so both sides are ~50/50; residual xG edge after handicap adjusts odds
-  const handicapVal = hcLabel==='0' ? 0 : hcLabel.includes('/') ?
-    (parseFloat(hcLabel.split('/')[0])+parseFloat(hcLabel.split('/')[1]))/2 :
-    parseFloat(hcLabel);
-  const residualEdge = absXGDiff - handicapVal * 0.9; // remaining xG edge after handicap
-  // Residual → cover probability for the favored side (capped ±12%)
-  const coverProb = Math.max(0.40, Math.min(0.60, 0.5 + residualEdge * 0.06));
-  // HK odds = (1/prob) * (1 - houseEdge) - 1, house edge 5.5%
-  const favHK = Math.max(0.72, Math.min(1.18, (1/coverProb * 0.945) - 1));
-  const undHK = Math.max(0.72, Math.min(1.18, (1/(1-coverProb) * 0.945) - 1));
-  // Assign based on who covers: favored team (homeFav) gets the lower HK (more likely)
   const hAH = (homeFav ? favHK : undHK).toFixed(2);
   const aAH = (homeFav ? undHK : favHK).toFixed(2);
 
-  // ── Over/Under line ──
-  const totalXG = parseFloat(p.hXG) + parseFloat(p.aXG);
-  let ouLine;
-  if(totalXG < 1.6)       ouLine = '1.5';
-  else if(totalXG < 2.0)  ouLine = '1.5/2';
-  else if(totalXG < 2.4)  ouLine = '2';
-  else if(totalXG < 2.75) ouLine = '2/2.5';
-  else if(totalXG < 3.1)  ouLine = '2.5';
-  else if(totalXG < 3.5)  ouLine = '2.5/3';
-  else if(totalXG < 3.9)  ouLine = '3';
-  else                     ouLine = '3/3.5';
+  // Display: home perspective (negative = home gives, positive = home receives)
+  let hcDisplay;
+  if(hcLabel==='0') hcDisplay='0';
+  else if(homeFav) hcDisplay=hcLabel.startsWith('0/')?`0/-${hcLabel.slice(2)}`:`-${hcLabel}`;
+  else             hcDisplay=hcLabel.startsWith('0/')?`0/+${hcLabel.slice(2)}`:`+${hcLabel}`;
 
-  // Over prob using Poisson CDF
-  const poissonCDF = (lambda, k) => {
-    let p=0, term=Math.exp(-lambda);
-    for(let i=0;i<=k;i++){p+=term;term*=lambda/(i+1);}
-    return p;
-  };
-  // Split line (e.g. '2/2.5') → average overProb of both halves
-  const ouParts = ouLine.split('/');
-  let overProb;
-  if(ouParts.length === 1) {
-    overProb = 1 - poissonCDF(totalXG, Math.floor(parseFloat(ouLine)));
-  } else {
-    const k1=Math.floor(parseFloat(ouParts[0])), k2=Math.floor(parseFloat(ouParts[1]));
-    overProb = ((1-poissonCDF(totalXG,k1))+(1-poissonCDF(totalXG,k2)))/2;
-  }
-  // O/U HK odds (house edge 5.5%); clamp 0.68–1.28 realistic bookmaker range
-  const tOdds = Math.max(0.68, Math.min(1.28, (1/overProb * 0.945) - 1)).toFixed(2);
-  const xOdds = Math.max(0.68, Math.min(1.28, (1/(1-overProb) * 0.945) - 1)).toFixed(2);
+  // ── Over/Under ──
+  let ouLine;
+  if(totalXG < 1.6)       ouLine='1.5';
+  else if(totalXG < 2.0)  ouLine='1.5/2';
+  else if(totalXG < 2.4)  ouLine='2';
+  else if(totalXG < 2.75) ouLine='2/2.5';
+  else if(totalXG < 3.1)  ouLine='2.5';
+  else if(totalXG < 3.5)  ouLine='2.5/3';
+  else if(totalXG < 3.9)  ouLine='3';
+  else                     ouLine='3/3.5';
+
+  // O/U HK odds: use simple P(total >= upper_k + 1) formula — matches real bookmaker pricing
+  // Asian O/U market uses ~2% edge (more competitive than 1x2)
+  const OU_EDGE=0.02;
+  const ouParts=ouLine.split('/');
+  // For split line '2/2.5': effective line = upper value (2.5 → P(total>=3))
+  // For whole '2': effective like half line at 2.5 (bookmaker absorbs push via odds, not rules)
+  const ouEffective=parseFloat(ouParts[ouParts.length-1]); // use upper bound of line
+  const overProb=1-poissonCDF(totalXG,Math.floor(ouEffective)); // P(total >= floor(upper)+1)
+  const tOdds=Math.max(0.60,Math.min(1.45,(1-OU_EDGE)/Math.max(0.30,overProb)-1)).toFixed(2);
+  const xOdds=Math.max(0.60,Math.min(1.45,(1-OU_EDGE)/Math.max(0.30,1-overProb)-1)).toFixed(2);
 
   // ── 1x2 ──
-  const h1x2 = toOdds(p.hW);
-  const d1x2 = toOdds(p.dr);
-  const a1x2 = toOdds(p.aW);
-
-  return { hcDisplay, homeFav, hAH, aAH, ouLine, tOdds, xOdds, h1x2, d1x2, a1x2 };
+  const h1x2=toOdds(p.hW), d1x2=toOdds(p.dr), a1x2=toOdds(p.aW);
+  return {hcDisplay, homeFav, hAH, aAH, ouLine, tOdds, xOdds, h1x2, d1x2, a1x2};
 }
 
 // ── ODDS TABLE HTML (kqbd.mobi style) ──
