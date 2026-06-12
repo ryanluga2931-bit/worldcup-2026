@@ -597,10 +597,24 @@ function predict(homeN, awayN) {
 }
 
 // ── VIETNAMESE AI COMMENTARY ──
-function aiComment(homeN, awayN, p) {
+function aiComment(homeN, awayN, p, live=false, hs='', as_='') {
   const stronger = p.hW > p.aW ? homeN : awayN;
   const weaker = p.hW > p.aW ? awayN : homeN;
   const diff = Math.abs(p.hW - p.aW);
+  const hShort = homeN.split(' ').pop(), aShort = awayN.split(' ').pop();
+
+  // Live-score-aware commentary
+  if(live && hs !== '' && as_ !== '') {
+    const hScore = parseInt(hs)||0, aScore = parseInt(as_)||0;
+    const predHome = p.hW > p.aW;
+    if(hScore > aScore && !predHome) return `😱 <strong>BẤT NGỜ ĐANG XẢY RA!</strong> ${hShort} đang dẫn ${hs}-${as_} dù AI dự đoán ${aShort} thắng. Liệu họ có giữ được không?`;
+    if(aScore > hScore && predHome) return `🚨 <strong>${aShort} đang tạo cú sốc!</strong> AI đã dự đoán ${hShort} thắng nhưng ${aShort} đang dẫn ${hs}-${as_}. Trận đấu hoàn toàn lật ngược!`;
+    if(hScore > 0 || aScore > 0) {
+      const total=hScore+aScore;
+      if(total>=3) return `⚡ Tỷ số ${hs}-${as_} — trận đấu đang rất căng thẳng! AI dự đoán ${p.pHome}-${p.pAway}. Còn nhiều bàn thắng có thể xảy ra với xG ${p.hXG}-${p.aXG}.`;
+    }
+  }
+
   if (p.isUpset) return `🚨 Cảnh báo bất ngờ! ${weaker} đang trong phong độ tốt và có ${p.aW}% cơ hội tạo ra kết quả bất ngờ trước ${homeN}. Đừng chủ quan!`;
   if (diff > 40) return `${stronger} là ứng cử viên nặng ký với ưu thế vượt trội. Dự đoán tỷ số ${p.pHome}-${p.pAway}, xG: ${p.hXG}-${p.aXG}. Kết quả gần như đã được định sẵn.`;
   if (diff < 12) return `⚖️ Trận đấu cực kỳ cân bằng! Cả ${homeN} và ${awayN} đều có cơ hội như nhau. Tỷ số hòa ${p.dr}% là kịch bản hoàn toàn có thể xảy ra.`;
@@ -1266,7 +1280,7 @@ function animateScoreEl(mid) {
 }
 
 // ── AI PANEL HTML ──
-function aiPanelHTML(mid, homeN, awayN, p) {
+function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='') {
   const upsetHTML = p.isUpset ? `<div class="upset-alert">🚨 <strong>UPSET ALERT</strong> — ${awayN} có ${p.aW}% cơ hội gây bất ngờ!</div>` : '';
   const h1 = getKeyPlayer(homeN, 0), h2 = getKeyPlayer(homeN, 1);
   const a1 = getKeyPlayer(awayN, 0), a2 = getKeyPlayer(awayN, 1);
@@ -1334,7 +1348,7 @@ function aiPanelHTML(mid, homeN, awayN, p) {
     </div>
     <div class="conf-badge ${p.confidence}">🧠 Độ chính xác AI: ${p.confLabel}</div>
     ${upsetHTML}
-    <div class="ai-comment">${aiComment(homeN, awayN, p)}</div>
+    <div class="ai-comment">${aiComment(homeN, awayN, p, live, homeScore, awayScore)}</div>
   </div>`;
 }
 
@@ -1470,7 +1484,7 @@ function renderMatchCard(event) {
       <span class="ai-toggle-lbl">🧠 Chi tiết phân tích & Thống kê đối đầu</span>
       <span class="ai-arr">▼</span>
     </div>
-    ${aiPanelHTML(mid, homeN, awayN, p)}
+    ${aiPanelHTML(mid, homeN, awayN, p, live, homeScore, awayScore)}
   </div>`;
 
   return { html, mid, upcoming, date: event.date, live, ht: sName==='STATUS_HALFTIME',
