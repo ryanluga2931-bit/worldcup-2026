@@ -412,25 +412,31 @@ main{-webkit-overflow-scrolling:touch}
 
 <!-- DESKTOP TABS -->
 <div class="tab-bar">
-  <div class="tab active" data-tab="scores">🔴 Live & Kết quả</div>
-  <div class="tab" data-tab="schedule">📅 Lịch thi đấu</div>
+  <div class="tab active" data-tab="schedule">📅 Lịch thi đấu</div>
+  <div class="tab" data-tab="live">🔴 Live</div>
+  <div class="tab" data-tab="results">✅ Kết quả</div>
   <div class="tab" data-tab="groups">🏆 Bảng xếp hạng</div>
   <div class="tab" data-tab="stream">📺 Xem trực tiếp</div>
 </div>
 
 <main>
-  <!-- SCORES -->
-  <section id="scores" class="section active">
+  <!-- SCHEDULE (default first tab) -->
+  <section id="schedule" class="section active">
+    <div id="schedule-content"><div class="loading"><div class="spinner"></div><br>Đang tải lịch thi đấu...</div></div>
+  </section>
+
+  <!-- LIVE -->
+  <section id="live" class="section">
     <button class="refresh-btn" id="refreshBtn" onclick="loadScores()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       Làm mới
     </button>
-    <div id="scores-content"><div class="loading"><div class="spinner"></div><br>Đang tải kết quả...</div></div>
+    <div id="live-content"><div class="loading"><div class="spinner"></div><br>Đang tải...</div></div>
   </section>
 
-  <!-- SCHEDULE -->
-  <section id="schedule" class="section">
-    <div id="schedule-content"><div class="loading"><div class="spinner"></div><br>Đang tải lịch thi đấu...</div></div>
+  <!-- RESULTS -->
+  <section id="results" class="section">
+    <div id="results-content"><div class="loading"><div class="spinner"></div><br>Đang tải kết quả...</div></div>
   </section>
 
   <!-- GROUPS -->
@@ -466,8 +472,9 @@ main{-webkit-overflow-scrolling:touch}
 <!-- MOBILE BOTTOM NAV -->
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
-    <div class="bnav-item active" data-tab="scores"><span class="bnav-icon">🔴</span>Live</div>
-    <div class="bnav-item" data-tab="schedule"><span class="bnav-icon">📅</span>Lịch</div>
+    <div class="bnav-item active" data-tab="schedule"><span class="bnav-icon">📅</span>Lịch</div>
+    <div class="bnav-item" data-tab="live"><span class="bnav-icon">🔴</span>Live</div>
+    <div class="bnav-item" data-tab="results"><span class="bnav-icon">✅</span>Kết quả</div>
     <div class="bnav-item" data-tab="groups"><span class="bnav-icon">🏆</span>BXH</div>
     <div class="bnav-item" data-tab="stream"><span class="bnav-icon">📺</span>Xem</div>
   </div>
@@ -639,20 +646,19 @@ function tickLiveClocks(){
 setInterval(tickLiveClocks, 1000);
 
 // ── SAVE / RESTORE AI PANEL STATE ──
-// Save as Set of match IDs that have open panels IN THE SCORES SECTION only
-function saveOpenPanels(){
-  const scoresEl = document.getElementById('scores-content');
-  if(!scoresEl) return new Set();
-  return new Set([...scoresEl.querySelectorAll('.ai-panel.open')].map(el=>el.id.replace('aip_','')));
+function saveOpenPanels(containerId='live-content'){
+  const container=document.getElementById(containerId);
+  if(!container) return new Set();
+  return new Set([...container.querySelectorAll('.ai-panel.open')].map(el=>el.id.replace('aip_','')));
 }
-function restoreOpenPanels(ids){
-  const scoresEl = document.getElementById('scores-content');
-  if(!scoresEl) return;
+function restoreOpenPanels(ids, containerId='live-content'){
+  const container=document.getElementById(containerId);
+  if(!container) return;
   ids.forEach(id=>{
-    const card = scoresEl.querySelector('#mc_'+id);
+    const card=container.querySelector('#mc_'+id);
     if(!card) return;
-    const panel = card.querySelector('.ai-panel');
-    const toggle = card.querySelector('.ai-toggle');
+    const panel=card.querySelector('.ai-panel');
+    const toggle=card.querySelector('.ai-toggle');
     if(!panel||panel.classList.contains('open')) return;
     panel.classList.add('open');
     toggle?.classList.add('open');
@@ -1452,40 +1458,39 @@ async function fetchWithRetry(url, retries=3){
   throw lastErr;
 }
 
-// ── LOAD SCORES ──
+// ── LOAD SCORES (populates both Live and Results sections) ──
 async function loadScores() {
-  if(_isLoading) return; // prevent overlapping fetches
+  if(_isLoading) return;
   _isLoading = true;
   const btn=document.getElementById('refreshBtn');
   btn?.classList.add('spinning');
 
-  // Show skeleton only on first load to avoid flicker
+  const skelHTML=[1,2,3].map(()=>`<div class="skel-card">
+    <div class="skel-line" style="width:40%;height:10px"></div>
+    <div style="display:flex;justify-content:space-between;margin:14px 0">
+      <div class="skel-line" style="width:28%;height:40px"></div>
+      <div class="skel-line" style="width:20%;height:40px"></div>
+      <div class="skel-line" style="width:28%;height:40px"></div>
+    </div>
+    <div class="skel-line" style="width:60%;margin:0 auto;height:10px"></div>
+  </div>`).join('');
   if(_firstLoad){
-    document.getElementById('scores-content').innerHTML=[1,2,3].map(()=>`
-      <div class="skel-card">
-        <div class="skel-line" style="width:40%;height:10px"></div>
-        <div style="display:flex;justify-content:space-between;margin:14px 0">
-          <div class="skel-line" style="width:28%;height:40px"></div>
-          <div class="skel-line" style="width:20%;height:40px"></div>
-          <div class="skel-line" style="width:28%;height:40px"></div>
-        </div>
-        <div class="skel-line" style="width:60%;margin:0 auto;height:10px"></div>
-      </div>`).join('');
+    document.getElementById('live-content').innerHTML=skelHTML;
+    document.getElementById('results-content').innerHTML=skelHTML;
   }
 
   try {
     const dates=[utcDate(-1),utcDate(0),utcDate(1)];
-    const results=await Promise.all(
+    const fetched=await Promise.all(
       dates.map(d=>fetchWithRetry(`${ESPN_BASE}/scoreboard?limit=50&dates=${d}`).catch(()=>({events:[]})))
     );
     const seen=new Set();
-    const events=results.flatMap(r=>r.events||[]).filter(e=>{
-      if(seen.has(e.id)) return false;
-      seen.add(e.id); return true;
+    const events=fetched.flatMap(r=>r.events||[]).filter(e=>{
+      if(seen.has(e.id)) return false; seen.add(e.id); return true;
     });
-    const scoreChanged = renderScores(events);
+    const scoreChanged=renderLive(events);
+    renderResults(events);
     updateTicker(events);
-    _retryCount=0;
     const hasLive=events.some(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
     _nextInterval = scoreChanged ? 5 : hasLive ? 10 : 60;
     const now=new Date().toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
@@ -1495,14 +1500,14 @@ async function loadScores() {
     _nextInterval = 30;
     const errBtn=`<br><button onclick="loadScores()" style="margin-top:9px;padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button>`;
     if(_firstLoad){
-      document.getElementById('scores-content').innerHTML=`<div class="error-box">⚠️ Không thể tải kết quả. Kiểm tra kết nối mạng.${errBtn}</div>`;
+      document.getElementById('live-content').innerHTML=`<div class="error-box">⚠️ Không thể tải kết quả.${errBtn}</div>`;
+      document.getElementById('results-content').innerHTML=`<div class="error-box">⚠️ Không thể tải kết quả.${errBtn}</div>`;
     } else {
-      // Non-fatal: show toast-style banner instead of wiping existing scores
       const luEl=document.getElementById('last-update');
-      if(luEl){ luEl.textContent='⚠️ Lỗi tải — đang thử lại...'; }
+      if(luEl) luEl.textContent='⚠️ Lỗi tải — đang thử lại...';
     }
   } finally {
-    _isLoading = false;
+    _isLoading=false;
     btn?.classList.remove('spinning');
   }
   _firstLoad=false;
@@ -1511,45 +1516,55 @@ async function loadScores() {
   startRefreshCountdown(_nextInterval);
 }
 
-// ── RENDER SCORES (no-flicker: preserve AI panels, score flip, live clocks) ──
-function renderScores(events) {
-  const el=document.getElementById('scores-content');
-  if(!events.length){el.innerHTML='<div class="loading">Không có trận đấu hôm nay.</div>';return false;}
-
-  const live=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
-  const done=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
-  const up=events.filter(e=>e.competitions?.[0]?.status?.type?.name==='STATUS_SCHEDULED');
-
-  // Save AI panel state before DOM update
-  const openPanels=saveOpenPanels();
-
-  // Build new HTML
-  const cards=[];
-  const buildGroup=(label,arr)=>{
-    if(!arr.length) return '';
-    let s=`<div class="match-group-label">${label}</div>`;
-    arr.forEach(e=>{
-      const result=renderMatchCard(e);
-      if(result){ cards.push(result); s+=result.html; }
-    });
-    return s;
-  };
-  let html=buildGroup('🔴 Đang diễn ra',live)+buildGroup('⏳ Sắp diễn ra',up)+buildGroup('✅ Đã kết thúc',done);
-  if(!html) html='<div class="loading">Không có trận hôm nay.</div>';
-
-  // Clear old countdowns before replacing DOM
+// ── RENDER LIVE TAB ──
+function renderLive(events) {
+  const el=document.getElementById('live-content');
+  const liveEvents=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+  const openPanels=saveOpenPanels('live-content');
   clearAllCountdowns();
 
-  el.innerHTML=html;
+  if(!liveEvents.length){
+    el.innerHTML='<div class="loading" style="padding:44px 20px">😴 Hiện không có trận nào đang diễn ra.<br><span style="font-size:12px;margin-top:8px;display:block">Kiểm tra tab <strong>Lịch thi đấu</strong> để xem trận tiếp theo.</span></div>';
+    restoreOpenPanels(openPanels,'live-content');
+    return false;
+  }
 
-  // Post-render: restore panels, animate scores, start clocks
-  restoreOpenPanels(openPanels);
+  const cards=[];
+  let html='<div class="match-group-label">🔴 Đang diễn ra</div>';
+  liveEvents.forEach(e=>{const r=renderMatchCard(e);if(r){cards.push(r);html+=r.html;}});
+  el.innerHTML=html;
+  restoreOpenPanels(openPanels,'live-content');
   cards.forEach(c=>{
     if(c.scoreChanged) animateScoreEl(c.mid);
-    if(c.upcoming && c.date) startCountdown(c.mid, c.date);
     if(c.live) registerLiveClock(c.mid, c.displayClock, c.ht);
   });
   return cards.some(c=>c.scoreChanged);
+}
+
+// ── RENDER RESULTS TAB ──
+function renderResults(events) {
+  const el=document.getElementById('results-content');
+  const done=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+
+  if(!done.length){
+    el.innerHTML='<div class="loading" style="padding:44px 20px">📋 Chưa có trận nào kết thúc hôm nay.</div>';
+    return;
+  }
+
+  // Group by date
+  const byDate={};
+  done.forEach(e=>{
+    const d=new Date(e.date).toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',timeZone:'Asia/Ho_Chi_Minh'});
+    if(!byDate[d]) byDate[d]=[];
+    byDate[d].push(e);
+  });
+
+  let html='';
+  Object.entries(byDate).forEach(([date,evs])=>{
+    html+=`<div class="match-group-label">📅 ${date}</div>`;
+    evs.forEach(e=>{const r=renderMatchCard(e);if(r) html+=r.html;});
+  });
+  el.innerHTML=html;
 }
 
 // ── TICKER UPDATE (uses all LIVE_STATUSES) ──
@@ -1658,6 +1673,7 @@ function switchTab(name) {
   document.getElementById(name)?.classList.add('active');
   if(name==='schedule'&&!document.getElementById('schedule-content').dataset.loaded) loadSchedule();
   if(name==='groups'&&!document.getElementById('groups-content').dataset.loaded) loadGroups();
+  if((name==='live'||name==='results')&&_firstLoad) loadScores();
 }
 document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>switchTab(el.dataset.tab)));
 
@@ -1698,6 +1714,8 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 // ── INIT ──
+// Load schedule immediately (default tab), load scores in background for Live/Results tabs
+loadSchedule();
 loadScores();
 </script>
 </body>
