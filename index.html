@@ -1752,13 +1752,15 @@ function renderSchedule(events) {
 
 // ── LOAD GROUPS ──
 async function loadGroups() {
+  const el=document.getElementById('groups-content');
+  el.innerHTML='<div class="loading"><div class="spinner"></div><br>Đang tải bảng xếp hạng...</div>';
   try {
     const data=await fetchWithRetry(`${ESPN_BASE}/standings?`);
     renderGroups(data);
-    document.getElementById('groups-content').dataset.loaded='1';
+    el.dataset.loaded='1';
   } catch(e) {
-    document.getElementById('groups-content').innerHTML=`
-      <div class="error-box">⚠️ Bảng xếp hạng chưa có dữ liệu (giải đấu mới bắt đầu).<br>Quay lại sau khi vòng bảng có kết quả nhé!</div>
+    el.innerHTML=`
+      <div class="error-box">⚠️ Bảng xếp hạng chưa có dữ liệu (giải đấu mới bắt đầu).<br>Quay lại sau khi vòng bảng có kết quả nhé! <button onclick="document.getElementById('groups-content').dataset.loaded='';loadGroups()" style="margin-left:8px;padding:4px 10px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:11px">🔄 Thử lại</button></div>
       <div style="margin-top:14px;color:var(--muted);font-size:12px;text-align:center">
         👀 Xem bảng xếp hạng chi tiết tại:<br><br>
         <a href="https://www.fifa.com/fifaplus/en/tournament-hub/worldcup" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:700">fifa.com ↗</a>
