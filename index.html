@@ -1613,17 +1613,24 @@ function renderResults(events) {
     return;
   }
 
-  // Group by date
+  // Group by date with friendly relative labels
+  const todayStr = new Date().toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',timeZone:'Asia/Ho_Chi_Minh'});
+  const yesterdayStr = new Date(Date.now()-86400000).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',timeZone:'Asia/Ho_Chi_Minh'});
   const byDate={};
   done.forEach(e=>{
     const d=new Date(e.date).toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',timeZone:'Asia/Ho_Chi_Minh'});
     if(!byDate[d]) byDate[d]=[];
     byDate[d].push(e);
   });
+  const friendlyDate = d => {
+    if(d.includes(todayStr)) return `Hôm nay · ${d}`;
+    if(d.includes(yesterdayStr)) return `Hôm qua · ${d}`;
+    return d;
+  };
 
   let html='';
   Object.entries(byDate).forEach(([date,evs])=>{
-    html+=`<div class="match-group-label">📅 ${date}</div>`;
+    html+=`<div class="match-group-label">📅 ${friendlyDate(date)}</div>`;
     evs.forEach(e=>{const r=renderMatchCard(e);if(r) html+=r.html;});
   });
   el.innerHTML=html;
