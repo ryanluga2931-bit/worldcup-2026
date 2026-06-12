@@ -567,7 +567,8 @@ function predict(homeN, awayN) {
   const rdiff = Math.abs(diff);
   const confidence = rdiff > 200 ? 'high' : rdiff > 100 ? 'medium' : 'low';
   const confLabel = {high:'Độ tin cao 🟢', medium:'Độ tin TB 🟡', low:'Độ tin thấp 🔴'}[confidence];
-  const isUpset = aW > 40 && a.r < h.r - 120;
+  // Upset: home favorite but not dominant (hW 45-57%) despite 60+ elo advantage
+  const isUpset = hW < 58 && hW > 44 && (h.r - a.r) > 60;
   const isHot = h.r > 1700 && a.r > 1680;
   const momentum = Math.round(hW);
   return { hW, dr, aW, hXG: hXG.toFixed(1), aXG: aXG.toFixed(1), pHome, pAway,
