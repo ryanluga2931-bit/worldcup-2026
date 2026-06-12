@@ -1682,7 +1682,12 @@ function renderResults(events) {
 function updateTicker(events) {
   const live=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
   const el=document.getElementById('ticker-inner');
-  if(!live.length){el.textContent='⚽ World Cup 2026 — Theo dõi kết quả live tại đây';return;}
+  if(!live.length){
+    // Repeat so ticker scrolls smoothly without blank gaps
+    const msg='<span class="ti">⚽ World Cup 2026 · Theo dõi trực tiếp</span><span class="ti">🇺🇸 USA · 🇨🇦 Canada · 🇲🇽 Mexico · 48 đội · 104 trận</span>';
+    el.innerHTML=msg.repeat(4);
+    return;
+  }
   let items='';
   live.forEach(e=>{
     const comp=e.competitions?.[0];
@@ -1694,7 +1699,11 @@ function updateTicker(events) {
     const scoreStr=(hs!==''&&as_!=='')?`<span class="ti-score">${hs}–${as_}</span>`:'<span class="ti-score">vs</span>';
     items+=`<span class="ti"><div class="ti-live"></div>${flag(h.team?.displayName)} ${scoreStr} ${flag(a.team?.displayName)} ${h.team?.shortDisplayName||''} vs ${a.team?.shortDisplayName||''} ${min?'· '+min:''}</span>`;
   });
-  if(!items){el.textContent='⚽ World Cup 2026 — Theo dõi kết quả live tại đây';return;}
+  if(!items){
+    const msg='<span class="ti">⚽ World Cup 2026 · Theo dõi trực tiếp</span><span class="ti">🇺🇸 USA · 🇨🇦 Canada · 🇲🇽 Mexico · 48 đội · 104 trận</span>';
+    el.innerHTML=msg.repeat(4);
+    return;
+  }
   // Repeat enough times so ticker always fills viewport for smooth loop
   const repeat=Math.max(2, Math.ceil(6/live.length));
   el.innerHTML=items.repeat(repeat);
