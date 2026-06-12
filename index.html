@@ -197,7 +197,9 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 @keyframes fadeSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
 /* HIGHLIGHTS */
-.hl-btn{display:flex;align-items:center;gap:7px;padding:8px 15px;cursor:pointer;border-top:1px solid var(--border);background:rgba(234,179,8,0.05);transition:background .15s;font-size:11px;font-weight:800;color:#fbbf24;letter-spacing:.3px;user-select:none}
+.yt-hl-link{display:flex;align-items:center;justify-content:center;gap:6px;margin:10px 14px 4px;padding:7px 0;border-radius:8px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);color:#f87171;font-size:11px;font-weight:800;text-decoration:none;letter-spacing:.3px;transition:background .15s}
+.yt-hl-link:hover{background:rgba(239,68,68,0.22)}
+.hl-btn{display:flex;align-items:center;gap:7px;padding:9px 15px;cursor:pointer;border-top:1px solid rgba(234,179,8,0.2);background:rgba(234,179,8,0.08);transition:background .15s;font-size:11px;font-weight:800;color:#fbbf24;letter-spacing:.3px;user-select:none}
 .hl-btn:hover{background:rgba(234,179,8,0.1)}
 .hl-btn .hl-arr{font-size:11px;color:var(--muted);transition:transform .25s;margin-left:auto}
 .hl-btn.open .hl-arr{transform:rotate(180deg)}
@@ -1436,9 +1438,13 @@ function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p) {
     return `<span class="rv-note">🤖 AI đoán sai kết quả</span>`;
   })();
 
+  const ytQ = encodeURIComponent(`${homeN} vs ${awayN} World Cup 2026 highlights`);
+  const ytLink = `https://www.youtube.com/results?search_query=${ytQ}`;
+
   return `<div class="result-banner">
     <div class="result-verdict">${badge}${aiNote}</div>
     ${scorersHTML}
+    <a class="yt-hl-link" href="${ytLink}" target="_blank" rel="noopener">▶ YouTube Highlights</a>
   </div>`;
 }
 
