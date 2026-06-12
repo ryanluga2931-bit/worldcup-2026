@@ -796,13 +796,17 @@ setInterval(tickLiveClocks, 1000);
 // ── SAVE / RESTORE AI PANEL STATE ──
 function saveOpenPanels(containerId='live-content'){
   const container=document.getElementById(containerId);
-  if(!container) return new Set();
-  return new Set([...container.querySelectorAll('.ai-panel.open')].map(el=>el.id.replace('aip_','')));
+  if(!container) return {ai:new Set(), hl:new Set()};
+  const ai=new Set([...container.querySelectorAll('.ai-panel.open')].map(el=>el.id.replace('aip_','')));
+  const hl=new Set([...container.querySelectorAll('.hl-btn.open')].map(el=>el.dataset.event||''));
+  hl.delete('');
+  return {ai, hl};
 }
-function restoreOpenPanels(ids, containerId='live-content'){
+function restoreOpenPanels(state, containerId='live-content'){
   const container=document.getElementById(containerId);
   if(!container) return;
-  ids.forEach(id=>{
+  const ids = state.ai||state; // backwards compat if old Set passed
+  ids.forEach&&ids.forEach(id=>{
     const card=container.querySelector('#mc_'+id);
     if(!card) return;
     const panel=card.querySelector('.ai-panel');
@@ -811,6 +815,18 @@ function restoreOpenPanels(ids, containerId='live-content'){
     panel.classList.add('open');
     toggle?.classList.add('open');
     panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});
+  });
+  // Restore highlight panels from cache
+  const hlIds = state.hl;
+  if(!hlIds) return;
+  hlIds.forEach(eventId=>{
+    if(!_hlCache[eventId]) return;
+    const btn=container.querySelector(`.hl-btn[data-event="${eventId}"]`);
+    const panel=btn?.nextElementSibling;
+    if(!btn||!panel||panel.classList.contains('open')) return;
+    panel.innerHTML=_hlCache[eventId];
+    panel.classList.add('open');
+    btn.classList.add('open');
   });
 }
 
@@ -894,10 +910,20 @@ function calcAsianOdds(homeN, awayN, p) {
     hcDisplay = hcLabel.startsWith('0/') ? `0/+${hcLabel.slice(2)}` : `+${hcLabel}`;
   }
 
-  // After handicap, market ~50/50 → odds ~0.88-0.97 each side with house edge
-  const residual = (absXGDiff % 1.2) / 12; // 0..0.1
-  const hAH = (0.87 + residual + seed * 0.06).toFixed(2);
-  const aAH = (0.87 + (0.1 - residual) + (1 - seed) * 0.06).toFixed(2);
+  // ── AH water odds (HK format: profit per unit) ──
+  // Handicap is set so both sides are ~50/50; residual xG edge after handicap adjusts odds
+  const handicapVal = hcLabel==='0' ? 0 : hcLabel.includes('/') ?
+    (parseFloat(hcLabel.split('/')[0])+parseFloat(hcLabel.split('/')[1]))/2 :
+    parseFloat(hcLabel);
+  const residualEdge = absXGDiff - handicapVal * 0.9; // remaining xG edge after handicap
+  // Residual → cover probability for the favored side (capped ±12%)
+  const coverProb = Math.max(0.40, Math.min(0.60, 0.5 + residualEdge * 0.06));
+  // HK odds = (1/prob) * (1 - houseEdge) - 1, house edge 5.5%
+  const favHK = Math.max(0.72, Math.min(1.18, (1/coverProb * 0.945) - 1));
+  const undHK = Math.max(0.72, Math.min(1.18, (1/(1-coverProb) * 0.945) - 1));
+  // Assign based on who covers: favored team (homeFav) gets the lower HK (more likely)
+  const hAH = (homeFav ? favHK : undHK).toFixed(2);
+  const aAH = (homeFav ? undHK : favHK).toFixed(2);
 
   // ── Over/Under line ──
   const totalXG = parseFloat(p.hXG) + parseFloat(p.aXG);
@@ -911,17 +937,24 @@ function calcAsianOdds(homeN, awayN, p) {
   else if(totalXG < 3.9)  ouLine = '3';
   else                     ouLine = '3/3.5';
 
-  // Over prob: P(total goals > ouLine) using Poisson CDF
-  // For half-ball lines, average P of floor and ceil
+  // Over prob using Poisson CDF
   const poissonCDF = (lambda, k) => {
     let p=0, term=Math.exp(-lambda);
     for(let i=0;i<=k;i++){p+=term;term*=lambda/(i+1);}
     return p;
   };
-  const ouMid = parseFloat(ouLine.split('/')[0]);
-  const overProb = 1 - poissonCDF(totalXG, Math.floor(ouMid));
-  const tOdds = Math.max(0.72, Math.min(1.05, 1/(overProb*1.06))).toFixed(2);
-  const xOdds = Math.max(0.72, Math.min(1.05, 1/((1-overProb)*1.06))).toFixed(2);
+  // Split line (e.g. '2/2.5') → average overProb of both halves
+  const ouParts = ouLine.split('/');
+  let overProb;
+  if(ouParts.length === 1) {
+    overProb = 1 - poissonCDF(totalXG, Math.floor(parseFloat(ouLine)));
+  } else {
+    const k1=Math.floor(parseFloat(ouParts[0])), k2=Math.floor(parseFloat(ouParts[1]));
+    overProb = ((1-poissonCDF(totalXG,k1))+(1-poissonCDF(totalXG,k2)))/2;
+  }
+  // O/U HK odds (house edge 5.5%); clamp 0.68–1.28 realistic bookmaker range
+  const tOdds = Math.max(0.68, Math.min(1.28, (1/overProb * 0.945) - 1)).toFixed(2);
+  const xOdds = Math.max(0.68, Math.min(1.28, (1/(1-overProb) * 0.945) - 1)).toFixed(2);
 
   // ── 1x2 ──
   const h1x2 = toOdds(p.hW);
@@ -1678,7 +1711,7 @@ function renderMatchCard(event) {
       ${momentumHTML}
     </div>
     ${resultBannerHTML}
-    ${finished ? `<div class="hl-btn" id="hlb_${mid}" onclick="toggleHighlights('${event.id}','${mid}',this)"><span>🎬 Highlights</span><span class="hl-arr">▼</span></div><div class="hl-panel" id="hlp_${mid}"></div>` : ''}
+    ${finished ? `<div class="hl-btn" id="hlb_${mid}" data-event="${event.id}" onclick="toggleHighlights('${event.id}','${mid}',this)"><span>🎬 Highlights</span><span class="hl-arr">▼</span></div><div class="hl-panel" id="hlp_${mid}"></div>` : ''}
     ${chipHTML}
     ${verdictHTML}
     ${oddsRow}
