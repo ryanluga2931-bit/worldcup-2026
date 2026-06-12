@@ -504,6 +504,13 @@ const FLAGS = {
   'United Arab Emirates':'🇦🇪','Iraq':'🇮🇶','Uzbekistan':'🇺🇿','Indonesia':'🇮🇩',
   'Bahrain':'🇧🇭','Jordan':'🇯🇴','Palestine':'🇵🇸','DR Congo':'🇨🇩','Angola':'🇦🇴',
   'Zimbabwe':'🇿🇼','Tanzania':'🇹🇿','Kenya':'🇰🇪','Uganda':'🇺🇬',
+  'Korea Republic':'🇰🇷','Republic of Korea':'🇰🇷',
+  "Côte d'Ivoire":'🇨🇮','Trinidad & Tobago':'🇹🇹',
+  'Czech Republic':'🇨🇿','Czechia':'🇨🇿','Ukraine':'🇺🇦','Romania':'🇷🇴',
+  'Hungary':'🇭🇺','Austria':'🇦🇹','Greece':'🇬🇷','Slovakia':'🇸🇰',
+  'Slovenia':'🇸🇮','Albania':'🇦🇱','Zambia':'🇿🇲',
+  'Cape Verde':'🇨🇻','Mali':'🇲🇱','Burkina Faso':'🇧🇫',
+  'El Salvador':'🇸🇻','Martinique':'🇲🇶','Guadeloupe':'🇬🇵',
 };
 const flag = n => FLAGS[n] || '🏳️';
 
@@ -538,6 +545,19 @@ const TS = {
   'New Zealand':{r:1380,a:5.2,d:5.6,f:'WDLWW'},'Bosnia and Herzegovina':{r:1480,a:6.1,d:6.0,f:'DWWLW'},
   'Dominican Republic':{r:1320,a:4.8,d:5.0,f:'LWLWW'},'Curacao':{r:1340,a:4.9,d:5.0,f:'WLLWW'},
   'Curaçao':{r:1340,a:4.9,d:5.0,f:'WLLWW'},
+  // ESPN alternate names
+  'Korea Republic':{r:1535,a:6.8,d:6.8,f:'WWDLW'},
+  'Republic of Korea':{r:1535,a:6.8,d:6.8,f:'WWDLW'},
+  "Côte d'Ivoire":{r:1500,a:6.4,d:6.2,f:'WWDWL'},
+  'Trinidad & Tobago':{r:1360,a:5.1,d:5.3,f:'WLWWL'},
+  'Bosnia & Herzegovina':{r:1480,a:6.1,d:6.0,f:'DWWLW'},
+  'Czech Republic':{r:1540,a:6.8,d:6.7,f:'WDWLW'},'Czechia':{r:1540,a:6.8,d:6.7,f:'WDWLW'},
+  'Ukraine':{r:1560,a:6.9,d:7.0,f:'WWWDL'},'Romania':{r:1510,a:6.5,d:6.5,f:'WWDWL'},
+  'Hungary':{r:1510,a:6.4,d:6.5,f:'DWWWL'},'Austria':{r:1560,a:6.9,d:6.8,f:'WWWWL'},
+  'Greece':{r:1490,a:6.2,d:6.5,f:'WDWLW'},'Slovakia':{r:1500,a:6.4,d:6.6,f:'WWDLW'},
+  'Slovenia':{r:1490,a:6.2,d:6.4,f:'WDWWL'},'Albania':{r:1470,a:6.0,d:6.2,f:'WWDLW'},
+  'DR Congo':{r:1460,a:6.0,d:5.8,f:'WWDLW'},'Zambia':{r:1400,a:5.5,d:5.4,f:'WDWLW'},
+  'Cape Verde':{r:1440,a:5.8,d:5.9,f:'WWWDL'},'Mali':{r:1450,a:5.9,d:5.7,f:'WDWLW'},
 };
 const getTS = n => TS[n] || {r:1450,a:6.0,d:6.0,f:'WWDLW'};
 
