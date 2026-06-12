@@ -639,13 +639,20 @@ function tickLiveClocks(){
 setInterval(tickLiveClocks, 1000);
 
 // ── SAVE / RESTORE AI PANEL STATE ──
+// Save as Set of match IDs that have open panels IN THE SCORES SECTION only
 function saveOpenPanels(){
-  return new Set([...document.querySelectorAll('.ai-panel.open')].map(el=>el.id.replace('aip_','')));
+  const scoresEl = document.getElementById('scores-content');
+  if(!scoresEl) return new Set();
+  return new Set([...scoresEl.querySelectorAll('.ai-panel.open')].map(el=>el.id.replace('aip_','')));
 }
 function restoreOpenPanels(ids){
+  const scoresEl = document.getElementById('scores-content');
+  if(!scoresEl) return;
   ids.forEach(id=>{
-    const panel=document.getElementById('aip_'+id);
-    const toggle=document.getElementById('ait_'+id);
+    const card = scoresEl.querySelector('#mc_'+id);
+    if(!card) return;
+    const panel = card.querySelector('.ai-panel');
+    const toggle = card.querySelector('.ai-toggle');
     if(!panel||panel.classList.contains('open')) return;
     panel.classList.add('open');
     toggle?.classList.add('open');
@@ -1278,15 +1285,18 @@ function aiPanelHTML(mid, homeN, awayN, p) {
 }
 
 // ── TOGGLE AI PANEL ──
-function toggleAI(mid) {
-  const toggle = document.getElementById('ait_'+mid);
-  const panel  = document.getElementById('aip_'+mid);
+// Use event target to find elements within the SAME card (avoids duplicate-ID issue
+// when the same match appears in both Scores and Schedule tabs simultaneously)
+function toggleAI(mid, btn) {
+  const card = btn?.closest?.('.match-card') || document.getElementById('mc_'+mid);
+  if(!card) return;
+  const toggle = card.querySelector('.ai-toggle');
+  const panel  = card.querySelector('.ai-panel');
   if(!toggle||!panel) return;
   const opening = !panel.classList.contains('open');
   toggle.classList.toggle('open', opening);
   panel.classList.toggle('open', opening);
   if(opening) {
-    // animate prob bars after a tick
     setTimeout(()=>{
       panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{
         el.style.width = el.dataset.w + '%';
@@ -1313,7 +1323,8 @@ function renderMatchCard(event) {
   const mid = event.id||Math.random().toString(36).slice(2);
   const homeScore = home.score??'';
   const awayScore = away.score??'';
-  const hasScore = homeScore!==''&&awayScore!=='';
+  // upcoming matches may return score='0' from ESPN — treat as no score
+  const hasScore = !upcoming && homeScore!=='' && awayScore!=='';
   const venue = comp.venue?.fullName||'';
   const p = predict(homeN, awayN);
 
@@ -1398,7 +1409,7 @@ function renderMatchCard(event) {
     ${oddsRow}
     ${liveStatsBlock}
     <div class="reactions" id="rx_${mid}">${rxHTML(mid)}</div>
-    <div class="ai-toggle" id="ait_${mid}" onclick="toggleAI('${mid}')">
+    <div class="ai-toggle" id="ait_${mid}" onclick="toggleAI('${mid}',this)">
       <span class="ai-toggle-lbl">🧠 Chi tiết phân tích & Thống kê đối đầu</span>
       <span class="ai-arr">▼</span>
     </div>
