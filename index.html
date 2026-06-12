@@ -559,9 +559,11 @@ function predict(homeN, awayN) {
   const pHome = Math.floor(hXG);
   const pAway = Math.floor(aXG);
   const totalXG = hXG + aXG;
-  const over25 = Math.min(88, Math.max(18, Math.round((1 - Math.exp(-totalXG/2.6)) * 100)));
+  // Poisson P(goals > 2.5) = 1 - P(0) - P(1) - P(2) = 1 - e^-λ*(1 + λ + λ²/2)
+  const over25 = Math.min(88, Math.max(18, Math.round((1 - Math.exp(-totalXG)*(1+totalXG+totalXG*totalXG/2)) * 100)));
   const btts = Math.min(82, Math.max(12, Math.round((1-Math.exp(-hXG)) * (1-Math.exp(-aXG)) * 100)));
-  const next10 = Math.min(45, Math.max(5, Math.round(totalXG / 9 * 10 * 100)));
+  // Poisson: P(≥1 goal in 10min) = 1 - e^(-λ*10/90)
+  const next10 = Math.min(42, Math.max(5, Math.round((1 - Math.exp(-totalXG * 10/90)) * 100)));
   const rdiff = Math.abs(diff);
   const confidence = rdiff > 200 ? 'high' : rdiff > 100 ? 'medium' : 'low';
   const confLabel = {high:'Độ tin cao 🟢', medium:'Độ tin TB 🟡', low:'Độ tin thấp 🔴'}[confidence];
