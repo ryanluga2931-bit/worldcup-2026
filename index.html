@@ -1550,17 +1550,31 @@ function renderLive(events) {
   if(!liveEvents.length){
     el.innerHTML='<div class="loading" style="padding:44px 20px">😴 Hiện không có trận nào đang diễn ra.<br><span style="font-size:12px;margin-top:8px;display:block">Kiểm tra tab <strong>Lịch thi đấu</strong> để xem trận tiếp theo.</span></div>';
     restoreOpenPanels(openPanels,'live-content');
+    document.title='⚽ World Cup 2026 Live';
+    document.querySelectorAll('[data-tab="live"]').forEach(t=>{
+      t.innerHTML=t.classList.contains('bnav-item')
+        ?'<span class="bnav-icon">🔴</span>Live'
+        :'🔴 Live';
+    });
     return false;
   }
 
   const cards=[];
-  let html='<div class="match-group-label">🔴 Đang diễn ra</div>';
+  let html=`<div class="match-group-label">🔴 Đang diễn ra · ${liveEvents.length} trận</div>`;
   liveEvents.forEach(e=>{const r=renderMatchCard(e);if(r){cards.push(r);html+=r.html;}});
   el.innerHTML=html;
   restoreOpenPanels(openPanels,'live-content');
   cards.forEach(c=>{
     if(c.scoreChanged) animateScoreEl(c.mid);
     if(c.live) registerLiveClock(c.mid, c.displayClock, c.ht);
+  });
+  // Update page title with live count
+  document.title = `🔴 ${liveEvents.length} Live · ⚽ World Cup 2026`;
+  // Update live tab label
+  document.querySelectorAll('[data-tab="live"]').forEach(t=>{
+    t.innerHTML = t.classList.contains('bnav-item')
+      ? `<span class="bnav-icon">🔴</span>Live<sup style="font-size:9px;color:#ef4444;font-weight:800;margin-left:2px">${liveEvents.length}</sup>`
+      : `🔴 Live <sup style="font-size:9px;color:#ef4444;font-weight:800;vertical-align:top;margin-top:2px">${liveEvents.length}</sup>`;
   });
   return cards.some(c=>c.scoreChanged);
 }
