@@ -1576,16 +1576,19 @@ const _hlCache = {};
 function hlPlayVideo(panelId, videoId, title) {
   const panel = document.getElementById(panelId);
   if(!panel) return;
-  // Replace thumbnail grid with inline embed player
   const existing = panel.querySelector('.hl-embed-wrap');
-  if(existing) { existing.remove(); }
+  if(existing) existing.remove();
   const wrap = document.createElement('div');
   wrap.className = 'hl-embed-wrap';
   wrap.innerHTML = `<iframe src="https://geo.dailymotion.com/player.html?video=${videoId}&autoplay=1&mute=0" allowfullscreen allow="autoplay"></iframe>`;
-  // Insert before the grid
   const grid = panel.querySelector('.hl-grid');
   if(grid) panel.insertBefore(wrap, grid);
   else panel.prepend(wrap);
+  // Sync cache with current panel state (embed + grid) so refresh restores it correctly
+  const mid = panelId.replace('hlp_', '');
+  const btn = document.getElementById('hlb_' + mid);
+  const eventId = btn?.dataset?.event;
+  if(eventId) _hlCache[eventId] = panel.innerHTML;
 }
 
 async function toggleHighlights(eventId, mid, btn) {
@@ -1636,7 +1639,9 @@ async function toggleHighlights(eventId, mid, btn) {
     _hlCache[eventId] = html;
     panel.innerHTML = html;
   } catch(e) {
-    panel.innerHTML = `<div class="hl-no-result">Không tải được. <a href="https://www.dailymotion.com/search/${dmQuery}" target="_blank" style="color:#fbbf24">Tìm trên Dailymotion ↗</a></div>`;
+    const errHtml = `<div class="hl-no-result">Không tải được. <a href="https://www.dailymotion.com/search/${dmQuery}" target="_blank" style="color:#fbbf24">Tìm trên Dailymotion ↗</a></div>`;
+    _hlCache[eventId] = errHtml; // cache error state so panel survives refresh
+    panel.innerHTML = errHtml;
   }
 }
 
