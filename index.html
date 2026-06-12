@@ -196,6 +196,26 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .ai-panel.open{display:block}
 @keyframes fadeSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 
+/* HIGHLIGHTS */
+.hl-btn{display:flex;align-items:center;gap:7px;padding:8px 15px;cursor:pointer;border-top:1px solid var(--border);background:rgba(234,179,8,0.05);transition:background .15s;font-size:11px;font-weight:800;color:#fbbf24;letter-spacing:.3px;user-select:none}
+.hl-btn:hover{background:rgba(234,179,8,0.1)}
+.hl-btn .hl-arr{font-size:11px;color:var(--muted);transition:transform .25s;margin-left:auto}
+.hl-btn.open .hl-arr{transform:rotate(180deg)}
+.hl-panel{display:none;border-top:1px solid rgba(234,179,8,0.15);background:rgba(0,0,0,0.25);padding:12px 14px;animation:fadeSlide .25s ease}
+.hl-panel.open{display:block}
+.hl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:2px}
+.hl-item{border-radius:8px;overflow:hidden;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);transition:transform .15s,box-shadow .15s}
+.hl-item:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+.hl-thumb-wrap{position:relative;aspect-ratio:16/9;overflow:hidden;background:#111}
+.hl-thumb{width:100%;height:100%;object-fit:cover;display:block}
+.hl-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);font-size:22px;transition:background .15s}
+.hl-item:hover .hl-play{background:rgba(0,0,0,0.1)}
+.hl-title{padding:6px 8px;font-size:10px;font-weight:600;color:var(--text-secondary);line-height:1.3}
+.hl-dur{padding:0 8px 7px;font-size:9px;color:var(--muted)}
+.hl-yt{margin-top:10px;text-align:center}
+.hl-yt a{display:inline-flex;align-items:center;gap:5px;color:#f87171;font-size:11px;font-weight:700;text-decoration:none;padding:6px 14px;border:1px solid rgba(248,113,113,0.3);border-radius:20px;transition:background .15s}
+.hl-yt a:hover{background:rgba(248,113,113,0.1)}
+
 /* PREDICTED SCORE */
 .pred-score{text-align:center;margin-bottom:14px}
 .pred-lbl{font-size:9px;font-weight:800;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
@@ -1373,6 +1393,56 @@ function toggleAI(mid, btn) {
   }
 }
 
+// ── HIGHLIGHTS ──
+const _hlCache = {};
+async function toggleHighlights(eventId, mid, btn) {
+  const panel = document.getElementById('hlp_' + mid);
+  if(!panel) return;
+  const opening = !panel.classList.contains('open');
+  btn.classList.toggle('open', opening);
+  panel.classList.toggle('open', opening);
+  if(!opening) return;
+  if(_hlCache[eventId]) { panel.innerHTML = _hlCache[eventId]; return; }
+  panel.innerHTML = '<div style="padding:12px;text-align:center;font-size:12px;color:var(--muted)">⏳ Đang tải highlights...</div>';
+  try {
+    const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world';
+    const r = await fetch(`${ESPN_BASE}/summary?event=${eventId}&_=${Date.now()}`, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    const videos = data.videos || [];
+    const homeN = btn.closest('.match-card')?.querySelector('.team-name')?.textContent || '';
+    const awayN = btn.closest('.match-card')?.querySelectorAll('.team-name')?.[1]?.textContent || '';
+    const ytQuery = encodeURIComponent(`${homeN} vs ${awayN} World Cup 2026 highlights`);
+    const ytLink = `https://www.youtube.com/results?search_query=${ytQuery}`;
+    let html = '';
+    if(videos.length) {
+      html += '<div class="hl-grid">';
+      videos.forEach(v => {
+        const title = v.headline || 'Video';
+        const thumb = v.thumbnail || '';
+        const url = v.links?.web?.href || '#';
+        const dur = v.duration ? (() => { const s=v.duration; return s>=60 ? `${Math.floor(s/60)}m${s%60 ? s%60+'s' : ''}` : s+'s'; })() : '';
+        html += `<a class="hl-item" href="${url}" target="_blank" rel="noopener">
+          <div class="hl-thumb-wrap">${thumb ? `<img class="hl-thumb" src="${thumb}" loading="lazy" alt="">` : ''}<div class="hl-play">▶</div></div>
+          <div class="hl-title">${title}</div>
+          ${dur ? `<div class="hl-dur">⏱ ${dur}</div>` : ''}
+        </a>`;
+      });
+      html += '</div>';
+    } else {
+      html = '<div style="padding:10px 0;font-size:11px;color:var(--muted);text-align:center">Chưa có video clip từ ESPN</div>';
+    }
+    html += `<div class="hl-yt"><a href="${ytLink}" target="_blank" rel="noopener">▶ Tìm trên YouTube</a></div>`;
+    _hlCache[eventId] = html;
+    panel.innerHTML = html;
+  } catch(e) {
+    const homeN = btn.closest('.match-card')?.querySelector('.team-name')?.textContent || '';
+    const awayN = btn.closest('.match-card')?.querySelectorAll('.team-name')?.[1]?.textContent || '';
+    const ytQuery = encodeURIComponent(`${homeN} vs ${awayN} World Cup 2026 highlights`);
+    panel.innerHTML = `<div style="padding:10px 0;text-align:center"><div class="hl-yt"><a href="https://www.youtube.com/results?search_query=${ytQuery}" target="_blank" rel="noopener">▶ Tìm trên YouTube</a></div></div>`;
+  }
+}
+
 // ── RENDER MATCH CARD ──
 function renderMatchCard(event) {
   const comp = event.competitions?.[0]; if(!comp) return '';
@@ -1475,6 +1545,7 @@ function renderMatchCard(event) {
       ${momentumHTML}
     </div>
     ${resultBannerHTML}
+    ${finished ? `<div class="hl-btn" id="hlb_${mid}" onclick="toggleHighlights('${event.id}','${mid}',this)"><span>🎬 Highlights</span><span class="hl-arr">▼</span></div><div class="hl-panel" id="hlp_${mid}"></div>` : ''}
     ${chipHTML}
     ${verdictHTML}
     ${oddsRow}
