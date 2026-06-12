@@ -1545,7 +1545,7 @@ function renderLive(events) {
   const el=document.getElementById('live-content');
   const liveEvents=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
   const openPanels=saveOpenPanels('live-content');
-  clearAllCountdowns();
+  // Do NOT clearAllCountdowns() here — that would wipe Schedule tab countdowns on every 10s refresh
 
   if(!liveEvents.length){
     el.innerHTML='<div class="loading" style="padding:44px 20px">😴 Hiện không có trận nào đang diễn ra.<br><span style="font-size:12px;margin-top:8px;display:block">Kiểm tra tab <strong>Lịch thi đấu</strong> để xem trận tiếp theo.</span></div>';
@@ -1650,6 +1650,7 @@ function renderSchedule(events) {
     html+=`<div class="match-group-label">📅 ${date}</div>`;
     evs.forEach(e=>{const r=renderMatchCard(e);if(r){html+=r.html;cards.push(r);}});
   });
+  clearAllCountdowns(); // clear before replacing DOM so old intervals don't linger
   el.innerHTML=html;
   cards.forEach(c=>{if(c.upcoming&&c.date) startCountdown(c.mid,c.date);});
   // Note: schedule tab renders once and is not auto-refreshed — switching tab reloads if not yet loaded
