@@ -1812,6 +1812,7 @@ let _firstLoad = true;
 let _isLoading = false; // guard against concurrent fetches
 let _retryCount = 0;
 let _nextInterval = 60;
+let _prevDoneIds = '';
 
 // ── DATE UTILS ──
 function utcDate(offset=0){
@@ -1868,7 +1869,9 @@ async function loadScores() {
       if(seen.has(e.id)) return false; seen.add(e.id); return true;
     });
     const scoreChanged=renderLive(events);
-    renderResults(events);
+    // Only re-render Results when the set of finished matches changes — avoids destroying hl panels every 5-10s
+    const doneIds=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name)).map(e=>e.id).sort().join(',');
+    if(doneIds!==_prevDoneIds){_prevDoneIds=doneIds;renderResults(events);}
     updateTicker(events);
     const hasLive=events.some(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
     _nextInterval = scoreChanged ? 5 : hasLive ? 10 : 60;
