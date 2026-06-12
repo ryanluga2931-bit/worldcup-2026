@@ -1730,8 +1730,8 @@ async function loadSchedule() {
 
 function renderSchedule(events) {
   const el=document.getElementById('schedule-content');
-  // Only show scheduled (upcoming) matches in schedule tab — completed/live go to their own tabs
-  const upcoming=events.filter(e=>!DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name)&&!LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+  // Only show upcoming (STATUS_SCHEDULED) — live and finished matches belong to their own tabs
+  const upcoming=events.filter(e=>e.competitions?.[0]?.status?.type?.name==='STATUS_SCHEDULED');
   if(!upcoming.length){el.innerHTML='<div class="loading" style="padding:44px 20px">✅ Không còn trận nào sắp thi đấu trong 7 ngày tới.</div>';return;}
   const byDate={};
   upcoming.forEach(e=>{
