@@ -1393,7 +1393,7 @@ function renderMatchCard(event) {
   const momentumHTML = live ? `
     <div class="momentum-bar">
       <span>${homeN.split(' ').pop()}</span>
-      <div class="momentum-track"><div class="momentum-fill" style="width:${p.momentum}%"></div></div>
+      <div class="momentum-track"><div class="momentum-fill" style="width:0" data-m="${p.momentum}"></div></div>
       <span>${awayN.split(' ').pop()}</span>
     </div>` : '';
 
@@ -1614,6 +1614,10 @@ function renderLive(events) {
     if(c.scoreChanged) animateScoreEl(c.mid);
     if(c.live) registerLiveClock(c.mid, c.displayClock, c.ht);
   });
+  // Animate momentum bars (start at 0, transition to target width)
+  setTimeout(()=>{
+    el.querySelectorAll('.momentum-fill[data-m]').forEach(el=>{el.style.width=el.dataset.m+'%';});
+  }, 60);
   // Update page title with live count
   document.title = `🔴 ${liveEvents.length} Live · ⚽ World Cup 2026`;
   // Update live tab label
