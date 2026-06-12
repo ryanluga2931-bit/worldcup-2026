@@ -67,6 +67,24 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .match-card.live{border-color:rgba(239,68,68,0.42);box-shadow:0 0 32px rgba(239,68,68,0.2),0 4px 24px rgba(0,0,0,.5);background:linear-gradient(135deg,rgba(17,24,39,0.95) 0%,rgba(32,10,10,0.95) 100%)}
 .match-card.live::after{content:'';position:absolute;inset:0;border-radius:var(--radius);border:1px solid rgba(239,68,68,0.25);animation:lpulse 2.2s ease-in-out infinite;pointer-events:none;will-change:opacity;z-index:0}
 @keyframes lpulse{0%,100%{opacity:1}50%{opacity:0}}
+/* Live intensity levels — escalate visual urgency as match heats up */
+.match-card.live.intensity-high{border-color:rgba(239,68,68,0.58);box-shadow:0 0 44px rgba(239,68,68,0.28),0 4px 24px rgba(0,0,0,.6)}
+.match-card.live.intensity-high::after{animation:lpulse 1.6s ease-in-out infinite;border-color:rgba(239,68,68,0.38)}
+.match-card.live.intensity-critical{border-color:rgba(239,68,68,0.80);box-shadow:0 0 56px rgba(239,68,68,0.45),0 0 96px rgba(239,68,68,0.12),0 4px 24px rgba(0,0,0,.7);background:linear-gradient(135deg,rgba(45,8,8,0.98) 0%,rgba(24,10,10,0.98) 100%)}
+.match-card.live.intensity-critical::after{animation:lpulse 0.9s ease-in-out infinite;border-color:rgba(239,68,68,0.55)}
+/* Featured badge strip at top of card */
+.featured-strip{height:3px;background:linear-gradient(90deg,transparent,rgba(239,68,68,0.9),rgba(239,68,68,0.9),transparent);animation:featuredSlide 2s ease-in-out infinite}
+@keyframes featuredSlide{0%,100%{opacity:.6}50%{opacity:1}}
+/* Goal flash ripple from score box */
+@keyframes goalRipple{0%{box-shadow:0 0 0 0 rgba(74,222,128,0.7)}70%{box-shadow:0 0 0 18px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+.score-box.goal-flash{animation:goalRipple 0.9s ease-out;border-radius:8px}
+/* Score digit roll-in animation (replaces simple scale) */
+@keyframes scoreRoll{0%{transform:translateY(-60%) scale(1.5);opacity:0}60%{transform:translateY(6%) scale(1.05);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
+.score.scored{animation:scoreRoll 0.48s cubic-bezier(.34,1.56,.64,1);color:#4ade80;will-change:transform,opacity}
+/* Late-game urgency: clock blinks red */
+@keyframes urgentTick{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.55;transform:scale(1.08)}}
+.live-min.urgent,.badge.live.urgent{animation:urgentTick 0.85s ease-in-out infinite}
+.badge.live.urgent{background:rgba(239,68,68,0.28);color:#fca5a5}
 .match-card.hot{border-color:rgba(245,158,11,0.38);box-shadow:var(--glow-gold)}
 .match-card.fav-home{background:linear-gradient(105deg,rgba(34,197,94,0.05) 0%,rgba(17,24,39,0.92) 45%)}
 .match-card.fav-away{background:linear-gradient(255deg,rgba(34,197,94,0.05) 0%,rgba(17,24,39,0.92) 45%)}
@@ -848,14 +866,15 @@ function startRefreshCountdown(secs){
 }
 
 // ── STATUS BADGE ──
-function statusBadge(status, mid){
+function statusBadge(status, mid, urgent=false){
   if(!status) return '';
   const s=status.type?.name||'';
   const min=status.displayClock||'';
-  if(['STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_IN_PROGRESS'].includes(s)) return `<span class="badge live">🔴 <span id="clk_${mid}">${min}</span></span>`;
+  const u = urgent ? ' urgent' : '';
+  if(['STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_IN_PROGRESS'].includes(s)) return `<span class="badge live${u}">🔴 <span id="clk_${mid}">${min}</span></span>`;
   if(s==='STATUS_HALFTIME') return `<span class="badge ht">⏸ <span id="clk_${mid}">HT</span></span>`;
-  if(['STATUS_EXTRA_TIME','STATUS_OVERTIME'].includes(s)) return `<span class="badge live">🔴 ET <span id="clk_${mid}">${min}</span></span>`;
-  if(s==='STATUS_SHOOTOUT') return `<span class="badge live">🔴 PKS</span>`;
+  if(['STATUS_EXTRA_TIME','STATUS_OVERTIME'].includes(s)) return `<span class="badge live${u}">🔴 ET <span id="clk_${mid}">${min}</span></span>`;
+  if(s==='STATUS_SHOOTOUT') return `<span class="badge live urgent">🔴 PKS</span>`;
   if(['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'].includes(s)) return `<span class="badge ft">✅ FT</span>`;
   return `<span class="badge ns">${status.type?.description||'Sắp đấu'}</span>`;
 }
@@ -1470,10 +1489,29 @@ function checkScoreChanged(mid, hs, as_) {
   return changed;
 }
 function animateScoreEl(mid) {
+  // Roll-in animation on each score digit
   ['h','a'].forEach(t=>{
     const el=document.getElementById(`sc_${t}_${mid}`);
     if(el){el.classList.remove('scored');void el.offsetWidth;el.classList.add('scored');}
   });
+  // Ripple flash from score box
+  const box=document.querySelector(`#mc_${mid} .score-box`);
+  if(box){box.classList.remove('goal-flash');void box.offsetWidth;box.classList.add('goal-flash');}
+  setTimeout(()=>document.querySelector(`#mc_${mid} .score-box`)?.classList.remove('goal-flash'),1000);
+}
+
+// Calculate live intensity level from match state
+function calcIntensity(clockStr, homeScore, awayScore, sName) {
+  const mins = parseInt(clockStr) || 0;
+  const hS = parseInt(homeScore) || 0;
+  const aS = parseInt(awayScore) || 0;
+  const diff = Math.abs(hS - aS);
+  const goals = hS + aS;
+  const isET = ['STATUS_EXTRA_TIME','STATUS_OVERTIME','STATUS_SHOOTOUT'].includes(sName);
+  if(isET || (mins >= 80 && diff <= 1)) return 'critical';
+  if(mins >= 65 && diff <= 1 && goals > 0) return 'high';
+  if(mins >= 45) return 'medium';
+  return '';
 }
 
 // ── AI PANEL HTML ──
@@ -1703,7 +1741,14 @@ function renderMatchCard(event) {
   const predictedHome = p.hW > p.aW;
   const predictedAway = p.aW > p.hW;
   const favClass = predictedHome ? ' fav-home' : predictedAway ? ' fav-away' : '';
-  const cardClass = `match-card${live?' live':''}${(!live&&p.isHot)?' hot':''}${favClass}`;
+  // Live intensity based on match time, score, and status
+  const intensity = live ? calcIntensity(comp.status?.displayClock||'', homeScore, awayScore, sName) : '';
+  const intensityClass = intensity ? ` intensity-${intensity}` : '';
+  const cardClass = `match-card${live?' live':''}${intensityClass}${(!live&&p.isHot)?' hot':''}${favClass}`;
+  // Featured strip on critical/high intensity matches
+  const featuredStrip = (intensity==='critical'||intensity==='high') ? '<div class="featured-strip"></div>' : '';
+  // Urgency: late game close matches — clock blinks
+  const isUrgent = intensity==='critical';
 
   // Odds table (kèo chấp + tài xỉu + 1x2)
   const o = calcAsianOdds(homeN, awayN, p);
@@ -1722,9 +1767,10 @@ function renderMatchCard(event) {
 
   const html = `
   <div class="${cardClass}" id="mc_${mid}">
+    ${featuredStrip}
     <div class="card-top">
       <span class="match-time">${timeVN(event.date)}${roundLabel?` · <span style="font-size:9px;color:var(--muted);font-weight:700">${roundLabel}</span>`:''}</span>
-      <div class="card-badges">${statusBadge(status,mid)}${hotBadge}${upsetBadge}</div>
+      <div class="card-badges">${statusBadge(status,mid,isUrgent)}${hotBadge}${upsetBadge}</div>
     </div>
     <div class="match-body">
       <div class="match-teams">
