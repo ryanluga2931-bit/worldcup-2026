@@ -94,3 +94,4 @@ Mỗi match card có:
 - Validate JS syntax với `node -e "new Function(...)"` trước khi commit
 - User **không dùng terminal** — mọi thứ qua Claude
 - Commit message tiếng Anh, ngắn gọn, mô tả đúng thay đổi
+- **Sau mỗi lần nâng cấp: recheck toàn bộ — tìm dead variables, CSS conflicts, undefined refs, cascade issues — fix đến khi sạch hoàn toàn trước khi push**

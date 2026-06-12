@@ -181,8 +181,6 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .fd.W{background:var(--green)}.fd.D{background:var(--accent)}.fd.L{background:var(--live)}
 .score-box{display:flex;align-items:center;gap:5px}
 .score{font-size:34px;font-weight:900;min-width:34px;text-align:center;color:var(--text);font-variant-numeric:tabular-nums;display:inline-block;transition:color .4s}
-.score.scored{animation:scoreFlip .5s cubic-bezier(.34,1.56,.64,1);color:var(--green)}
-@keyframes scoreFlip{0%{transform:scale(1)}50%{transform:scale(1.45) rotate(-4deg)}100%{transform:scale(1)}}
 .score-sep{font-size:20px;color:var(--muted);font-weight:300}
 .score-vs{font-size:15px;color:var(--muted);font-weight:500}
 .countdown{font-size:11px;font-weight:700;color:#93c5fd;text-align:center;margin-top:3px;letter-spacing:.4px}
@@ -913,7 +911,6 @@ function calcAsianOdds(homeN, awayN, p) {
 
   // Favorite based on win probability (more accurate than score diff)
   const homeFav = hW >= aW;
-  const winDiff = Math.abs(hW - aW);
   const fL = homeFav ? hXGf : aXGf; // favorite's xG lambda
   const uL = homeFav ? aXGf : hXGf; // underdog's xG lambda
 
@@ -932,7 +929,6 @@ function calcAsianOdds(homeN, awayN, p) {
   // Cover probabilities: blend Poisson (score distribution) + ELO (overall strength)
   // Poisson alone underestimates dominant team's win rate vs ELO
   const pW1=pDiffGte(fL,uL,1), pW2=pDiffGte(fL,uL,2), pW3=pDiffGte(fL,uL,3);
-  const pDr=pDiffGte(fL,uL,0)-pW1;
   const favWpct = (homeFav ? hW : aW) / 100; // ELO-based win probability for favorite
   const AH_EDGE=0.01; // Asian market ~1% edge (very competitive, tighter than 1x2)
   const ahHK=(fc)=>Math.max(0.60,Math.min(1.50,((1-AH_EDGE)/Math.max(0.35,Math.min(0.65,fc)))-1));
@@ -1510,8 +1506,7 @@ function calcIntensity(clockStr, homeScore, awayScore, sName) {
   const isET = ['STATUS_EXTRA_TIME','STATUS_OVERTIME','STATUS_SHOOTOUT'].includes(sName);
   if(isET || (mins >= 80 && diff <= 1)) return 'critical';
   if(mins >= 65 && diff <= 1 && goals > 0) return 'high';
-  if(mins >= 45) return 'medium';
-  return '';
+  return ''; // below threshold: base .live styling is sufficient
 }
 
 // ── AI PANEL HTML ──
