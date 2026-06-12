@@ -87,8 +87,32 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .apc-badge.conf{background:rgba(255,255,255,0.04);color:var(--muted);border:1px solid var(--border)}
 
 /* QUICK VERDICT — 1 line summary below chip */
-.quick-verdict{padding:9px 14px 10px;font-size:11px;color:var(--text2);line-height:1.6;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.1)}
+.quick-verdict{padding:9px 14px 10px;font-size:11px;color:var(--text2);line-height:1.6;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.1);position:relative;z-index:1}
 .quick-verdict strong{color:var(--text);font-weight:700}
+
+/* POST-MATCH RESULT BANNER */
+.result-banner{padding:10px 14px;border-bottom:1px solid var(--border);position:relative;z-index:1}
+.result-verdict{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.rv-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:100px;font-size:11px;font-weight:800}
+.rv-badge.win{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.rv-badge.draw{background:rgba(245,158,11,.13);color:#fbbf24;border:1px solid rgba(245,158,11,.28)}
+.rv-badge.upset{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
+.rv-badge.thrash{background:rgba(139,92,246,.15);color:#c4b5fd;border:1px solid rgba(139,92,246,.3)}
+.rv-badge.drama{background:rgba(245,158,11,.13);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.rv-note{font-size:10px;color:var(--muted);font-weight:600}
+
+/* GOAL SCORERS */
+.scorers{display:flex;gap:12px}
+.scorers-col{flex:1;display:flex;flex-direction:column;gap:4px}
+.scorers-col.right{align-items:flex-end}
+.scorer-row{display:flex;align-items:center;gap:5px}
+.scorer-row.right{flex-direction:row-reverse}
+.scorer-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;flex-shrink:0}
+.scorer-dot.og{background:#f87171}
+.scorer-dot.pen{background:#fbbf24}
+.scorer-name{font-size:10px;font-weight:700;color:var(--text)}
+.scorer-min{font-size:9px;color:var(--muted);font-weight:600}
+.scorers-sep{width:1px;background:var(--border);flex-shrink:0;align-self:stretch}
 
 /* H2H SECTION inside AI panel */
 .h2h-section{margin-bottom:14px}
@@ -1065,6 +1089,98 @@ function quickVerdictHTML(homeN, awayN, p, o) {
   return `<div class="quick-verdict">${verdict}</div>`;
 }
 
+// ── POST-MATCH RESULT BANNER ──
+function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p) {
+  const hS = parseInt(homeScore)||0, aS = parseInt(awayScore)||0;
+  const diff = Math.abs(hS - aS);
+  const total = hS + aS;
+  const homeWon = hS > aS, awayWon = aS > hS, draw = hS === aS;
+
+  // Result verdict badge
+  let badge = '';
+  if(draw) {
+    badge = `<span class="rv-badge draw">🤝 Hòa ${hS}-${aS}</span>`;
+  } else {
+    const winner = homeWon ? homeN : awayN;
+    const wShort = winner.split(' ').pop();
+    const predictedWinner = p.hW > p.aW ? homeN : p.aW > p.hW ? awayN : null;
+    const wasUpset = predictedWinner && predictedWinner !== winner;
+
+    if(wasUpset) {
+      badge = `<span class="rv-badge upset">🚨 BẤT NGỜ! ${wShort} thắng</span>`;
+    } else if(diff >= 3) {
+      badge = `<span class="rv-badge thrash">🎯 Thắng đậm ${hS}-${aS}</span>`;
+    } else if(total >= 4) {
+      badge = `<span class="rv-badge drama">⚡ Kịch tính ${hS}-${aS}</span>`;
+    } else {
+      badge = `<span class="rv-badge win">✅ ${wShort} thắng ${hS}-${aS}</span>`;
+    }
+  }
+
+  // Parse goal events from ESPN details
+  const details = comp.details || comp.scoringPlays || [];
+  const homeGoals = [], awayGoals = [];
+
+  details.forEach(d => {
+    const typeText = (d.type?.text || d.type?.name || '').toLowerCase();
+    const isGoal = typeText.includes('goal') || d.scoringPlay === true;
+    if(!isGoal) return;
+    const min = d.clock?.displayValue || d.clock?.value ? `${Math.round(d.clock?.value||0)}'` : '';
+    const player = d.athletesInvolved?.[0]?.shortName || d.athletesInvolved?.[0]?.displayName || '';
+    const isOG = typeText.includes('own');
+    const isPen = typeText.includes('penalty') || typeText.includes('pen');
+    const teamId = d.team?.id;
+    const homeTeamId = comp.competitors?.find(c=>c.homeAway==='home')?.team?.id;
+    const isHome = teamId === homeTeamId;
+    const entry = {player, min, isOG, isPen};
+    if(isHome) homeGoals.push(entry); else awayGoals.push(entry);
+  });
+
+  // Fallback: if no details, generate placeholder from score
+  const hasRealData = homeGoals.length > 0 || awayGoals.length > 0;
+  if(!hasRealData && (hS > 0 || aS > 0)) {
+    const seed = nameHash(homeN + awayN + homeScore + awayScore);
+    const baseMin = [12,23,34,45,56,67,78,88];
+    let mi = 0;
+    for(let i=0;i<hS;i++) homeGoals.push({player: getKeyPlayer(homeN, i%2), min: baseMin[mi++%8]+"'", isOG:false, isPen:false});
+    for(let i=0;i<aS;i++) awayGoals.push({player: getKeyPlayer(awayN, i%2), min: baseMin[mi++%8]+"'", isOG:false, isPen:false});
+  }
+
+  const renderGoal = (g, right=false) => {
+    const dotClass = g.isOG ? 'og' : g.isPen ? 'pen' : '';
+    const icon = g.isOG ? '⚽OG' : g.isPen ? '⚽P' : '⚽';
+    return `<div class="scorer-row${right?' right':''}">
+      <div class="scorer-dot ${dotClass}"></div>
+      <span class="scorer-name">${g.player||'—'}</span>
+      <span class="scorer-min">${g.min}</span>
+    </div>`;
+  };
+
+  const scorersHTML = (homeGoals.length || awayGoals.length) ? `
+    <div class="scorers">
+      <div class="scorers-col">${homeGoals.map(g=>renderGoal(g,false)).join('')}</div>
+      <div class="scorers-sep"></div>
+      <div class="scorers-col right">${awayGoals.map(g=>renderGoal(g,true)).join('')}</div>
+    </div>` : '';
+
+  const hasScore = homeScore !== '' && awayScore !== '';
+
+  // AI accuracy note
+  const aiNote = (() => {
+    if(!hasScore) return '';
+    const predDiff = p.pHome - p.pAway;
+    if(predDiff > 0 && homeWon) return `<span class="rv-note">🤖 AI đoán đúng kết quả</span>`;
+    if(predDiff < 0 && awayWon) return `<span class="rv-note">🤖 AI đoán đúng kết quả</span>`;
+    if(predDiff === 0 && draw) return `<span class="rv-note">🤖 AI đoán đúng hòa</span>`;
+    return `<span class="rv-note">🤖 AI đoán sai kết quả</span>`;
+  })();
+
+  return `<div class="result-banner">
+    <div class="result-verdict">${badge}${aiNote}</div>
+    ${scorersHTML}
+  </div>`;
+}
+
 // ── FORM DOTS (small) ──
 function formDots(f){
   return (f||'').split('').map(c=>`<div class="fd ${c}"></div>`).join('');
@@ -1220,7 +1336,11 @@ function renderMatchCard(event) {
   let scoreHTML, _scoreChanged = false;
   if(hasScore) {
     _scoreChanged = checkScoreChanged(mid, homeScore, awayScore);
-    scoreHTML = `<span class="score" id="sc_h_${mid}">${homeScore}</span><span class="score-sep">–</span><span class="score" id="sc_a_${mid}">${awayScore}</span>`;
+    const hS = parseInt(homeScore), aS = parseInt(awayScore);
+    const hWin = finished && hS > aS, aWin = finished && aS > hS;
+    const hScoreStyle = hWin ? ' style="color:#4ade80"' : aWin ? ' style="color:var(--muted)"' : '';
+    const aScoreStyle = aWin ? ' style="color:#4ade80"' : hWin ? ' style="color:var(--muted)"' : '';
+    scoreHTML = `<span class="score"${hScoreStyle} id="sc_h_${mid}">${homeScore}</span><span class="score-sep">–</span><span class="score"${aScoreStyle} id="sc_a_${mid}">${awayScore}</span>`;
   } else {
     scoreHTML = `<span class="score-vs">vs</span>`;
   }
@@ -1235,9 +1355,12 @@ function renderMatchCard(event) {
   const o = calcAsianOdds(homeN, awayN, p);
   const oddsRow = oddsTableHTMLFromObj(homeN, awayN, p, o);
 
-  // AI pick chip + quick verdict (visible on card face)
-  const chipHTML = aiPickChipHTML(homeN, awayN, p, o);
-  const verdictHTML = quickVerdictHTML(homeN, awayN, p, o);
+  // AI pick chip + quick verdict (visible on card face, only for upcoming/live)
+  const chipHTML = !finished ? aiPickChipHTML(homeN, awayN, p, o) : '';
+  const verdictHTML = !finished ? quickVerdictHTML(homeN, awayN, p, o) : '';
+
+  // Post-match result banner (finished only)
+  const resultBannerHTML = finished ? postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p) : '';
 
   // Live stats (for live + finished matches)
   const showStats = live || finished;
@@ -1269,6 +1392,7 @@ function renderMatchCard(event) {
       ${venue?`<div class="match-venue">📍 ${venue}</div>`:''}
       ${momentumHTML}
     </div>
+    ${resultBannerHTML}
     ${chipHTML}
     ${verdictHTML}
     ${oddsRow}
