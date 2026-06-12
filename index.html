@@ -1357,6 +1357,9 @@ function renderMatchCard(event) {
   // upcoming matches may return score='0' from ESPN — treat as no score
   const hasScore = !upcoming && homeScore!=='' && awayScore!=='';
   const venue = comp.venue?.fullName||'';
+  // Tournament round / group label from ESPN
+  const groupName = event.season?.slug || comp.groups?.[0]?.name || comp.notes?.[0]?.headline || '';
+  const roundLabel = groupName.replace(/^.*(group [a-z]|round of|quarter|semi|final)/i, m => m).slice(0,22);
   const p = predict(homeN, awayN);
 
   // Hot match badge
@@ -1411,7 +1414,7 @@ function renderMatchCard(event) {
   const html = `
   <div class="${cardClass}" id="mc_${mid}">
     <div class="card-top">
-      <span class="match-time">${timeVN(event.date)}</span>
+      <span class="match-time">${timeVN(event.date)}${roundLabel?` · <span style="font-size:9px;color:var(--muted);font-weight:700">${roundLabel}</span>`:''}</span>
       <div class="card-badges">${statusBadge(status,mid)}${hotBadge}${upsetBadge}</div>
     </div>
     <div class="match-body">
