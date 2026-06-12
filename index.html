@@ -1567,6 +1567,7 @@ function renderLive(events) {
 function renderResults(events) {
   const el=document.getElementById('results-content');
   const done=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+  const openPanels=saveOpenPanels('results-content');
 
   if(!done.length){
     el.innerHTML='<div class="loading" style="padding:44px 20px">📋 Chưa có trận nào kết thúc hôm nay.</div>';
@@ -1587,6 +1588,7 @@ function renderResults(events) {
     evs.forEach(e=>{const r=renderMatchCard(e);if(r) html+=r.html;});
   });
   el.innerHTML=html;
+  restoreOpenPanels(openPanels,'results-content');
 }
 
 // ── TICKER UPDATE (uses all LIVE_STATUSES) ──
@@ -1632,9 +1634,11 @@ async function loadSchedule() {
 
 function renderSchedule(events) {
   const el=document.getElementById('schedule-content');
-  if(!events.length){el.innerHTML='<div class="loading">Không có dữ liệu.</div>';return;}
+  // Only show scheduled (upcoming) matches in schedule tab — completed/live go to their own tabs
+  const upcoming=events.filter(e=>!DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name)&&!LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+  if(!upcoming.length){el.innerHTML='<div class="loading" style="padding:44px 20px">✅ Không còn trận nào sắp thi đấu trong 7 ngày tới.</div>';return;}
   const byDate={};
-  events.forEach(e=>{
+  upcoming.forEach(e=>{
     const d=new Date(e.date).toLocaleDateString('vi-VN',{weekday:'short',day:'2-digit',month:'2-digit',timeZone:'Asia/Ho_Chi_Minh'});
     if(!byDate[d]) byDate[d]=[];
     byDate[d].push(e);
@@ -1646,6 +1650,7 @@ function renderSchedule(events) {
   });
   el.innerHTML=html;
   cards.forEach(c=>{if(c.upcoming&&c.date) startCountdown(c.mid,c.date);});
+  // Note: schedule tab renders once and is not auto-refreshed — switching tab reloads if not yet loaded
 }
 
 // ── LOAD GROUPS ──
