@@ -703,10 +703,10 @@ function timeVN(d){
   return dt.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Ho_Chi_Minh'})+' · '+dt.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',timeZone:'Asia/Ho_Chi_Minh'});
 }
 
-// ── DECIMAL ODDS ──
+// ── DECIMAL ODDS (includes ~6% house margin to match real bookmaker odds) ──
 function toOdds(pct) {
   if(!pct || pct <= 0) return '—';
-  return (100 / pct).toFixed(2);
+  return Math.max(1.01, 100 / (pct * 0.945)).toFixed(2);
 }
 
 // ── ASIAN HANDICAP + O/U ENGINE ──
