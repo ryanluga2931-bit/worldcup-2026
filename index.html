@@ -2045,6 +2045,8 @@ let _isLoading = false; // guard against concurrent fetches
 let _retryCount = 0;
 let _nextInterval = 60;
 let _prevDoneIds = '';
+let _pastEvents = []; // finished matches from days before yesterday, loaded once
+let _lastCurrentEvents = []; // last events from loadScores, kept so loadPastResults can re-render
 
 // ── DATE UTILS ──
 function utcDate(offset=0){
@@ -2100,6 +2102,7 @@ async function loadScores() {
     const events=fetched.flatMap(r=>r.events||[]).filter(e=>{
       if(seen.has(e.id)) return false; seen.add(e.id); return true;
     });
+    _lastCurrentEvents=events;
     const scoreChanged=renderLive(events);
     // Only re-render Results when the set of finished matches changes — avoids destroying hl panels every 5-10s
     const doneIds=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name)).map(e=>e.id).sort().join(',');
@@ -2241,11 +2244,18 @@ function renderLive(events) {
 // ── RENDER RESULTS TAB ──
 function renderResults(events) {
   const el=document.getElementById('results-content');
-  const done=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+  // Merge current-window done events with past events (loaded separately, days -2 to -14)
+  const currentDone=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+  const currentIds=new Set(currentDone.map(e=>e.id));
+  const done=[...currentDone, ..._pastEvents.filter(e=>!currentIds.has(e.id))];
+  // Sort newest first
+  done.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  // Track current done IDs on element so loadPastResults can trigger a re-render
+  el.dataset.currentDone=currentDone.map(e=>e.id).join(',');
   const openPanels=saveOpenPanels('results-content');
 
   if(!done.length){
-    el.innerHTML='<div class="loading" style="padding:44px 20px">📋 Chưa có trận nào kết thúc hôm nay.</div>';
+    el.innerHTML='<div class="loading" style="padding:44px 20px">📋 Chưa có trận nào kết thúc.<br><span style="font-size:12px;color:var(--muted)">Kết quả sẽ xuất hiện sau khi các trận kết thúc.</span></div>';
     return;
   }
 
@@ -2302,6 +2312,26 @@ function updateTicker(events) {
   // Repeat enough times so ticker always fills viewport for smooth loop
   const repeat=Math.max(2, Math.ceil(6/live.length));
   el.innerHTML=items.repeat(repeat);
+}
+
+// ── LOAD PAST RESULTS (days -2 to -14, run once to fill results tab with older matches) ──
+async function loadPastResults() {
+  // Fetch up to 14 days back in parallel, skip yesterday(-1) which loadScores already covers
+  const offsets=[-2,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-14];
+  try {
+    const fetched=await Promise.all(
+      offsets.map(i=>fetchWithRetry(`${ESPN_BASE}/scoreboard?limit=50&dates=${utcDate(i)}`).catch(()=>({events:[]})))
+    );
+    const seen=new Set();
+    const past=fetched.flatMap(r=>r.events||[]).filter(e=>{
+      if(seen.has(e.id)) return false; seen.add(e.id); return true;
+    }).filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
+    if(!past.length) return;
+    _pastEvents=past;
+    // Force Results tab to re-render with past events merged in alongside current window events
+    _prevDoneIds='';
+    renderResults(_lastCurrentEvents);
+  } catch(e) {}
 }
 
 // ── LOAD SCHEDULE (fetch next 7 days as separate requests — ESPN doesn't support date ranges) ──
@@ -2490,6 +2520,7 @@ if(_heroEl) _heroObserver.observe(_heroEl);
 // Load schedule immediately (default tab), load scores in background for Live/Results tabs
 loadSchedule();
 loadScores();
+loadPastResults(); // fetch days -2 to -14 once for Results tab history
 </script>
 </body>
 </html>
