@@ -453,6 +453,16 @@ main{-webkit-overflow-scrolling:touch}
 .badge.stage-group{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border)}
 /* Touch active state */
 .match-card:active{transform:translateY(0) scale(0.988);transition:transform .07s}
+/* Live Insight — 1-line status below score on live cards */
+.live-insight{text-align:center;font-size:11px;font-weight:700;color:var(--text2);margin-top:7px;padding:4px 14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:100px;letter-spacing:.25px;max-width:90%;margin-left:auto;margin-right:auto}
+/* MUST WATCH badge — top team clash */
+@keyframes mwPulse{0%,100%{border-color:rgba(245,158,11,.42);box-shadow:none}50%{border-color:rgba(245,158,11,.85);box-shadow:0 0 8px rgba(245,158,11,.3)}}
+.badge.mustwatch{background:linear-gradient(90deg,rgba(245,158,11,.18),rgba(239,68,68,.12));color:#fde68a;border:1px solid rgba(245,158,11,.42);animation:mwPulse 2.2s ease-in-out infinite}
+.badge.bigmatch{background:rgba(139,92,246,.13);color:#c4b5fd;border:1px solid rgba(139,92,246,.32)}
+/* Heartbeat on live scores between API refreshes */
+@keyframes heartbeat{0%,100%{transform:scale(1)}14%{transform:scale(1.06)}28%{transform:scale(1)}}
+.match-card.live .score{animation:heartbeat 3s ease-in-out infinite}
+.match-card.live .score.scored{animation:scoreRoll 0.48s cubic-bezier(.34,1.56,.64,1)}
 </style>
 </head>
 <body>
@@ -1523,6 +1533,37 @@ function animateScoreEl(mid) {
   setTimeout(()=>document.querySelector(`#mc_${mid} .score-box`)?.classList.remove('goal-flash'),1000);
 }
 
+// Live Insight — 1-line contextual status for a live match
+function liveInsight(homeN, awayN, p, homeScore, awayScore, clockStr, sName) {
+  const mins = parseInt(clockStr)||0;
+  const hS = parseInt(homeScore)||0;
+  const aS = parseInt(awayScore)||0;
+  const diff = hS - aS;
+  const total = hS + aS;
+  const isET = ['STATUS_EXTRA_TIME','STATUS_OVERTIME','STATUS_SHOOTOUT'].includes(sName);
+  const isPKS = sName==='STATUS_SHOOTOUT';
+  const hShort = homeN.split(' ').pop();
+  const aShort = awayN.split(' ').pop();
+  if(isPKS) return '🎯 Loạt đá luân lưu quyết định!';
+  if(isET && diff===0) return `⏰ Hiệp phụ · Hòa ${hS}-${aS} — ai ghi trước thắng!`;
+  if(isET && diff>0) return `🔒 ${hShort} dẫn ${hS}-${aS} · Đang giữ vững hiệp phụ`;
+  if(isET && diff<0) return `⚡ ${aShort} dẫn ${hS}-${aS} · ${hShort} cần bàn gỡ`;
+  if(sName==='STATUS_HALFTIME') return `⏸ Giải lao · ${hS}-${aS} · Chờ hiệp 2`;
+  if(mins>=85 && diff===0) return `😰 Hòa ${hS}-${aS} · Còn ít phút — cực kỳ căng thẳng!`;
+  if(mins>=85 && diff===1) return `🔒 ${hShort} bảo vệ ${hS}-${aS} · ${mins}' — ${aShort} tìm bàn gỡ`;
+  if(mins>=85 && diff===-1) return `⚡ ${aShort} dẫn ${hS}-${aS} · ${mins}' — ${hShort} phải ghi gấp!`;
+  if(mins>=85 && diff>1) return `✅ ${hShort} gần như chắc thắng ${hS}-${aS}`;
+  if(mins>=70 && diff===0) return `🔥 Hòa ${hS}-${aS} · ${mins}' — trận chiến chưa ngã ngũ`;
+  if(total>=4) return `🔥 Trận cầu mãn nhãn ${hS}-${aS} · Đã ${total} bàn thắng!`;
+  if(total>=3) return `⚽ ${hS}-${aS} · Nhiều bàn — rất hấp dẫn!`;
+  if(diff>1) return `💪 ${hShort} kiểm soát ${hS}-${aS} · ${mins}'`;
+  if(diff<-1) return `💪 ${aShort} kiểm soát ${hS}-${aS} · ${mins}'`;
+  if(p.momentum>60) return `🔴 ${hShort} đang áp đảo bóng · ${mins}'`;
+  if(p.momentum<40) return `🔵 ${aShort} kiểm soát trận · ${mins}'`;
+  if(total===0 && mins<20) return `🎬 Hiệp 1 · Đang làm nóng · ${mins}'`;
+  return `⚽ ${hShort} ${hS} – ${aS} ${aShort} · ${mins}'`;
+}
+
 // Parse ESPN round/group note into a clean display label
 function parseStageLabel(raw) {
   if(!raw) return '';
@@ -1756,6 +1797,12 @@ function renderMatchCard(event) {
   // Hot match badge
   const hotBadge = (!live && p.isHot) ? `<span class="badge hot">🔥 HOT</span>` : '';
   const upsetBadge = (!live && p.isUpset) ? `<span class="badge upset">🚨 UPSET?</span>` : '';
+  // MUST WATCH / BIG MATCH — detect elite matchups by ELO
+  const hElo = getTS(homeN).r, aElo = getTS(awayN).r;
+  const avgElo = (hElo + aElo) / 2, eloGap = Math.abs(hElo - aElo);
+  const isMustWatch = avgElo >= 1750 && eloGap < 130;
+  const isBigMatch = !isMustWatch && avgElo >= 1680 && eloGap < 210;
+  const eliteBadge = isMustWatch ? `<span class="badge mustwatch">⭐ MUST WATCH</span>` : isBigMatch ? `<span class="badge bigmatch">🏟️ BIG MATCH</span>` : '';
 
   // Momentum bar for live
   const momentumHTML = live ? `
@@ -1816,7 +1863,7 @@ function renderMatchCard(event) {
     ${featuredStrip}
     <div class="card-top">
       <span class="match-time">${timeVN(event.date)}${stageLabel?` · <span style="font-size:9px;color:var(--muted);font-weight:700">${stageLabel}</span>`:''}</span>
-      <div class="card-badges">${statusBadge(status,mid,isUrgent)}${heatBadge}${hotBadge}${upsetBadge}${stageBadgeHTML}</div>
+      <div class="card-badges">${statusBadge(status,mid,isUrgent)}${heatBadge}${eliteBadge}${hotBadge}${upsetBadge}${stageBadgeHTML}</div>
     </div>
     <div class="match-body">
       <div class="match-teams">
@@ -1833,6 +1880,7 @@ function renderMatchCard(event) {
         </div>
       </div>
       ${countdownHTML}
+      ${live ? `<div class="live-insight">${liveInsight(homeN,awayN,p,homeScore,awayScore,comp.status?.displayClock||'',sName)}</div>` : ''}
     </div>
     <div class="match-footer">
       ${venue?`<div class="match-venue">📍 ${venue}</div>`:''}
