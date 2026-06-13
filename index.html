@@ -669,6 +669,7 @@ main{-webkit-overflow-scrolling:touch}
     <div class="bnav-item" data-tab="results"><span class="bnav-icon">✅</span>Kết quả</div>
     <div class="bnav-item" data-tab="groups"><span class="bnav-icon">🏆</span>BXH</div>
     <div class="bnav-item" data-tab="stream"><span class="bnav-icon">📺</span>Xem</div>
+    <div class="bnav-item" data-tab="admin"><span class="bnav-icon">⚙️</span>Admin</div>
   </div>
 </nav>
 
@@ -2598,11 +2599,9 @@ const _heroEl=document.getElementById('featured-hero');
 if(_heroEl) _heroObserver.observe(_heroEl);
 
 // ── INIT ──
-// Load schedule immediately (default tab), load scores in background for Live/Results tabs
 loadSchedule();
-loadScores();
-loadPastResults(); // fetch days -2 to -14 once for Results tab history
-// Silently increment visit counter on every page load
+loadScores().then(()=>loadPastResults()); // ensure _lastCurrentEvents is populated before past results merge
+// Increment visit counter once per page load
 fetch('https://api.countapi.xyz/hit/worldcup2026-ryanluga/visits').catch(()=>{});
 
 // ── ADMIN ──
@@ -2644,12 +2643,12 @@ function showAdminDashboard() {
 }
 
 async function loadAdminData() {
-  // Visit counter via CountAPI
+  // Visit counter — read current value (GET, not hit, to avoid double counting)
   try {
-    const r = await fetch('https://api.countapi.xyz/hit/worldcup2026-ryanluga/visits');
+    const r = await fetch('https://api.countapi.xyz/get/worldcup2026-ryanluga/visits');
     const d = await r.json();
     const el = document.getElementById('adm-total');
-    if(el && d.value) el.textContent = d.value.toLocaleString('vi-VN');
+    if(el && d.value != null) el.textContent = d.value.toLocaleString('vi-VN');
   } catch(e) {
     const el = document.getElementById('adm-total');
     if(el) el.textContent = 'N/A';
@@ -2699,11 +2698,7 @@ async function loadAdminData() {
   }
 }
 
-// Auto-restore session if already logged in
-if(sessionStorage.getItem(ADMIN_KEY) === '1') {
-  document.addEventListener('DOMContentLoaded', () => {}, {once:true});
-  // Will be triggered when user opens admin tab
-}
+// Session restore happens in switchTab when user opens admin tab
 </script>
 </body>
 </html>
