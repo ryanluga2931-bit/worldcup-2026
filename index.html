@@ -1019,16 +1019,19 @@ function saveOpenPanels(containerId='live-content'){
 function restoreOpenPanels(state, containerId='live-content'){
   const container=document.getElementById(containerId);
   if(!container) return;
-  const ids = state.ai||state; // backwards compat if old Set passed
+  const ids = state.ai||state;
   ids.forEach&&ids.forEach(id=>{
     const card=container.querySelector('#mc_'+id);
     if(!card) return;
     const panel=card.querySelector('.ai-panel');
     const toggle=card.querySelector('.ai-toggle');
-    if(!panel||panel.classList.contains('open')) return;
-    panel.classList.add('open');
-    toggle?.classList.add('open');
-    panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});
+    if(!panel) return;
+    if(!panel.classList.contains('open')) {
+      panel.classList.add('open');
+      toggle?.classList.add('open');
+    }
+    // Animate progress bars after reflow (Bug #9 fix)
+    setTimeout(()=>{panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});},60);
   });
   // Restore highlight panels from cache
   const hlIds = state.hl;
@@ -1037,8 +1040,9 @@ function restoreOpenPanels(state, containerId='live-content'){
     if(!_hlCache[eventId]) return;
     const btn=container.querySelector(`.hl-btn[data-event="${eventId}"]`);
     const panel=btn?.nextElementSibling;
-    if(!btn||!panel||panel.classList.contains('open')) return;
-    panel.innerHTML=_hlCache[eventId];
+    if(!btn||!panel) return;
+    if(!panel.classList.contains('open')) panel.innerHTML=_hlCache[eventId];
+    // Always restore both panel AND button open state (Bug #2 fix)
     panel.classList.add('open');
     btn.classList.add('open');
   });
@@ -2211,13 +2215,14 @@ async function loadScores() {
       if(luEl) luEl.textContent='⚠️ Lỗi tải — đang thử lại...';
     }
   } finally {
+    // Bug #6 fix: always reset _isLoading even if render phase throws
     _isLoading=false;
     btn?.classList.remove('spinning');
+    _firstLoad=false;
+    clearTimeout(refreshTimer);
+    refreshTimer=setTimeout(loadScores, _nextInterval*1000);
+    startRefreshCountdown(_nextInterval);
   }
-  _firstLoad=false;
-  clearTimeout(refreshTimer);
-  refreshTimer=setTimeout(loadScores, _nextInterval*1000);
-  startRefreshCountdown(_nextInterval);
 }
 
 // ── RENDER LIVE TAB ──
@@ -2270,6 +2275,11 @@ function renderLive(events) {
     if(c.scoreChanged) animateScoreEl(c.mid);
     if(c.live) registerLiveClock(c.mid, c.displayClock, c.ht);
   });
+  // Cleanup stale clock data for matches no longer live (Bug #1 fix)
+  const liveIds=new Set(liveEvents.map(e=>e.id));
+  Object.keys(liveClockData).forEach(mid=>{ if(!liveIds.has(mid)) delete liveClockData[mid]; });
+  // Cleanup stale score state for matches no longer in current window (Bug #3 fix)
+  Object.keys(_prevScores).forEach(mid=>{ if(!liveIds.has(mid)) delete _prevScores[mid]; });
   // Animate momentum bars (start at 0, transition to target width)
   setTimeout(()=>{
     el.querySelectorAll('.momentum-fill[data-m]').forEach(el=>{el.style.width=el.dataset.m+'%';});
