@@ -1149,7 +1149,7 @@ function calcAsianOdds(homeN, awayN, p) {
 
   // Display: home perspective (negative = home gives, positive = home receives)
   let hcDisplay;
-  if(hcLabel==='0') hcDisplay='0';
+  if(hcLabel==='0') hcDisplay='PKC';
   else if(homeFav) hcDisplay=hcLabel.startsWith('0/')?`0/-${hcLabel.slice(2)}`:`-${hcLabel}`;
   else             hcDisplay=hcLabel.startsWith('0/')?`0/+${hcLabel.slice(2)}`:`+${hcLabel}`;
 
@@ -2648,10 +2648,10 @@ async function loadAdminData() {
     const r = await fetch('https://api.countapi.xyz/get/worldcup2026-ryanluga/visits');
     const d = await r.json();
     const el = document.getElementById('adm-total');
-    if(el && d.value != null) el.textContent = d.value.toLocaleString('vi-VN');
+    if(el) el.textContent = (d.value != null ? d.value : 0).toLocaleString('vi-VN');
   } catch(e) {
     const el = document.getElementById('adm-total');
-    if(el) el.textContent = 'N/A';
+    if(el) el.textContent = '–';
   }
   // Device info from browser
   const ua = navigator.userAgent;
