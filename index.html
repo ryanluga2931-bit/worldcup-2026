@@ -453,6 +453,33 @@ main{-webkit-overflow-scrolling:touch}
 .badge.stage-group{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border)}
 /* Touch active state */
 .match-card:active{transform:translateY(0) scale(0.988);transition:transform .07s}
+/* Watchability score chip */
+.ws-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:100px;font-size:9px;font-weight:800;vertical-align:middle;margin-left:5px}
+.ws-chip.hot{background:rgba(239,68,68,.14);color:#fca5a5;border:1px solid rgba(239,68,68,.28)}
+.ws-chip.warm{background:rgba(245,158,11,.13);color:#fbbf24;border:1px solid rgba(245,158,11,.28)}
+.ws-chip.cool{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border)}
+/* Live insight text fade transition */
+.live-insight{transition:opacity .2s}
+/* Group Impact footer */
+.group-impact{font-size:10px;font-weight:700;color:var(--text2);text-align:center;padding:3px 0;letter-spacing:.2px}
+/* Sticky mini live bar */
+#live-mini-bar{display:none;position:fixed;top:0;left:0;right:0;z-index:95;background:rgba(6,8,16,.97);border-bottom:1px solid rgba(239,68,68,.25);padding:6px 16px;transform:translateY(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+#live-mini-bar.visible{transform:translateY(0)}
+.lmb-inner{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:10px;cursor:pointer}
+.lmb-dot{width:5px;height:5px;background:var(--live);border-radius:50%;animation:pulse 1s infinite;flex-shrink:0}
+.lmb-score{font-size:14px;font-weight:900;color:var(--text);letter-spacing:2px}
+.lmb-teams{font-size:11px;font-weight:700;color:var(--text2)}
+.lmb-hint{margin-left:auto;font-size:9px;color:var(--muted);font-weight:700;flex-shrink:0}
+/* Champion predictor card */
+.champ-card{background:rgba(17,24,39,.95);border:1px solid rgba(245,158,11,.22);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
+.champ-header{background:rgba(245,158,11,.08);padding:11px 15px;font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.8px;border-bottom:1px solid rgba(245,158,11,.15)}
+.champ-body{padding:13px 15px}
+.champ-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.champ-rank{width:20px;font-size:10px;font-weight:800;color:var(--muted);flex-shrink:0;text-align:right}
+.champ-name{font-size:12px;font-weight:700;min-width:110px;color:var(--text)}
+.champ-bar-wrap{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.champ-bar{height:100%;border-radius:4px;transition:width .9s ease}
+.champ-pct{font-size:12px;font-weight:800;min-width:36px;text-align:right}
 /* Live Insight — 1-line status below score on live cards */
 .live-insight{text-align:center;font-size:11px;font-weight:700;color:var(--text2);margin-top:7px;padding:4px 14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:100px;letter-spacing:.25px;max-width:90%;margin-left:auto;margin-right:auto}
 /* MUST WATCH badge — top team clash */
@@ -484,6 +511,16 @@ main{-webkit-overflow-scrolling:touch}
 
 <!-- FEATURED LIVE MATCH HERO (populated by renderLive) -->
 <div id="featured-hero"></div>
+
+<!-- STICKY MINI LIVE BAR (shows when scrolled past featured hero) -->
+<div id="live-mini-bar">
+  <div class="lmb-inner" onclick="switchTab('live');window.scrollTo({top:0,behavior:'smooth'})">
+    <div class="lmb-dot"></div>
+    <span class="lmb-score" id="lmb-score">–</span>
+    <span class="lmb-teams" id="lmb-teams">Loading...</span>
+    <span class="lmb-hint">Tap xem Live →</span>
+  </div>
+</div>
 
 <!-- DESKTOP TABS -->
 <div class="tab-bar">
@@ -852,6 +889,7 @@ function registerLiveClock(mid, displayClock, isHT) {
   const secs=parseInt(parts[0]||0)*60+parseInt(parts[1]||0);
   liveClockData[mid]={startedAt:Date.now(),initialSecs:secs,isHT:false};
 }
+let _commentaryTick = 0;
 function tickLiveClocks(){
   Object.entries(liveClockData).forEach(([mid,data])=>{
     const el=document.getElementById('clk_'+mid);
@@ -860,11 +898,25 @@ function tickLiveClocks(){
     const elapsed=Math.floor((Date.now()-data.startedAt)/1000);
     const total=data.initialSecs+elapsed;
     const mins=Math.floor(total/60), secs=total%60;
-    // Cap display at 90'+x or 120'+x format for stoppage time
     if(mins>=90&&mins<120) el.textContent=`90'+${mins-90}`;
     else if(mins>=120) el.textContent=`120'+${mins-120}`;
     else el.textContent=`${mins}:${String(secs).padStart(2,'0')}`;
   });
+  // Rotate commentary every 8s
+  _commentaryTick++;
+  if(_commentaryTick % 8 === 0) {
+    Object.keys(liveClockData).forEach(mid=>{
+      const ins=document.querySelector('#mc_'+mid+' .live-insight');
+      if(!ins||!ins.dataset.lines) return;
+      try {
+        const lines=JSON.parse(ins.dataset.lines);
+        if(lines.length<2) return;
+        const idx=Math.floor(_commentaryTick/8)%lines.length;
+        ins.style.opacity='0';
+        setTimeout(()=>{if(ins.isConnected){ins.textContent=lines[idx];ins.style.opacity='1';}},200);
+      } catch(e){}
+    });
+  }
 }
 setInterval(tickLiveClocks, 1000);
 
@@ -1584,6 +1636,45 @@ function liveInsight(homeN, awayN, p, homeScore, awayScore, clockStr, sName) {
   return `⚽ ${hShort} ${hS} – ${aS} ${aShort} · ${mins}'`;
 }
 
+// Watchability score 1–10 for a match
+function watchabilityScore(homeN, awayN, stageTier, intensity, live, homeScore, awayScore) {
+  let s = 5;
+  s += ({final:3,semi:2.5,qf:2,r16:1.5,group:0.5}[stageTier]||0);
+  const avgElo = (getTS(homeN).r + getTS(awayN).r) / 2;
+  s += Math.min(2, (avgElo - 1500) / 175);
+  s += Math.max(0, 1.5 - Math.abs(getTS(homeN).r - getTS(awayN).r) / 220);
+  if(intensity==='critical') s += 2;
+  else if(intensity==='high') s += 1;
+  if(live){
+    const tot=(parseInt(homeScore)||0)+(parseInt(awayScore)||0);
+    s += Math.min(1.5, tot*0.4);
+    if(Math.abs((parseInt(homeScore)||0)-(parseInt(awayScore)||0))<=1 && tot>0) s += 0.5;
+  }
+  return Math.min(10, Math.max(1, Math.round(s*10)/10));
+}
+
+// Group / stage impact text for live cards
+function groupImpactText(stageTier) {
+  if(stageTier==='final')  return '🏆 CHUNG KẾT · Nhà vô địch được quyết định hôm nay!';
+  if(stageTier==='semi')   return '⚡ BÁN KẾT · Thắng → Vào Chung kết';
+  if(stageTier==='qf')     return '🎯 TỨ KẾT · Thắng → Vào Bán kết';
+  if(stageTier==='r16')    return '🎯 VÒNG 16 · Thắng → Vào Tứ kết';
+  return '📊 Vòng bảng · Win +3pts · Hòa +1pt';
+}
+
+// ELO-based tournament champion probability
+function championOdds() {
+  const dedup = new Set();
+  const teams = Object.entries(TS).filter(([n,d])=>{
+    const k = d.r+'_'+n[0]; if(dedup.has(k)) return false; dedup.add(k); return true;
+  }).map(([n,d])=>({n,r:d.r})).sort((a,b)=>b.r-a.r).slice(0,32);
+  const avg = teams.reduce((s,t)=>s+t.r,0)/teams.length;
+  const raw = teams.map(t=>({n:t.n, p:Math.pow(1/(1+Math.pow(10,-(t.r-avg)/350)),6)}));
+  const tot = raw.reduce((s,t)=>s+t.p,0);
+  return raw.map(t=>({n:t.n,pct:Math.round(t.p/tot*1000)/10}))
+            .filter(t=>t.pct>=1).sort((a,b)=>b.pct-a.pct).slice(0,8);
+}
+
 // Parse ESPN round/group note into a clean display label
 function parseStageLabel(raw) {
   if(!raw) return '';
@@ -1867,6 +1958,22 @@ function renderMatchCard(event) {
   const isUrgent = intensity==='critical';
   // Heat badge — surface intensity level as visible text badge
   const heatBadge = live && intensity ? `<span class="fh-heat ${intensity}" style="padding:2px 7px;font-size:9px">${intensity==='critical'?'🔥 CRITICAL':'⚡ HOT'}</span>` : '';
+  // Watchability score
+  const ws = watchabilityScore(homeN, awayN, stageTier, intensity, live, homeScore, awayScore);
+  const wsClass = ws>=8.5?'hot':ws>=7?'warm':'cool';
+  const wsIcon = ws>=8.5?'🔥':ws>=7?'⭐':'📺';
+  const wsChip = !finished ? `<span class="ws-chip ${wsClass}">${wsIcon} ${ws}</span>` : '';
+  // Commentary pool for live rotation (stored as JSON in data-lines attr)
+  const commentLines = live ? [
+    liveInsight(homeN,awayN,p,homeScore,awayScore,comp.status?.displayClock||'',sName),
+    `📊 xG: ${homeN.split(' ').pop()} ${p.hXG} – ${p.aXG} ${awayN.split(' ').pop()} · Dự đoán ${p.pHome}-${p.pAway}`,
+    `⚡ Gôl trong 10p tới: ${p.next10}% · Over 2.5: ${p.over25}%`,
+    `🧠 Tỷ số khả thi nhất: ${(p.topScores||[])[0]?.label||'?'} (${(p.topScores||[])[0]?.pct||'?'}%) · BTTS ${p.btts}%`,
+    p.momentum>58?`🔴 ${homeN.split(' ').pop()} đang áp đảo (${p.momentum}% momentum)`:`🔵 ${awayN.split(' ').pop()} kiểm soát bóng · Chú ý phản công`,
+  ] : [];
+  const commentData = live ? ` data-lines="${JSON.stringify(commentLines).replace(/"/g,'&quot;')}"` : '';
+  // Group / knockout impact text for live cards
+  const impactText = live ? groupImpactText(stageTier) : '';
 
   // Odds table (kèo chấp + tài xỉu + 1x2)
   const o = calcAsianOdds(homeN, awayN, p);
@@ -1887,7 +1994,7 @@ function renderMatchCard(event) {
   <div class="${cardClass}" id="mc_${mid}">
     ${featuredStrip}
     <div class="card-top">
-      <span class="match-time">${timeVN(event.date)}${stageLabel?` · <span style="font-size:9px;color:var(--muted);font-weight:700">${stageLabel}</span>`:''}</span>
+      <span class="match-time">${timeVN(event.date)}${stageLabel?` · <span style="font-size:9px;color:var(--muted);font-weight:700">${stageLabel}</span>`:''}${wsChip}</span>
       <div class="card-badges">${statusBadge(status,mid,isUrgent)}${heatBadge}${eliteBadge}${hotBadge}${upsetBadge}${stageBadgeHTML}</div>
     </div>
     <div class="match-body">
@@ -1905,11 +2012,12 @@ function renderMatchCard(event) {
         </div>
       </div>
       ${countdownHTML}
-      ${live ? `<div class="live-insight">${liveInsight(homeN,awayN,p,homeScore,awayScore,comp.status?.displayClock||'',sName)}</div>` : ''}
+      ${live ? `<div class="live-insight"${commentData}>${liveInsight(homeN,awayN,p,homeScore,awayScore,comp.status?.displayClock||'',sName)}</div>` : ''}
     </div>
     <div class="match-footer">
       ${venue?`<div class="match-venue">📍 ${venue}</div>`:''}
       ${momentumHTML}
+      ${impactText?`<div class="group-impact">${impactText}</div>`:''}
     </div>
     ${resultBannerHTML}
     ${finished ? `<div class="hl-btn" id="hlb_${mid}" data-event="${event.id}" onclick="toggleHighlights('${event.id}','${mid}',this)"><span>🎬 Highlights</span><span class="hl-arr">▼</span></div><div class="hl-panel" id="hlp_${mid}"></div>` : ''}
@@ -2053,6 +2161,7 @@ function renderLive(events) {
     restoreOpenPanels(openPanels,'live-content');
     const heroEl2=document.getElementById('featured-hero');
     if(heroEl2) heroEl2.style.display='none';
+    updateMiniBar([]);
     document.title='⚽ World Cup 2026 Live';
     document.querySelectorAll('[data-tab="live"]').forEach(t=>{
       t.innerHTML=t.classList.contains('bnav-item')
@@ -2125,6 +2234,7 @@ function renderLive(events) {
     </div></div>`;
     heroEl.style.display='block';
   }
+  updateMiniBar(liveEvents);
   return anyGoal;
 }
 
@@ -2258,8 +2368,23 @@ async function loadGroups() {
 function renderGroups(data) {
   const el=document.getElementById('groups-content');
   const groups=data.standings||data.children||[];
-  if(!groups.length){el.innerHTML=`<div class="error-box">Chưa có dữ liệu bảng xếp hạng.</div>`;return;}
-  let html='';
+  // Build champion odds predictor
+  const odds=championOdds();
+  const maxPct=odds[0]?.pct||1;
+  const colors=['linear-gradient(90deg,#f59e0b,#fde68a)','linear-gradient(90deg,#c0a0ff,#c4b5fd)','linear-gradient(90deg,#93c5fd,#60a5fa)'];
+  let html=`<div class="champ-card">
+    <div class="champ-header">🏆 Dự đoán Nhà Vô Địch — World Cup 2026</div>
+    <div class="champ-body">
+      ${odds.map((t,i)=>`<div class="champ-row">
+        <span class="champ-rank">#${i+1}</span>
+        <span class="champ-name">${flag(t.n)} ${t.n}</span>
+        <div class="champ-bar-wrap"><div class="champ-bar" style="width:${Math.round(t.pct/maxPct*100)}%;background:${colors[i]||'rgba(255,255,255,.18)'}"></div></div>
+        <span class="champ-pct" style="color:${i===0?'#fbbf24':i<=2?'#c4b5fd':'var(--text2)'}">${t.pct}%</span>
+      </div>`).join('')}
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;text-align:right">Mô hình ELO · P(vô địch) ≈ P(thắng 6 trận liên tiếp)</div>
+    </div>
+  </div>`;
+  if(!groups.length){el.innerHTML=html+`<div class="error-box">Chưa có dữ liệu bảng đấu. Bảng xếp hạng sẽ cập nhật sau vòng đầu tiên.</div>`;return;}
   groups.forEach(group=>{
     const name=group.name||group.abbreviation||'Bảng';
     const entries=group.standings?.entries||group.entries||[];
@@ -2323,6 +2448,43 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden){ clearTimeout(refreshTimer); if(_refreshCountdownTimer) clearInterval(_refreshCountdownTimer); }
   else { _isLoading=false; loadScores(); } // reset guard in case fetch was in-flight when backgrounded
 });
+
+// ── MINI LIVE BAR — update content, shown/hidden by IntersectionObserver ──
+let _miniBarLive = false;
+function updateMiniBar(liveEvents) {
+  const bar = document.getElementById('live-mini-bar');
+  if(!bar) return;
+  if(!liveEvents.length) { _miniBarLive=false; bar.classList.remove('visible'); bar.style.display='none'; return; }
+  _miniBarLive = true;
+  // Pick most intense match
+  const top = liveEvents.reduce((best,e)=>{
+    const comp=e.competitions?.[0];
+    const sN=comp?.status?.type?.name||'';
+    const clk=comp?.status?.displayClock||'';
+    const hc=comp?.competitors?.find(c=>c.homeAway==='home');
+    const ac=comp?.competitors?.find(c=>c.homeAway==='away');
+    const tier=calcIntensity(clk,hc?.score||0,ac?.score||0,sN)==='critical'?3:calcIntensity(clk,hc?.score||0,ac?.score||0,sN)==='high'?2:1;
+    return tier>(best.tier||0)?{e,tier}:best;
+  },{}).e || liveEvents[0];
+  const tc=top.competitions?.[0];
+  const th=tc?.competitors?.find(c=>c.homeAway==='home');
+  const ta=tc?.competitors?.find(c=>c.homeAway==='away');
+  const sc=document.getElementById('lmb-score');
+  const tm=document.getElementById('lmb-teams');
+  if(sc) sc.textContent=`${th?.score??'-'} – ${ta?.score??'-'}`;
+  if(tm) tm.textContent=`${flag(th?.team?.displayName)} ${th?.team?.shortDisplayName||''} vs ${flag(ta?.team?.displayName)} ${ta?.team?.shortDisplayName||''}`;
+  bar.style.display='block';
+}
+
+// Show mini bar only when featured-hero is scrolled out of view
+const _heroObserver = new IntersectionObserver(entries=>{
+  const bar=document.getElementById('live-mini-bar');
+  if(!bar||!_miniBarLive) return;
+  if(entries[0].isIntersecting) bar.classList.remove('visible');
+  else bar.classList.add('visible');
+},{threshold:0});
+const _heroEl=document.getElementById('featured-hero');
+if(_heroEl) _heroObserver.observe(_heroEl);
 
 // ── INIT ──
 // Load schedule immediately (default tab), load scores in background for Live/Results tabs
