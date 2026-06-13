@@ -968,6 +968,12 @@ function registerLiveClock(mid, displayClock, isHT) {
   if(!displayClock) return;
   const parts=displayClock.split(':');
   const secs=parseInt(parts[0]||0)*60+parseInt(parts[1]||0);
+  // If clock already running, only sync forward — never let ESPN's stale value reset a running clock
+  if(liveClockData[mid] && !liveClockData[mid].isHT) {
+    const elapsed=Math.floor((Date.now()-liveClockData[mid].startedAt)/1000);
+    const estimate=liveClockData[mid].initialSecs+elapsed;
+    if(secs<=estimate) return; // ESPN behind our estimate — keep ticking, don't reset
+  }
   liveClockData[mid]={startedAt:Date.now(),initialSecs:secs,isHT:false};
 }
 let _commentaryTick = 0;
