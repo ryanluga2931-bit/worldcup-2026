@@ -664,6 +664,8 @@ function poissonInvCDF(lambda, u) {
   while(k<=8){cdf+=Math.exp(-lambda)*Math.pow(lambda,k)/fact[k];if(u<=cdf)return k;k++;}
   return 8;
 }
+// Single Poisson PMF
+function pPoi(l,k){const f=[1,1,2,6,24,120,720,5040,40320];return k<=8?Math.exp(-l)*Math.pow(l,k)/f[k]:0;}
 
 // ── AI PREDICTION ENGINE ──
 function predict(homeN, awayN) {
@@ -682,9 +684,10 @@ function predict(homeN, awayN) {
   const hXG = Math.max(0.4, (h.a*0.5+(10-a.d)*0.5)/10*3.2 + (hFm-0.6)*0.55);
   const aXG = Math.max(0.25, (a.a*0.5+(10-h.d)*0.5)/10*2.7 + (aFm-0.6)*0.5);
 
-  // Seeded Poisson sampling: different matchups get different scores via nameHash
-  const u1 = nameHash(homeN + '##gh##' + awayN);
-  const u2 = nameHash(awayN + '##ga##' + homeN);
+  // Bounded sampling: clamp to 20th–80th percentile so strong teams don't get 0 and
+  // weak teams don't get unrealistically high scores (bug with raw nameHash seed)
+  const u1 = 0.20 + nameHash(homeN + '##gh##' + awayN) * 0.60;
+  const u2 = 0.20 + nameHash(awayN + '##ga##' + homeN) * 0.60;
   const pHome = poissonInvCDF(hXG, u1);
   const pAway = poissonInvCDF(aXG, u2);
 
@@ -692,15 +695,32 @@ function predict(homeN, awayN) {
   const over25 = Math.min(88, Math.max(18, Math.round((1-Math.exp(-totalXG)*(1+totalXG+totalXG*totalXG/2))*100)));
   const btts = Math.min(82, Math.max(12, Math.round((1-Math.exp(-hXG))*(1-Math.exp(-aXG))*100)));
   const next10 = Math.min(42, Math.max(5, Math.round((1-Math.exp(-totalXG*10/90))*100)));
+
+  // Top 3 most probable exact scorelines via joint Poisson distribution
+  const scorelines = [];
+  for(let hi=0;hi<=5;hi++) for(let ai=0;ai<=5;ai++){
+    scorelines.push({h:hi,a:ai,p:pPoi(hXG,hi)*pPoi(aXG,ai)});
+  }
+  scorelines.sort((a,b)=>b.p-a.p);
+  const topScores = scorelines.slice(0,3).map(s=>({
+    label:`${s.h}-${s.a}`, pct:Math.round(s.p*100)
+  }));
+
+  // Confidence: ELO gap + form consistency
   const rdiff = Math.abs(eloDiff);
-  const confidence = rdiff > 200 ? 'high' : rdiff > 100 ? 'medium' : 'low';
+  const formUnstable = [(h.f||''), (a.f||'')].some(f=>f.includes('L')&&f.includes('W'));
+  const confidence = rdiff > 220 && !formUnstable ? 'high' : rdiff > 100 ? 'medium' : 'low';
   const confLabel = {high:'Độ tin cao 🟢', medium:'Độ tin TB 🟡', low:'Độ tin thấp 🔴'}[confidence];
-  const isUpset = hW < 58 && hW > 44 && (h.r - a.r) > 60;
+
+  // Upset: underdog (either side) has real chance despite notable ELO gap
+  const absEloDiff = Math.abs(eloDiff);
+  const isUpset = absEloDiff > 90 && Math.min(hW, aW) > 28;
+
   const isHot = h.r > 1700 && a.r > 1680;
   const momentum = Math.round(hW);
   return { hW, dr, aW, hXG: hXG.toFixed(1), aXG: aXG.toFixed(1), pHome, pAway,
            over25, btts, next10, confidence, confLabel, isUpset, isHot, momentum,
-           homeForm: h.f, awayForm: a.f, eloDiff: Math.abs(eloDiff) };
+           homeForm: h.f, awayForm: a.f, eloDiff: absEloDiff, topScores };
 }
 
 // ── VIETNAMESE AI COMMENTARY ──
@@ -1592,7 +1612,9 @@ function calcIntensity(clockStr, homeScore, awayScore, sName) {
 
 // ── AI PANEL HTML ──
 function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='') {
-  const upsetHTML = p.isUpset ? `<div class="upset-alert">🚨 <strong>UPSET ALERT</strong> — ${awayN} có ${p.aW}% cơ hội gây bất ngờ!</div>` : '';
+  const upsetTeam = p.hW < p.aW ? homeN : awayN;
+  const upsetPct = Math.min(p.hW, p.aW);
+  const upsetHTML = p.isUpset ? `<div class="upset-alert">🚨 <strong>UPSET ALERT</strong> — <strong>${upsetTeam}</strong> là cửa dưới nhưng có tới <strong>${upsetPct}%</strong> cơ hội gây sốc (ELO gap ${p.eloDiff}pt)!</div>` : '';
   const h1 = getKeyPlayer(homeN, 0), h2 = getKeyPlayer(homeN, 1);
   const a1 = getKeyPlayer(awayN, 0), a2 = getKeyPlayer(awayN, 1);
   const goalTiming = Math.min(72, Math.max(28, Math.round((parseFloat(p.hXG)+parseFloat(p.aXG))/5.5*100)));
@@ -1601,6 +1623,9 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
     <div class="pred-score">
       <div class="pred-lbl">⚽ Dự đoán tỷ số</div>
       <div class="pred-nums">${p.pHome} – ${p.pAway}</div>
+      <div style="display:flex;justify-content:center;gap:7px;margin-top:8px;flex-wrap:wrap">
+        ${(p.topScores||[]).map((s,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:800;background:${i===0?'rgba(139,92,246,.18)':'rgba(255,255,255,.04)'};border:1px solid ${i===0?'rgba(139,92,246,.35)':'rgba(255,255,255,.08)'};color:${i===0?'#c4b5fd':'var(--text2)'}">${i===0?'🎯 ':''}<span style="font-variant-numeric:tabular-nums">${s.label}</span><span style="font-size:9px;opacity:.7">${s.pct}%</span></span>`).join('')}
+      </div>
     </div>
     <div class="prob3">
       <div class="prob3-item"><div class="prob3-val h">${p.hW}%</div><div class="prob3-lbl">🏠 ${homeN.split(' ').pop()}</div></div>
