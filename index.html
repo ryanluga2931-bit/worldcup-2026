@@ -2409,8 +2409,8 @@ async function loadPastResults() {
     }).filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
     if(!past.length) return;
     _pastEvents=past;
-    // Force Results tab to re-render with past events merged in alongside current window events
-    _prevDoneIds='';
+    // Re-render Results once to merge past events in — do NOT touch _prevDoneIds
+    // (resetting it would make the next loadScores always re-render, destroying open highlight panels)
     renderResults(_lastCurrentEvents);
   } catch(e) {}
 }
