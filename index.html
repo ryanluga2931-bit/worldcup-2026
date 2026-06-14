@@ -708,43 +708,53 @@ const FLAGS = {
 const flag = n => FLAGS[n] || '🏳️';
 
 // ── TEAM STRENGTH DB ──
+// ELO ratings updated after WC 2026 Round 1 results (K=40, neutral venue)
+// Results: MEX 2-0 RSA, KOR 2-1 CZE, CAN 1-1 BIH, USA 4-1 PAR,
+//          QAT 1-1 SUI, BRA 1-1 MAR, HAI 0-1 SCO, AUS 2-0 TUR
 const TS = {
-  'Argentina':{r:1850,a:9.2,d:8.5,f:'WWWDW'},'France':{r:1820,a:8.8,d:8.7,f:'WWWWL'},
-  'England':{r:1790,a:8.5,d:8.2,f:'WWDWW'},'Spain':{r:1780,a:8.7,d:8.3,f:'WWWWW'},
-  'Brazil':{r:1760,a:8.6,d:8.0,f:'WDWWW'},'Portugal':{r:1720,a:8.4,d:7.8,f:'WWWDW'},
-  'Germany':{r:1700,a:8.2,d:7.9,f:'WDWWW'},'Netherlands':{r:1690,a:8.0,d:7.8,f:'WWDWL'},
-  'Belgium':{r:1680,a:7.9,d:7.6,f:'DWWWW'},'Croatia':{r:1650,a:7.5,d:7.8,f:'WWDWW'},
-  'Denmark':{r:1635,a:7.3,d:7.7,f:'WWWDW'},'Morocco':{r:1620,a:7.2,d:8.0,f:'WDWDW'},
-  'Switzerland':{r:1615,a:7.2,d:7.5,f:'DWWWW'},'Uruguay':{r:1640,a:7.4,d:7.7,f:'WDWDW'},
-  'Colombia':{r:1610,a:7.3,d:7.1,f:'WWWWD'},'Turkey':{r:1600,a:7.2,d:7.0,f:'WDWWL'},
-  'Türkiye':{r:1600,a:7.2,d:7.0,f:'WDWWL'},'USA':{r:1600,a:7.0,d:7.2,f:'WWDWL'},
-  'United States':{r:1600,a:7.0,d:7.2,f:'WWDWL'},'Mexico':{r:1590,a:7.0,d:7.0,f:'WDWWW'},
-  'Serbia':{r:1590,a:7.2,d:6.9,f:'WWDWW'},'Ecuador':{r:1520,a:6.6,d:6.8,f:'WWWDL'},
-  'Japan':{r:1565,a:7.0,d:7.2,f:'WDWWW'},'Canada':{r:1570,a:6.8,d:7.0,f:'WDWWL'},
-  'Poland':{r:1540,a:6.8,d:7.0,f:'DWWWL'},'South Korea':{r:1535,a:6.8,d:6.8,f:'WWDLW'},
-  'Ivory Coast':{r:1500,a:6.4,d:6.2,f:'WWDWL'},'Senegal':{r:1580,a:7.0,d:7.3,f:'WWDWL'},
-  'Scotland':{r:1520,a:6.5,d:6.5,f:'WWDWW'},'Wales':{r:1480,a:6.0,d:6.3,f:'WDWLW'},
-  'Algeria':{r:1490,a:6.3,d:6.2,f:'WWWDL'},'Tunisia':{r:1480,a:6.2,d:6.3,f:'WDWWL'},
-  'Australia':{r:1480,a:6.2,d:6.5,f:'WDWWL'},'Nigeria':{r:1490,a:6.3,d:6.2,f:'WDWWL'},
+  'Argentina':{r:1852,a:9.2,d:8.5,f:'WWWDW'},'France':{r:1822,a:8.8,d:8.7,f:'WWWWL'},
+  'England':{r:1792,a:8.5,d:8.2,f:'WWDWW'},'Spain':{r:1782,a:8.7,d:8.3,f:'WWWWW'},
+  'Brazil':{r:1751,a:8.6,d:8.1,f:'DWWWD'},'Portugal':{r:1722,a:8.4,d:7.8,f:'WWWDW'},
+  'Germany':{r:1702,a:8.2,d:7.9,f:'WDWWW'},'Netherlands':{r:1692,a:8.0,d:7.8,f:'WWDWL'},
+  'Belgium':{r:1682,a:7.9,d:7.6,f:'DWWWW'},'Croatia':{r:1652,a:7.5,d:7.8,f:'WWDWW'},
+  'Denmark':{r:1637,a:7.3,d:7.7,f:'WWWDW'},'Morocco':{r:1629,a:7.3,d:8.1,f:'DWDWD'},
+  'Switzerland':{r:1606,a:7.1,d:7.6,f:'WWWWD'},'Uruguay':{r:1642,a:7.4,d:7.7,f:'WDWDW'},
+  'Colombia':{r:1612,a:7.3,d:7.1,f:'WWWWD'},
+  'Turkey':{r:1572,a:7.0,d:6.8,f:'WDWWL'},'Türkiye':{r:1572,a:7.0,d:6.8,f:'DWWLL'},
+  'USA':{r:1609,a:7.2,d:7.3,f:'WWDWW'},'United States':{r:1609,a:7.2,d:7.3,f:'WWDWW'},
+  'Mexico':{r:1602,a:7.1,d:7.1,f:'DWWWW'},
+  'Serbia':{r:1592,a:7.2,d:6.9,f:'WWDWW'},'Ecuador':{r:1522,a:6.6,d:6.8,f:'WWWDL'},
+  'Japan':{r:1567,a:7.0,d:7.2,f:'WDWWW'},'Canada':{r:1563,a:6.8,d:7.1,f:'WDWWLD'},
+  'Poland':{r:1542,a:6.8,d:7.0,f:'DWWWL'},
+  'South Korea':{r:1556,a:6.9,d:6.9,f:'WDLWW'},'Ivory Coast':{r:1502,a:6.4,d:6.2,f:'WWDWL'},
+  'Senegal':{r:1582,a:7.0,d:7.3,f:'WWDWL'},'Scotland':{r:1529,a:6.6,d:6.6,f:'WDWWW'},
+  'Sweden':{r:1620,a:7.1,d:7.0,f:'WWDWW'},
+  'Wales':{r:1480,a:6.0,d:6.3,f:'WDWLW'},'Algeria':{r:1490,a:6.3,d:6.2,f:'WWWDL'},
+  'Tunisia':{r:1478,a:6.2,d:6.3,f:'WDWWL'},
+  'Australia':{r:1508,a:6.5,d:6.7,f:'DWWLW'},'Nigeria':{r:1492,a:6.3,d:6.2,f:'WDWWL'},
   'Ghana':{r:1450,a:5.9,d:5.7,f:'WWLDW'},'Cameroon':{r:1460,a:6.0,d:5.8,f:'LWWWL'},
-  'South Africa':{r:1460,a:6.0,d:6.0,f:'WDWLW'},'Chile':{r:1490,a:6.2,d:6.0,f:'WWLWW'},
-  'Venezuela':{r:1450,a:5.8,d:5.8,f:'WDWLW'},'Paraguay':{r:1440,a:5.8,d:6.0,f:'WDWWL'},
+  'South Africa':{r:1448,a:5.9,d:5.9,f:'DWLWL'},
+  'Chile':{r:1490,a:6.2,d:6.0,f:'WWLWW'},'Venezuela':{r:1450,a:5.8,d:5.8,f:'WDWLW'},
+  'Paraguay':{r:1431,a:5.7,d:5.9,f:'DWWLL'},
   'Peru':{r:1430,a:5.7,d:5.9,f:'LWWWL'},'Bolivia':{r:1400,a:5.5,d:5.5,f:'LWWWL'},
   'Iran':{r:1500,a:6.2,d:6.8,f:'WLWDW'},'Saudi Arabia':{r:1480,a:6.0,d:6.5,f:'DWWLW'},
   'Egypt':{r:1470,a:6.1,d:6.4,f:'WWDLW'},'Iraq':{r:1460,a:6.0,d:6.1,f:'WDWWL'},
+  'Qatar':{r:1389,a:5.5,d:6.0,f:'WLDWD'},
   'Costa Rica':{r:1430,a:5.8,d:6.5,f:'WDLWW'},'Panama':{r:1410,a:5.5,d:6.2,f:'DWWLW'},
   'Honduras':{r:1380,a:5.2,d:5.5,f:'WLWDW'},'Jamaica':{r:1380,a:5.3,d:5.8,f:'WLWWL'},
-  'Haiti':{r:1360,a:5.0,d:5.5,f:'LWWLW'},'Guatemala':{r:1360,a:5.0,d:5.3,f:'WWLWL'},
-  'New Zealand':{r:1380,a:5.2,d:5.6,f:'WDLWW'},'Bosnia and Herzegovina':{r:1480,a:6.1,d:6.0,f:'DWWLW'},
+  'Haiti':{r:1353,a:4.9,d:5.4,f:'WWLWL'},'Guatemala':{r:1360,a:5.0,d:5.3,f:'WWLWL'},
+  'New Zealand':{r:1380,a:5.2,d:5.6,f:'WDLWW'},
+  'Bosnia and Herzegovina':{r:1487,a:6.1,d:6.1,f:'WWLWD'},
   'Dominican Republic':{r:1320,a:4.8,d:5.0,f:'LWLWW'},'Curacao':{r:1340,a:4.9,d:5.0,f:'WLLWW'},
   'Curaçao':{r:1340,a:4.9,d:5.0,f:'WLLWW'},
   // ESPN alternate names
-  'Korea Republic':{r:1535,a:6.8,d:6.8,f:'WWDLW'},
-  'Republic of Korea':{r:1535,a:6.8,d:6.8,f:'WWDLW'},
-  "Côte d'Ivoire":{r:1500,a:6.4,d:6.2,f:'WWDWL'},
+  'Korea Republic':{r:1556,a:6.9,d:6.9,f:'WDLWW'},
+  'Republic of Korea':{r:1556,a:6.9,d:6.9,f:'WDLWW'},
+  "Côte d'Ivoire":{r:1502,a:6.4,d:6.2,f:'WWDWL'},
   'Trinidad & Tobago':{r:1360,a:5.1,d:5.3,f:'WLWWL'},
-  'Bosnia & Herzegovina':{r:1480,a:6.1,d:6.0,f:'DWWLW'},
-  'Czech Republic':{r:1540,a:6.8,d:6.7,f:'WDWLW'},'Czechia':{r:1540,a:6.8,d:6.7,f:'WDWLW'},
+  'Bosnia & Herzegovina':{r:1487,a:6.1,d:6.1,f:'WWLWD'},
+  'Bosnia-Herzegovina':{r:1487,a:6.1,d:6.1,f:'WWLWD'},
+  'Czech Republic':{r:1524,a:6.7,d:6.6,f:'DWLWL'},'Czechia':{r:1524,a:6.7,d:6.6,f:'DWLWL'},
   'Ukraine':{r:1560,a:6.9,d:7.0,f:'WWWDL'},'Romania':{r:1510,a:6.5,d:6.5,f:'WWDWL'},
   'Hungary':{r:1510,a:6.4,d:6.5,f:'DWWWL'},'Austria':{r:1560,a:6.9,d:6.8,f:'WWWWL'},
   'Greece':{r:1490,a:6.2,d:6.5,f:'WDWLW'},'Slovakia':{r:1500,a:6.4,d:6.6,f:'WWDLW'},
@@ -786,9 +796,12 @@ function poissonInvCDF(lambda, u) {
 function pPoi(l,k){const f=[1,1,2,6,24,120,720,5040,40320];return k<=8?Math.exp(-l)*Math.pow(l,k)/f[k]:0;}
 
 // ── AI PREDICTION ENGINE ──
+// WC 2026 host nations get a small home crowd boost; all other matches are neutral
+const WC_HOSTS = new Set(['United States','USA','Canada','Mexico']);
 function predict(homeN, awayN) {
   const h = getTS(homeN), a = getTS(awayN);
-  const eloDiff = (h.r + 42) - a.r; // home advantage ~42 elo
+  const homeBoost = WC_HOSTS.has(homeN) ? 20 : 0; // neutral venue — no advantage unless host nation
+  const eloDiff = (h.r + homeBoost) - a.r;
   const winP = 1 / (1 + Math.pow(10, -eloDiff / 350));
   const drawP = 0.27 * Math.exp(-Math.pow(eloDiff / 290, 2) * 0.5);
   let hW = Math.max(5, Math.min(88, Math.round((winP - drawP/2) * 100)));
