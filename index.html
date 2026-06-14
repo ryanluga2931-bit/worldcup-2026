@@ -243,9 +243,25 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .hl-no-result{padding:14px 16px;font-size:11px;color:var(--muted);text-align:center}
 
 /* PREDICTED SCORE */
-.pred-score{text-align:center;margin-bottom:14px}
+.pred-score{text-align:center;margin-bottom:10px}
 .pred-lbl{font-size:9px;font-weight:800;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
 .pred-nums{font-size:30px;font-weight:900;color:#c4b5fd;letter-spacing:3px}
+
+/* TOP SCORELINES v2 */
+.sl-section{background:rgba(255,255,255,0.025);border:1px solid var(--border);border-radius:11px;padding:10px 11px;margin-bottom:13px}
+.sl-title{font-size:9px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.sl-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.sl-row:last-child{margin-bottom:0}
+.sl-score{font-size:12px;font-weight:900;color:var(--text2);width:30px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.sl-top .sl-score{color:#c4b5fd}
+.sl-bar-wrap{flex:1;height:5px;border-radius:100px;background:rgba(255,255,255,0.05);overflow:hidden}
+.sl-bar-fill{height:100%;border-radius:100px;background:rgba(139,92,246,0.25);transition:width 1.1s cubic-bezier(.4,0,.2,1);width:0}
+.sl-bf-top{background:linear-gradient(90deg,var(--purple),#c4b5fd)}
+.sl-pct{font-size:10px;font-weight:800;color:var(--muted);width:26px;text-align:right;flex-shrink:0}
+.sl-top .sl-pct{color:#c4b5fd}
+
+/* KEY FACTOR ROW */
+.key-factor-row{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:9px;padding:8px 11px;font-size:11px;font-weight:700;color:#a5b4fc;margin-bottom:13px;line-height:1.4}
 
 /* 3-COL WIN PROB */
 .prob3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:13px}
@@ -768,6 +784,18 @@ const getTS = n => TS[n] || {r:1620,a:6.2,d:6.2,f:'WWDLW'};
 function formScore(f) {
   return (f||'WDWDW').split('').reduce((s,c)=>s+(c==='W'?1:c==='D'?0.5:0),0)/5;
 }
+// Weighted form: more recent results count more (index 0=oldest → 4=latest)
+function formScoreWeighted(f) {
+  const weights = [1.0, 1.2, 1.5, 1.9, 2.4];
+  const arr = (f||'WDWDW').split('').slice(0,5);
+  let score = 0, totalW = 0;
+  arr.forEach((c,i) => {
+    const w = weights[Math.min(i, weights.length-1)];
+    score += (c==='W' ? 1 : c==='D' ? 0.42 : 0) * w;
+    totalW += w;
+  });
+  return score / (totalW || 1);
+}
 function formStreak(f) {
   const arr=(f||'').split('');
   if(!arr.length) return {type:'',len:0};
@@ -795,63 +823,107 @@ function poissonInvCDF(lambda, u) {
 // Single Poisson PMF
 function pPoi(l,k){const f=[1,1,2,6,24,120,720,5040,40320];return k<=8?Math.exp(-l)*Math.pow(l,k)/f[k]:0;}
 
-// ── AI PREDICTION ENGINE ──
+// ── AI PREDICTION ENGINE v2 (Super VIP Pro) ──
 // WC 2026 host nations get a small home crowd boost; all other matches are neutral
 const WC_HOSTS = new Set(['United States','USA','Canada','Mexico']);
-function predict(homeN, awayN) {
+
+// #1 decisive factor for a matchup (used in AI panel key insight row)
+function calcKeyFactor(homeN, awayN, h, a, hFm, aFm, eloDiff, hXG, aXG) {
+  const hShort = homeN.split(' ').pop();
+  const aShort = awayN.split(' ').pop();
+  const abs = Math.abs(eloDiff);
+  if(abs > 200) {
+    const stronger = eloDiff > 0 ? hShort : aShort;
+    return `⚡ Đẳng cấp chênh lệch lớn — ${stronger} vượt trội ${Math.round(abs)} ELO điểm`;
+  }
+  if(hFm > 0.82) return `🔥 ${hShort} đang thăng hoa — phong độ xuất sắc gần đây`;
+  if(aFm > 0.82) return `🔥 ${aShort} đang thăng hoa — phong độ xuất sắc gần đây`;
+  if(hXG - aXG > 0.85) return `⚽ ${hShort} tạo cơ hội áp đảo — xG cao hơn ${(hXG-aXG).toFixed(1)} goals`;
+  if(aXG - hXG > 0.85) return `⚽ ${aShort} nguy hiểm hơn — xG cao hơn ${(aXG-hXG).toFixed(1)} goals`;
+  if(h.d > 8.0 && a.a < 7.0) return `🛡 ${hShort} hàng thủ kiên cố — ${aShort} khó xuyên phá`;
+  if(a.d > 8.0 && h.a < 7.0) return `🛡 ${aShort} hàng thủ kiên cố — ${hShort} khó xuyên phá`;
+  if(hFm < 0.25) return `⚠️ ${hShort} phong độ kém — đang sa sút nghiêm trọng`;
+  if(aFm < 0.25) return `⚠️ ${aShort} phong độ kém — đang sa sút nghiêm trọng`;
+  if(abs < 60) return `🎯 Trận đấu cân bằng — biến số cao, khó dự đoán`;
+  const edge = eloDiff > 0 ? hShort : aShort;
+  return `📊 ${edge} nhỉnh hơn về đẳng cấp (ELO +${Math.round(abs)}) — lợi thế nhỏ nhưng đủ`;
+}
+
+function predict(homeN, awayN, stageTier='group') {
   const h = getTS(homeN), a = getTS(awayN);
-  const homeBoost = WC_HOSTS.has(homeN) ? 20 : 0; // neutral venue — no advantage unless host nation
+  const homeBoost = WC_HOSTS.has(homeN) ? 20 : 0;
   const eloDiff = (h.r + homeBoost) - a.r;
   const winP = 1 / (1 + Math.pow(10, -eloDiff / 350));
-  const drawP = 0.27 * Math.exp(-Math.pow(eloDiff / 290, 2) * 0.5);
+
+  // Draw probability: knockout stages suppress draws (extra time decides instead)
+  const isKnockout = ['r16','qf','semi','final'].includes(stageTier);
+  const drawBase = isKnockout ? 0.06 : 0.27;
+  const drawP = drawBase * Math.exp(-Math.pow(eloDiff / 290, 2) * 0.5);
+
   let hW = Math.max(5, Math.min(88, Math.round((winP - drawP/2) * 100)));
   let aW = Math.max(5, Math.min(88, Math.round(((1-winP) - drawP/2) * 100)));
-  let dr = Math.max(5, Math.min(38, 100 - hW - aW));
+  let dr = Math.max(isKnockout ? 3 : 8, Math.min(isKnockout ? 14 : 36, 100 - hW - aW));
   const tot = hW + dr + aW;
   hW = Math.round(hW/tot*100); aW = Math.round(aW/tot*100); dr = 100-hW-aW;
 
-  const hFm = formScore(h.f), aFm = formScore(a.f);
-  // xG with form modifier: in-form team +0.3 xG, out-of-form -0.3
-  const hXG = Math.max(0.4, (h.a*0.5+(10-a.d)*0.5)/10*3.2 + (hFm-0.6)*0.55);
-  const aXG = Math.max(0.25, (a.a*0.5+(10-h.d)*0.5)/10*2.7 + (aFm-0.6)*0.5);
+  // Weighted form: recent games count more
+  const hFm = formScoreWeighted(h.f), aFm = formScoreWeighted(a.f);
 
-  // Bounded sampling: clamp to 20th–80th percentile so strong teams don't get 0 and
-  // weak teams don't get unrealistically high scores (bug with raw nameHash seed)
-  const u1 = 0.20 + nameHash(homeN + '##gh##' + awayN) * 0.60;
-  const u2 = 0.20 + nameHash(awayN + '##ga##' + homeN) * 0.60;
-  const pHome = poissonInvCDF(hXG, u1);
-  const pAway = poissonInvCDF(aXG, u2);
+  // Improved xG v2: attack vs opponent-defense (0.6/0.4 split), multiplicative form
+  // Multiplicative form means in-form teams get exponentially more xG (more realistic)
+  const hAtkVsDef = (h.a * 0.6 + (10 - a.d) * 0.4) / 10;
+  const aAtkVsDef = (a.a * 0.6 + (10 - h.d) * 0.4) / 10;
+  const hXGRaw = hAtkVsDef * 3.1 * (0.72 + hFm * 0.56);
+  const aXGRaw = aAtkVsDef * 2.65 * (0.72 + aFm * 0.56);
+  // Knockout stage: teams more cautious, expect ~12% fewer goals
+  const stageMult = isKnockout ? 0.88 : 1.0;
+  const hXG = Math.max(0.35, hXGRaw * stageMult);
+  const aXG = Math.max(0.20, aXGRaw * stageMult);
+
+  // Predicted score: Poisson mode = Math.floor(xG) — most likely single outcome
+  const pHome = Math.floor(hXG);
+  const pAway = Math.floor(aXG);
 
   const totalXG = hXG + aXG;
-  const over25 = Math.min(88, Math.max(18, Math.round((1-Math.exp(-totalXG)*(1+totalXG+totalXG*totalXG/2))*100)));
-  const btts = Math.min(82, Math.max(12, Math.round((1-Math.exp(-hXG))*(1-Math.exp(-aXG))*100)));
+  const over25 = Math.min(88, Math.max(12, Math.round((1-Math.exp(-totalXG)*(1+totalXG+totalXG*totalXG/2))*100)));
+  const btts = Math.min(82, Math.max(8, Math.round((1-Math.exp(-hXG))*(1-Math.exp(-aXG))*100)));
   const next10 = Math.min(42, Math.max(5, Math.round((1-Math.exp(-totalXG*10/90))*100)));
 
-  // Top 3 most probable exact scorelines via joint Poisson distribution
+  // Top 5 most probable scorelines via joint Poisson
   const scorelines = [];
-  for(let hi=0;hi<=5;hi++) for(let ai=0;ai<=5;ai++){
-    scorelines.push({h:hi,a:ai,p:pPoi(hXG,hi)*pPoi(aXG,ai)});
+  for(let hi=0;hi<=6;hi++) for(let ai=0;ai<=6;ai++){
+    scorelines.push({h:hi, a:ai, p:pPoi(hXG,hi)*pPoi(aXG,ai)});
   }
-  scorelines.sort((a,b)=>b.p-a.p);
-  const topScores = scorelines.slice(0,3).map(s=>({
+  scorelines.sort((x,y)=>y.p-x.p);
+  const topScores = scorelines.slice(0,5).map(s=>({
     label:`${s.h}-${s.a}`, pct:Math.round(s.p*100)
   }));
 
-  // Confidence: ELO gap + form consistency
+  // Multi-factor confidence: ELO gap + form gap + xG gap + form stability
   const rdiff = Math.abs(eloDiff);
-  const formUnstable = [(h.f||''), (a.f||'')].some(f=>f.includes('L')&&f.includes('W'));
-  const confidence = rdiff > 220 && !formUnstable ? 'high' : rdiff > 100 ? 'medium' : 'low';
+  const formGap = Math.abs(hFm - aFm);
+  const xgGap = Math.abs(hXG - aXG);
+  const formUnstable = [(h.f||''), (a.f||'')].some(f=>{
+    const arr=f.split(''); const last=arr[arr.length-1];
+    return last==='L' && arr.slice(0,3).filter(c=>c==='W').length>=2;
+  });
+  let confScore = 0;
+  if(rdiff > 200) confScore += 2; else if(rdiff > 100) confScore += 1;
+  if(formGap > 0.25) confScore += 1;
+  if(xgGap > 0.6) confScore += 1;
+  if(!formUnstable) confScore += 1;
+  const confidence = confScore >= 4 ? 'high' : confScore >= 2 ? 'medium' : 'low';
   const confLabel = {high:'Độ tin cao 🟢', medium:'Độ tin TB 🟡', low:'Độ tin thấp 🔴'}[confidence];
 
-  // Upset: underdog (either side) has real chance despite notable ELO gap
+  const keyFactor = calcKeyFactor(homeN, awayN, h, a, hFm, aFm, eloDiff, hXG, aXG);
+
   const absEloDiff = Math.abs(eloDiff);
   const isUpset = absEloDiff > 90 && Math.min(hW, aW) > 28;
-
   const isHot = h.r > 1700 && a.r > 1680;
   const momentum = Math.round(hW);
   return { hW, dr, aW, hXG: hXG.toFixed(1), aXG: aXG.toFixed(1), pHome, pAway,
            over25, btts, next10, confidence, confLabel, isUpset, isHot, momentum,
-           homeForm: h.f, awayForm: a.f, eloDiff: absEloDiff, topScores };
+           homeForm: h.f, awayForm: a.f, eloDiff: absEloDiff, topScores, keyFactor, isKnockout };
 }
 
 // ── VIETNAMESE AI COMMENTARY ──
@@ -1044,7 +1116,10 @@ function restoreOpenPanels(state, containerId='live-content'){
       toggle?.classList.add('open');
     }
     // Animate progress bars after reflow (Bug #9 fix)
-    setTimeout(()=>{panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});},60);
+    setTimeout(()=>{
+      panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});
+      panel.querySelectorAll('.sl-bar-fill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});
+    },60);
   });
   // Restore highlight panels from cache
   const hlIds = state.hl;
@@ -1813,18 +1888,26 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
   const h1 = getKeyPlayer(homeN, 0), h2 = getKeyPlayer(homeN, 1);
   const a1 = getKeyPlayer(awayN, 0), a2 = getKeyPlayer(awayN, 1);
   const goalTiming = Math.min(72, Math.max(28, Math.round((parseFloat(p.hXG)+parseFloat(p.aXG))/5.5*100)));
+  // Max pct among top scorelines for bar scaling
+  const maxSLPct = (p.topScores&&p.topScores[0]) ? Math.max(1, p.topScores[0].pct) : 1;
   return `
   <div class="ai-panel" id="aip_${mid}">
     <div class="pred-score">
       <div class="pred-lbl">⚽ Dự đoán tỷ số</div>
       <div class="pred-nums">${p.pHome} – ${p.pAway}</div>
-      <div style="display:flex;justify-content:center;gap:7px;margin-top:8px;flex-wrap:wrap">
-        ${(p.topScores||[]).map((s,i)=>`<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:800;background:${i===0?'rgba(139,92,246,.18)':'rgba(255,255,255,.04)'};border:1px solid ${i===0?'rgba(139,92,246,.35)':'rgba(255,255,255,.08)'};color:${i===0?'#c4b5fd':'var(--text2)'}">${i===0?'🎯 ':''}<span style="font-variant-numeric:tabular-nums">${s.label}</span><span style="font-size:9px;opacity:.7">${s.pct}%</span></span>`).join('')}
-      </div>
+    </div>
+    <div class="sl-section">
+      <div class="sl-title">📊 Top tỷ số có thể xảy ra</div>
+      ${(p.topScores||[]).map((s,i)=>`
+      <div class="sl-row${i===0?' sl-top':''}">
+        <span class="sl-score">${s.label}</span>
+        <div class="sl-bar-wrap"><div class="sl-bar-fill sl-bf${i===0?'-top':''}" style="width:0" data-w="${Math.round(s.pct/maxSLPct*100)}"></div></div>
+        <span class="sl-pct">${s.pct}%</span>
+      </div>`).join('')}
     </div>
     <div class="prob3">
       <div class="prob3-item"><div class="prob3-val h">${p.hW}%</div><div class="prob3-lbl">🏠 ${homeN.split(' ').pop()}</div></div>
-      <div class="prob3-item"><div class="prob3-val d">${p.dr}%</div><div class="prob3-lbl">🤝 Hòa</div></div>
+      <div class="prob3-item"><div class="prob3-val d">${p.dr}%</div><div class="prob3-lbl">🤝 Hòa${p.isKnockout?' (H.phụ)':''}</div></div>
       <div class="prob3-item"><div class="prob3-val a">${p.aW}%</div><div class="prob3-lbl">✈️ ${awayN.split(' ').pop()}</div></div>
     </div>
     <div class="prob-bar-row">
@@ -1852,6 +1935,7 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
       <div class="ai-stat"><div class="ai-stat-lbl">xG Home</div><div class="ai-stat-val">${p.hXG} <small>goals</small></div></div>
       <div class="ai-stat"><div class="ai-stat-lbl">xG Away</div><div class="ai-stat-val">${p.aXG} <small>goals</small></div></div>
     </div>
+    ${p.keyFactor ? `<div class="key-factor-row">${p.keyFactor}</div>` : ''}
     <div class="key-players">
       <div class="kp-block">
         <div class="kp-icon">⭐</div>
@@ -1898,6 +1982,9 @@ function toggleAI(mid, btn) {
   if(opening) {
     setTimeout(()=>{
       panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{
+        el.style.width = el.dataset.w + '%';
+      });
+      panel.querySelectorAll('.sl-bar-fill[data-w]').forEach(el=>{
         el.style.width = el.dataset.w + '%';
       });
     }, 60);
@@ -2012,7 +2099,7 @@ function renderMatchCard(event) {
   else if(gn.includes('round of 16')||gn.includes('round of sixteen')) stageTier='r16';
   else if(gn.match(/group [a-l]/i)) stageTier='group';
   const stageBadgeHTML = stageTier ? `<span class="badge stage stage-${stageTier}">${stageLabel||groupName.slice(0,14)}</span>` : '';
-  const p = predict(homeN, awayN);
+  const p = predict(homeN, awayN, stageTier);
 
   // Hot match badge
   const hotBadge = (!live && p.isHot) ? `<span class="badge hot">🔥 HOT</span>` : '';
