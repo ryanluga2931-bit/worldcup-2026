@@ -94,8 +94,9 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .live-min.urgent,.badge.live.urgent{animation:urgentTick 0.85s ease-in-out infinite}
 .badge.live.urgent{background:rgba(239,68,68,0.28);color:#fca5a5}
 .match-card.hot{border-color:rgba(245,158,11,0.38);box-shadow:var(--glow-gold)}
-.match-card.fav-home{background:linear-gradient(105deg,rgba(34,197,94,0.05) 0%,rgba(17,24,39,0.92) 45%)}
-.match-card.fav-away{background:linear-gradient(255deg,rgba(34,197,94,0.05) 0%,rgba(17,24,39,0.92) 45%)}
+.match-card.fav-home{background:linear-gradient(105deg,rgba(34,197,94,0.05) 0%,rgba(17,24,39,0.92) 45%);border-left:3px solid #3b82f6}
+.match-card.fav-away{background:linear-gradient(255deg,rgba(34,197,94,0.05) 0%,rgba(17,24,39,0.92) 45%);border-left:3px solid #ef4444}
+.match-card.fav-balanced{border-left:3px solid #f59e0b}
 .match-card.live.fav-home,.match-card.live.fav-away{background:linear-gradient(135deg,rgba(32,10,10,0.95) 0%,rgba(17,24,39,0.95) 100%)}
 
 /* TEAM WIN HIGHLIGHT */
@@ -267,12 +268,17 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 /* KEY FACTOR ROW */
 .key-factor-row{background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:9px;padding:8px 11px;font-size:11px;font-weight:700;color:#a5b4fc;margin-bottom:13px;line-height:1.4}
 
-/* 3-COL WIN PROB */
-.prob3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:13px}
-.prob3-item{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:9px 6px;text-align:center}
-.prob3-val{font-size:20px;font-weight:900}
-.prob3-val.h{color:#60a5fa}.prob3-val.d{color:#fbbf24}.prob3-val.a{color:#f87171}
-.prob3-lbl{font-size:9px;color:var(--muted);font-weight:700;margin-top:2px;letter-spacing:.5px}
+/* WIN PROBABILITY BAR */
+.wpbar{margin-bottom:14px}
+.wpbar-labels{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.wpbar-lbl{font-size:10px;font-weight:800;color:var(--text2)}
+.wpbar-lbl.h{color:#60a5fa}.wpbar-lbl.d{color:#fbbf24;text-align:center;flex:1}.wpbar-lbl.a{color:#f87171;text-align:right}
+.wpbar-pct{font-size:15px;font-weight:900;display:block;margin-top:1px}
+.wpbar-track{display:flex;height:32px;border-radius:9px;overflow:hidden;gap:2px}
+.wpbar-seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:rgba(255,255,255,0.92);transition:width 1s cubic-bezier(.4,0,.2,1);width:0;overflow:hidden;white-space:nowrap;min-width:0}
+.wpbar-seg.h{background:linear-gradient(135deg,#1d4ed8,#3b82f6)}
+.wpbar-seg.d{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.wpbar-seg.a{background:linear-gradient(135deg,#b91c1c,#ef4444)}
 
 /* PROB BARS */
 .prob-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:7px}
@@ -889,7 +895,7 @@ function getMarketOdds(homeN, awayN) {
     const keys = Object.keys(_marketOdds);
     for(const k of keys) {
       const [a,b] = k.split('||');
-      if(a.length < 5 || b.length < 5) continue;
+      if(!a || !b || a.length < 5 || b.length < 5) continue;
       if((a.includes(hk)||hk.includes(a)) && (b.includes(ak)||ak.includes(b))) return _marketOdds[k];
       if((a.includes(ak)||ak.includes(a)) && (b.includes(hk)||hk.includes(b))) return _marketOdds[k];
     }
@@ -2103,10 +2109,17 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
         <span class="sl-pct">${s.pct}%</span>
       </div>`).join('')}
     </div>
-    <div class="prob3">
-      <div class="prob3-item"><div class="prob3-val h">${p.hW}%</div><div class="prob3-lbl">🏠 ${homeN.split(' ').pop()}</div></div>
-      <div class="prob3-item"><div class="prob3-val d">${p.dr}%</div><div class="prob3-lbl">🤝 Hòa${p.isKnockout?' (H.phụ)':''}</div></div>
-      <div class="prob3-item"><div class="prob3-val a">${p.aW}%</div><div class="prob3-lbl">✈️ ${awayN.split(' ').pop()}</div></div>
+    <div class="wpbar">
+      <div class="wpbar-labels">
+        <div class="wpbar-lbl h">🏠 ${homeN.split(' ').pop()}<span class="wpbar-pct">${p.hW}%</span></div>
+        <div class="wpbar-lbl d">🤝 Hòa${p.isKnockout?' (H.phụ)':''}<span class="wpbar-pct">${p.dr}%</span></div>
+        <div class="wpbar-lbl a">✈️ ${awayN.split(' ').pop()}<span class="wpbar-pct">${p.aW}%</span></div>
+      </div>
+      <div class="wpbar-track" data-h="${p.hW}" data-d="${p.dr}" data-a="${p.aW}">
+        <div class="wpbar-seg h" style="width:0%">${p.hW}%</div>
+        <div class="wpbar-seg d" style="width:0%">${p.dr > 5 ? p.dr+'%' : ''}</div>
+        <div class="wpbar-seg a" style="width:0%">${p.aW}%</div>
+      </div>
     </div>
     <div class="prob-bar-row">
       <span class="pb-label">Trên 2.5 bàn</span>
@@ -2192,6 +2205,12 @@ function toggleAI(mid, btn) {
       panel.querySelectorAll('.sl-bar-fill[data-w]').forEach(el=>{
         el.style.width = el.dataset.w + '%';
       });
+      const trk = panel.querySelector('.wpbar-track');
+      if(trk) {
+        const segs = trk.querySelectorAll('.wpbar-seg');
+        const vals = [+trk.dataset.h, +trk.dataset.d, +trk.dataset.a];
+        segs.forEach((s,i)=>{ s.style.width = vals[i]+'%'; });
+      }
     }, 60);
   }
 }
@@ -2343,7 +2362,7 @@ function renderMatchCard(event) {
   // Predicted winner
   const predictedHome = p.hW > p.aW;
   const predictedAway = p.aW > p.hW;
-  const favClass = predictedHome ? ' fav-home' : predictedAway ? ' fav-away' : '';
+  const favClass = predictedHome ? ' fav-home' : predictedAway ? ' fav-away' : ' fav-balanced';
   // Live intensity based on match time, score, and status
   const intensity = live ? calcIntensity(comp.status?.displayClock||'', homeScore, awayScore, sName) : '';
   const intensityClass = intensity ? ` intensity-${intensity}` : '';
