@@ -856,18 +856,22 @@ function pPoi(l,k){const f=[1,1,2,6,24,120,720,5040,40320];return k<=8?Math.exp(
 let _marketOdds = {}; // keyed by normalized "hometeam||awayteam"
 let _oddsDebug = {sportKey:'', events:[], status:''};
 
-// Canonical name map: ESPN/TS name → The Odds API name (normalized)
+// Aliases: raw-normalized ESPN name → raw-normalized Odds API name
 const _TEAM_NORM_MAP = {
-  'unitedstates':'usa','côtedivoire':'ivorycoast','korerepublic':'southkorea',
-  'republicofkorea':'southkorea','czechia':'czechrepublic',
-  'bosniaherzegovina':'bosniaherzegovina','bosniaandherzegovina':'bosniaherzegovina',
-  'bosniaandherzegovina':'bosniaherzegovina','bosniaherzegovina':'bosniaherzegovina',
-  'türkiye':'turkey','curacao':'curaçao','curaao':'curaçao',
-  'trinidadtobago':'trinidadtobago','trinidadandtobago':'trinidadtobago',
-  'democraticrepublicofcongo':'drcongo','drcongo':'drcongo',
+  'unitedstates':'usa',
+  'cotedivoire':'ivorycoast','cdivoire':'ivorycoast',
+  'korerepublic':'southkorea','republicofkorea':'southkorea',
+  'czechia':'czechrepublic',
+  'bosniaandherzegovina':'bosniaherzegovina',
+  'turkiye':'turkey',
+  'curacao':'curacao','curaao':'curacao',
+  'trinidadandtobago':'trinidadtobago',
+  'democraticrepublicofcongo':'drcongo','congodr':'drcongo',
+  'norway':'norway', // Norway not in TS — passthrough
 };
 function _normTeam(n) {
-  const raw = (n||'').toLowerCase().replace(/[^a-z]/g,'');
+  // strip ALL non-ascii then lowercase then remove non a-z
+  const raw = (n||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z]/g,'');
   return _TEAM_NORM_MAP[raw] || raw;
 }
 function getMarketOdds(homeN, awayN) {
@@ -2141,13 +2145,11 @@ function toggleAI(mid, btn) {
   toggle.classList.toggle('open', opening);
   panel.classList.toggle('open', opening);
   if(opening) {
-    // Lazy-render market odds now (after fetchMarketOdds has had time to complete)
+    // Re-render market odds every open (handles async fetch + card refresh)
     const lazy = panel.querySelector('.mkt-lazy');
     if(lazy) {
       const miniP = {hW: parseInt(lazy.dataset.hw)||50, aW: parseInt(lazy.dataset.aw)||50};
-      const el = document.createElement('div');
-      el.innerHTML = marketOddsHTML(lazy.dataset.home, lazy.dataset.away, miniP);
-      lazy.replaceWith(el.firstElementChild || el);
+      lazy.innerHTML = marketOddsHTML(lazy.dataset.home, lazy.dataset.away, miniP);
     }
     setTimeout(()=>{
       panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{
