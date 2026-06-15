@@ -731,7 +731,7 @@ const TS = {
   'Argentina':{r:1852,a:9.2,d:8.5,f:'WWWDW'},'France':{r:1822,a:8.8,d:8.7,f:'WWWWL'},
   'England':{r:1792,a:8.5,d:8.2,f:'WWDWW'},'Spain':{r:1782,a:8.7,d:8.3,f:'WWWWW'},
   'Brazil':{r:1751,a:8.6,d:8.1,f:'DWWWD'},'Portugal':{r:1722,a:8.4,d:7.8,f:'WWWDW'},
-  'Germany':{r:1702,a:8.2,d:7.9,f:'WDWWW'},'Netherlands':{r:1692,a:8.0,d:7.8,f:'WWDWL'},
+  'Germany':{r:1710,a:8.5,d:8.0,f:'WWWWW'},'Netherlands':{r:1692,a:8.0,d:7.8,f:'WWDWL'},
   'Belgium':{r:1682,a:7.9,d:7.6,f:'DWWWW'},'Croatia':{r:1652,a:7.5,d:7.8,f:'WWDWW'},
   'Denmark':{r:1637,a:7.3,d:7.7,f:'WWWDW'},'Morocco':{r:1629,a:7.3,d:8.1,f:'DWDWD'},
   'Switzerland':{r:1606,a:7.1,d:7.6,f:'WWWWD'},'Uruguay':{r:1642,a:7.4,d:7.7,f:'WDWDW'},
@@ -869,16 +869,21 @@ function predict(homeN, awayN, stageTier='group') {
   // Weighted form: recent games count more
   const hFm = formScoreWeighted(h.f), aFm = formScoreWeighted(a.f);
 
-  // Improved xG v2: attack vs opponent-defense (0.6/0.4 split), multiplicative form
-  // Multiplicative form means in-form teams get exponentially more xG (more realistic)
+  // Improved xG v3: attack vs opponent-defense (0.6/0.4 split), multiplicative form
+  // + ELO gap bonus: big ELO advantage means stronger team dominates possession/chances
   const hAtkVsDef = (h.a * 0.6 + (10 - a.d) * 0.4) / 10;
   const aAtkVsDef = (a.a * 0.6 + (10 - h.d) * 0.4) / 10;
   const hXGRaw = hAtkVsDef * 3.1 * (0.72 + hFm * 0.56);
   const aXGRaw = aAtkVsDef * 2.65 * (0.72 + aFm * 0.56);
+  // ELO mismatch amplifier: when gap > 100 ELO, stronger team creates far more chances
+  // e.g. 300 gap → +43% xG for the dominant team; 100 gap → 0% bonus
+  const eloGapBonus = Math.max(0, (Math.abs(eloDiff) - 100)) / 700;
+  const hEloBoost = eloDiff > 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.5);
+  const aEloBoost = eloDiff < 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.5);
   // Knockout stage: teams more cautious, expect ~12% fewer goals
   const stageMult = isKnockout ? 0.88 : 1.0;
-  const hXG = Math.max(0.35, hXGRaw * stageMult);
-  const aXG = Math.max(0.20, aXGRaw * stageMult);
+  const hXG = Math.max(0.35, hXGRaw * hEloBoost * stageMult);
+  const aXG = Math.max(0.20, aXGRaw * aEloBoost * stageMult);
 
   // Predicted score: Poisson mode = Math.floor(xG) — most likely single outcome
   const pHome = Math.floor(hXG);
