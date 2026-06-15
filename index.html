@@ -859,6 +859,7 @@ function pPoi(l,k){const f=[1,1,2,6,24,120,720,5040,40320];return k<=8?Math.exp(
 // ── MARKET ODDS (The Odds API — bet365 + 40 bookmakers) ──
 let _marketOdds = {}; // keyed by normalized "hometeam||awayteam"
 let _oddsDebug = {sportKey:'', events:[], status:''};
+let _wcSportKeyCache = null; // cached after first successful lookup — avoids double API call
 
 // Aliases: raw-normalized ESPN name → raw-normalized Odds API name
 const _TEAM_NORM_MAP = {
@@ -883,26 +884,30 @@ function getMarketOdds(homeN, awayN) {
   // exact normalized match (both orders)
   const exact = _marketOdds[hk+'||'+ak] || _marketOdds[ak+'||'+hk];
   if(exact) return exact;
-  // fuzzy: check if any stored key contains both team name fragments
-  const keys = Object.keys(_marketOdds);
-  for(const k of keys) {
-    const [a,b] = k.split('||');
-    if((a.includes(hk)||hk.includes(a)) && (b.includes(ak)||ak.includes(b))) return _marketOdds[k];
-    if((a.includes(ak)||ak.includes(a)) && (b.includes(hk)||hk.includes(b))) return _marketOdds[k];
+  // fuzzy: substring match — only for names ≥5 chars to avoid false positives (e.g. 'usa' in 'lausanne')
+  if(hk.length >= 5 && ak.length >= 5) {
+    const keys = Object.keys(_marketOdds);
+    for(const k of keys) {
+      const [a,b] = k.split('||');
+      if(a.length < 5 || b.length < 5) continue;
+      if((a.includes(hk)||hk.includes(a)) && (b.includes(ak)||ak.includes(b))) return _marketOdds[k];
+      if((a.includes(ak)||ak.includes(a)) && (b.includes(hk)||hk.includes(b))) return _marketOdds[k];
+    }
   }
   return null;
 }
 
 async function _findWCSportKey(apiKey) {
+  if(_wcSportKeyCache) return _wcSportKeyCache; // use cached key — saves 1 API credit per fetch
   try {
-    const r = await fetch(`https://api.the-odds-api.com/v4/sports/?apiKey=${apiKey}`);
+    const r = await fetch(`https://api.the-odds-api.com/v4/sports/?apiKey=${encodeURIComponent(apiKey)}`);
     if(!r.ok) return 'soccer_fifa_world_cup';
     const list = await r.json();
-    // Find active WC sport — prefer active ones
     const wc = list.find(s=>s.active && s.key.includes('world_cup') && s.key.includes('soccer'))
             || list.find(s=>s.key.includes('world_cup') && s.key.includes('soccer'))
             || list.find(s=>s.key==='soccer_fifa_world_cup');
-    return wc ? wc.key : 'soccer_fifa_world_cup';
+    _wcSportKeyCache = wc ? wc.key : 'soccer_fifa_world_cup';
+    return _wcSportKeyCache;
   } catch(e) { return 'soccer_fifa_world_cup'; }
 }
 
@@ -913,7 +918,7 @@ async function fetchMarketOdds() {
     const sportKey = await _findWCSportKey(key);
     _oddsDebug.sportKey = sportKey;
     const r = await fetch(
-      `https://api.the-odds-api.com/v4/sports/${sportKey}/odds/?apiKey=${key}&regions=uk,eu,us&markets=h2h,totals,spreads&oddsFormat=decimal`,
+      `https://api.the-odds-api.com/v4/sports/${sportKey}/odds/?apiKey=${encodeURIComponent(key)}&regions=uk,eu,us&markets=h2h,totals,spreads&oddsFormat=decimal`,
       {cache:'no-store'}
     );
     if(!r.ok) { _oddsDebug.status = `HTTP ${r.status}`; return; }
@@ -2177,7 +2182,7 @@ function toggleAI(mid, btn) {
     // Re-render market odds every open (handles async fetch + card refresh)
     const lazy = panel.querySelector('.mkt-lazy');
     if(lazy) {
-      const miniP = {hW: parseInt(lazy.dataset.hw)||50, aW: parseInt(lazy.dataset.aw)||50};
+      const miniP = {hW: lazy.dataset.hw != null ? +lazy.dataset.hw : 50, aW: lazy.dataset.aw != null ? +lazy.dataset.aw : 50};
       lazy.innerHTML = marketOddsHTML(lazy.dataset.home, lazy.dataset.away, miniP);
     }
     setTimeout(()=>{
@@ -2918,6 +2923,7 @@ if(_heroEl) _heroObserver.observe(_heroEl);
 loadSchedule();
 loadScores().then(()=>loadPastResults()); // ensure _lastCurrentEvents is populated before past results merge
 fetchMarketOdds().then(()=>showAdminSettings()); // load real bookmaker odds if API key is saved
+setInterval(()=>{ if(localStorage.getItem(ODDS_API_KEY_LS)) fetchMarketOdds(); }, 2*60*60*1000); // refresh every 2h
 // Increment visit counter once per page load
 fetch('https://api.countapi.xyz/hit/worldcup2026-ryanluga/visits').catch(()=>{});
 
