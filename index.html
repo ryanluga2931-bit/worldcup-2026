@@ -864,12 +864,26 @@ function getMarketOdds(homeN, awayN) {
       || null;
 }
 
+async function _findWCSportKey(apiKey) {
+  try {
+    const r = await fetch(`https://api.the-odds-api.com/v4/sports/?apiKey=${apiKey}`);
+    if(!r.ok) return 'soccer_fifa_world_cup';
+    const list = await r.json();
+    // Find active WC sport — prefer active ones
+    const wc = list.find(s=>s.active && s.key.includes('world_cup') && s.key.includes('soccer'))
+            || list.find(s=>s.key.includes('world_cup') && s.key.includes('soccer'))
+            || list.find(s=>s.key==='soccer_fifa_world_cup');
+    return wc ? wc.key : 'soccer_fifa_world_cup';
+  } catch(e) { return 'soccer_fifa_world_cup'; }
+}
+
 async function fetchMarketOdds() {
   const key = localStorage.getItem(ODDS_API_KEY_LS) || '';
   if(!key) return;
   try {
+    const sportKey = await _findWCSportKey(key);
     const r = await fetch(
-      `https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds/?apiKey=${key}&regions=uk&markets=h2h,totals&oddsFormat=decimal`,
+      `https://api.the-odds-api.com/v4/sports/${sportKey}/odds/?apiKey=${key}&regions=uk&markets=h2h,totals&oddsFormat=decimal`,
       {cache:'no-store'}
     );
     if(!r.ok) return;
@@ -2942,10 +2956,12 @@ function saveOddsKey() {
   if(!val) return;
   localStorage.setItem(ODDS_API_KEY_LS, val);
   const st = document.getElementById('adm-odds-status');
-  if(st) st.textContent = '✅ Đã lưu! Đang tải kèo...';
+  if(st) st.textContent = '⏳ Đã lưu! Đang tìm kèo WC 2026...';
   fetchMarketOdds().then(()=>{
     const cnt = Object.keys(_marketOdds).length;
-    if(st) st.textContent = cnt > 0 ? `✅ Đã tải kèo ${cnt} trận từ bookmaker` : '⚠️ Không tải được kèo. Kiểm tra lại API key.';
+    if(st) st.textContent = cnt > 0
+      ? `✅ Đã tải kèo ${cnt} trận sắp diễn ra`
+      : '⚠️ Không có kèo — có thể hôm nay không có trận nào sắp đá, hoặc bookmaker chưa mở kèo';
   });
 }
 
