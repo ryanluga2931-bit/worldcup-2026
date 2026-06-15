@@ -304,6 +304,23 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .conf-badge.medium{background:rgba(245,158,11,.13);color:var(--accent);border:1px solid rgba(245,158,11,.28)}
 .conf-badge.low{background:rgba(239,68,68,.1);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
 
+/* MARKET ODDS BLOCK */
+.mkt-odds{border:1px solid rgba(99,102,241,.22);border-radius:11px;padding:10px 11px;margin-bottom:13px;background:rgba(99,102,241,.04)}
+.mkt-nokey,.mkt-nodata{border-color:var(--border);background:rgba(255,255,255,.02)}
+.mkt-title{font-size:9px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.mkt-1x2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:7px}
+.mkt-cell{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:7px 5px;text-align:center}
+.mkt-dec{font-size:16px;font-weight:900;color:#c4b5fd}
+.mkt-imp{font-size:10px;font-weight:700;color:var(--text2);margin:1px 0}
+.mkt-team{font-size:9px;color:var(--muted);font-weight:600}
+.mkt-ou-row{display:flex;align-items:center;gap:7px;font-size:11px;padding-top:6px;border-top:1px solid var(--border);flex-wrap:wrap}
+.mkt-ou-lbl{font-weight:700;color:var(--text2);font-size:10px}
+.mkt-ou-val{font-weight:800;font-size:11px}
+.mkt-ou-val.tài{color:#34d399}.mkt-ou-val.xỉu{color:#f87171}
+.mkt-ou-sep{color:var(--border)}
+.mkt-value{margin-top:7px;padding:6px 9px;border-radius:7px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);font-size:10px;font-weight:700;color:#fde68a}
+.mkt-nokey-msg{font-size:11px;color:var(--muted);line-height:1.5}
+
 /* UPSET ALERT */
 .upset-alert{display:flex;align-items:center;gap:7px;padding:9px 11px;border-radius:9px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);margin-bottom:10px;font-size:11px;font-weight:700;color:#fca5a5}
 
@@ -671,6 +688,17 @@ main{-webkit-overflow-scrolling:touch}
           <div class="admin-row"><span class="admin-row-label">Màn hình</span><span class="admin-row-value" id="adm-screen">…</span></div>
           <div class="admin-row"><span class="admin-row-label">Ngôn ngữ</span><span class="admin-row-value" id="adm-lang">…</span></div>
         </div>
+        <div class="admin-visitor-card" id="adm-settings-card">
+          <div class="admin-visitor-title">⚙️ Cài đặt API · Kèo thị trường</div>
+          <div class="admin-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+            <span class="admin-row-label" style="font-size:10px;color:var(--muted)">The Odds API Key · <a href="https://the-odds-api.com" target="_blank" style="color:#818cf8">Lấy miễn phí tại đây</a> (500 req/tháng)</span>
+            <div style="display:flex;gap:7px;width:100%">
+              <input id="adm-odds-key" type="password" placeholder="Paste API key vào đây..." style="flex:1;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;outline:none" />
+              <button onclick="saveOddsKey()" style="background:var(--purple);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer">Lưu</button>
+            </div>
+            <div id="adm-odds-status" style="font-size:11px;color:var(--muted)"></div>
+          </div>
+        </div>
         <button class="admin-logout" onclick="adminLogout()">Đăng xuất</button>
       </div>
     </div>
@@ -692,6 +720,7 @@ main{-webkit-overflow-scrolling:touch}
 <script>
 // ── CONFIG ──
 const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world';
+const ODDS_API_KEY_LS = 'odds_api_key_v1'; // localStorage key for The Odds API key
 let refreshTimer = null;
 let _prevScores = {};
 
@@ -822,6 +851,92 @@ function poissonInvCDF(lambda, u) {
 }
 // Single Poisson PMF
 function pPoi(l,k){const f=[1,1,2,6,24,120,720,5040,40320];return k<=8?Math.exp(-l)*Math.pow(l,k)/f[k]:0;}
+
+// ── MARKET ODDS (The Odds API — bet365 + 40 bookmakers) ──
+let _marketOdds = {}; // keyed by normalized "hometeam||awayteam"
+
+function _normTeam(n) {
+  return (n||'').toLowerCase().replace(/[^a-z]/g,'');
+}
+function getMarketOdds(homeN, awayN) {
+  return _marketOdds[_normTeam(homeN)+'||'+_normTeam(awayN)]
+      || _marketOdds[_normTeam(awayN)+'||'+_normTeam(homeN)] // try reversed
+      || null;
+}
+
+async function fetchMarketOdds() {
+  const key = localStorage.getItem(ODDS_API_KEY_LS) || '';
+  if(!key) return;
+  try {
+    const r = await fetch(
+      `https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds/?apiKey=${key}&regions=uk&markets=h2h,totals&oddsFormat=decimal`,
+      {cache:'no-store'}
+    );
+    if(!r.ok) return;
+    const data = await r.json();
+    const newOdds = {};
+    data.forEach(ev => {
+      // prefer bet365, fall back to first available bookmaker
+      const bk = ev.bookmakers?.find(b=>b.key==='bet365') || ev.bookmakers?.[0];
+      if(!bk) return;
+      const h2h = bk.markets?.find(m=>m.key==='h2h');
+      if(!h2h) return;
+      const homeOut = h2h.outcomes?.find(o=>o.name===ev.home_team);
+      const awayOut = h2h.outcomes?.find(o=>o.name===ev.away_team);
+      const drawOut = h2h.outcomes?.find(o=>o.name==='Draw');
+      const totals  = bk.markets?.find(m=>m.key==='totals');
+      const overOut = totals?.outcomes?.find(o=>o.name==='Over');
+      const underOut= totals?.outcomes?.find(o=>o.name==='Under');
+      const k = _normTeam(ev.home_team)+'||'+_normTeam(ev.away_team);
+      newOdds[k] = {
+        h: homeOut?.price, d: drawOut?.price, a: awayOut?.price,
+        overOdds: overOut?.price, overPoint: overOut?.point,
+        underOdds: underOut?.price,
+        source: bk.title || 'Bookmaker',
+        homeName: ev.home_team, awayName: ev.away_team
+      };
+    });
+    _marketOdds = newOdds;
+  } catch(e) {}
+}
+
+// Render market odds block for AI panel
+function marketOddsHTML(homeN, awayN, p) {
+  const m = getMarketOdds(homeN, awayN);
+  const key = localStorage.getItem(ODDS_API_KEY_LS)||'';
+  if(!key) {
+    return `<div class="mkt-odds mkt-nokey">
+      <div class="mkt-title">📊 Kèo thị trường</div>
+      <div class="mkt-nokey-msg">Chưa có API key · <a href="https://the-odds-api.com" target="_blank" style="color:#818cf8">Lấy key miễn phí</a> · Dán vào tab <strong>⚙️ Admin → Cài đặt</strong></div>
+    </div>`;
+  }
+  if(!m) return `<div class="mkt-odds mkt-nodata"><div class="mkt-title">📊 Kèo thị trường</div><div class="mkt-nokey-msg">Chưa có kèo cho trận này (trận đã kết thúc hoặc chưa mở kèo)</div></div>`;
+  const fmt = v => v ? v.toFixed(2) : '–';
+  const imp = v => v ? Math.round(100/v)+'%' : '–';
+  const hShort = homeN.split(' ').pop(), aShort = awayN.split(' ').pop();
+  // Value bet: AI vs market implied prob difference
+  const mktHPct = m.h ? Math.round(100/m.h) : null;
+  const mktAPct = m.a ? Math.round(100/m.a) : null;
+  const aiDiffH = mktHPct ? (p.hW - mktHPct) : 0;
+  const aiDiffA = mktAPct ? (p.aW - mktAPct) : 0;
+  let valueLine = '';
+  if(Math.abs(aiDiffH) >= 8 || Math.abs(aiDiffA) >= 8) {
+    const bigDiff = Math.abs(aiDiffH) >= Math.abs(aiDiffA) ? aiDiffH : aiDiffA;
+    const bigTeam = Math.abs(aiDiffH) >= Math.abs(aiDiffA) ? hShort : aShort;
+    const dir = bigDiff > 0 ? 'cao' : 'thấp';
+    valueLine = `<div class="mkt-value">💡 AI thấy ${bigTeam} ${Math.abs(Math.round(bigDiff))}% ${dir} hơn thị trường${bigDiff > 0 ? ' → Có thể là kèo value!' : ''}</div>`;
+  }
+  return `<div class="mkt-odds">
+    <div class="mkt-title">📊 Kèo thị trường · <span style="color:var(--muted)">${m.source}</span></div>
+    <div class="mkt-1x2">
+      <div class="mkt-cell"><div class="mkt-dec">${fmt(m.h)}</div><div class="mkt-imp">${imp(m.h)}</div><div class="mkt-team">🏠 ${hShort}</div></div>
+      <div class="mkt-cell"><div class="mkt-dec">${fmt(m.d)}</div><div class="mkt-imp">${imp(m.d)}</div><div class="mkt-team">🤝 Hòa</div></div>
+      <div class="mkt-cell"><div class="mkt-dec">${fmt(m.a)}</div><div class="mkt-imp">${imp(m.a)}</div><div class="mkt-team">✈️ ${aShort}</div></div>
+    </div>
+    ${m.overPoint ? `<div class="mkt-ou-row"><span class="mkt-ou-lbl">Tài/Xỉu ${m.overPoint} bàn</span><span class="mkt-ou-val tài">Tài ${fmt(m.overOdds)}</span><span class="mkt-ou-sep">·</span><span class="mkt-ou-val xỉu">Xỉu ${fmt(m.underOdds)}</span></div>` : ''}
+    ${valueLine}
+  </div>`;
+}
 
 // ── AI PREDICTION ENGINE v2 (Super VIP Pro) ──
 // WC 2026 host nations get a small home crowd boost; all other matches are neutral
@@ -1966,6 +2081,7 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
         <div class="form-circles">${formCircles(p.awayForm)}</div>
       </div>
     </div>
+    ${marketOddsHTML(homeN, awayN, p)}
     <div class="conf-badge ${p.confidence}">🧠 Độ chính xác AI: ${p.confLabel}</div>
     ${upsetHTML}
     <div class="ai-comment">${aiComment(homeN, awayN, p, live, homeScore, awayScore)}</div>
@@ -2722,6 +2838,7 @@ if(_heroEl) _heroObserver.observe(_heroEl);
 // ── INIT ──
 loadSchedule();
 loadScores().then(()=>loadPastResults()); // ensure _lastCurrentEvents is populated before past results merge
+fetchMarketOdds(); // load real bookmaker odds if API key is saved
 // Increment visit counter once per page load
 fetch('https://api.countapi.xyz/hit/worldcup2026-ryanluga/visits').catch(()=>{});
 
@@ -2753,6 +2870,7 @@ function showAdminDashboard() {
   document.getElementById('admin-lock').style.display = 'none';
   document.getElementById('admin-dashboard').style.display = 'flex';
   loadAdminData();
+  showAdminSettings();
   _adminSessionStart = Date.now();
   if(_adminTimerInterval) clearInterval(_adminTimerInterval);
   _adminTimerInterval = setInterval(() => {
@@ -2817,6 +2935,27 @@ async function loadAdminData() {
   } catch(e) {
     ['adm-ip','adm-country','adm-city','adm-isp'].forEach(id=>set(id,'Không lấy được'));
   }
+}
+
+function saveOddsKey() {
+  const val = (document.getElementById('adm-odds-key')?.value||'').trim();
+  if(!val) return;
+  localStorage.setItem(ODDS_API_KEY_LS, val);
+  const st = document.getElementById('adm-odds-status');
+  if(st) st.textContent = '✅ Đã lưu! Đang tải kèo...';
+  fetchMarketOdds().then(()=>{
+    const cnt = Object.keys(_marketOdds).length;
+    if(st) st.textContent = cnt > 0 ? `✅ Đã tải kèo ${cnt} trận từ bookmaker` : '⚠️ Không tải được kèo. Kiểm tra lại API key.';
+  });
+}
+
+function showAdminSettings() {
+  const key = localStorage.getItem(ODDS_API_KEY_LS)||'';
+  const inp = document.getElementById('adm-odds-key');
+  if(inp && key) inp.placeholder = '••••••••••••••• (đã lưu)';
+  const cnt = Object.keys(_marketOdds).length;
+  const st = document.getElementById('adm-odds-status');
+  if(st) st.textContent = key ? (cnt > 0 ? `✅ Đang dùng kèo ${cnt} trận` : '⚠️ Có key nhưng chưa tải được kèo') : 'Chưa có API key';
 }
 
 // Session restore happens in switchTab when user opens admin tab
