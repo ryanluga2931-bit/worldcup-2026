@@ -991,28 +991,43 @@ function marketOddsHTML(homeN, awayN, p) {
     const dir = bigDiff > 0 ? 'cao' : 'thấp';
     valueLine = `<div class="mkt-value">💡 AI thấy ${bigTeam} ${Math.abs(Math.round(bigDiff))}% ${dir} hơn thị trường${bigDiff > 0 ? ' → Có thể là kèo value!' : ''}</div>`;
   }
-  // Handicap display: line is from home's perspective (e.g. -1.5 = home gives 1.5 goals)
-  function fmtHdp(n) {
-    if(n == null) return '';
-    const abs = Math.abs(n), sign = n < 0 ? '-' : n > 0 ? '+' : '';
+  // Handicap line → VN quarter format: 0.75→"½-1", 1.25→"1-1½", 1.0→"1", 0.5→"½"
+  function fmtHdpLine(abs) {
     const whole = Math.floor(abs);
-    const frac = Math.round((abs - whole) * 4); // quarters
-    const fracStr = frac === 0 ? '' : frac === 1 ? '¼' : frac === 2 ? '½' : '¾';
-    if(whole === 0 && frac === 0) return '0';
-    if(whole === 0) return sign + fracStr;
-    return sign + whole + fracStr;
+    const frac = Math.round((abs - whole) * 4);
+    if(frac === 0) return whole === 0 ? '0' : String(whole);
+    if(frac === 2) return whole === 0 ? '½' : whole + '½';
+    // quarter ball = split line (VN shows as range)
+    if(frac === 1) return whole === 0 ? '0-½' : whole+'-'+whole+'½';
+    if(frac === 3) return whole+'½-'+(whole+1);
+    return String(abs);
+  }
+  // Decimal odds → Malay odds display (signed HK style like five88)
+  // home line < 0 = home gives goals = home is handicap favorite
+  function fmtMalay(decimalOdds, isGiving) {
+    if(!decimalOdds) return '–';
+    const hk = +(decimalOdds - 1).toFixed(2);
+    return isGiving ? (hk >= 0 ? '-'+hk.toFixed(2) : hk.toFixed(2))
+                    : (hk >= 0 ? '+'+hk.toFixed(2) : hk.toFixed(2));
   }
   let handicapHTML = '';
   if(m.handicapLine != null && m.handicapHome && m.handicapAway) {
-    const line = m.handicapLine;
-    const awayLine = -line;
-    const hLabel = `${hShort} ${fmtHdp(line)}`;
-    const aLabel = `${aShort} ${fmtHdp(awayLine)}`;
+    const line = m.handicapLine; // home perspective: negative = home gives goals
+    const homeGives = line < 0;
+    const absLine = Math.abs(line);
+    const lineStr = fmtHdpLine(absLine);
+    // Label: who gives, who gets
+    const giverLabel = homeGives ? hShort : aShort;
+    const takerLabel = homeGives ? aShort : hShort;
+    const giverOdds = homeGives ? m.handicapHome : m.handicapAway;
+    const takerOdds = homeGives ? m.handicapAway : m.handicapHome;
+    const giverMalay = fmtMalay(giverOdds, true);
+    const takerMalay = fmtMalay(takerOdds, false);
     handicapHTML = `<div class="mkt-ou-row">
-      <span class="mkt-ou-lbl">Kèo chấp</span>
-      <span class="mkt-ou-val tài">${hLabel} · ${fmt(m.handicapHome)}</span>
+      <span class="mkt-ou-lbl">Kèo chấp ${lineStr}</span>
+      <span class="mkt-ou-val tài">${giverLabel} <span style="color:#f87171">${giverMalay}</span></span>
       <span class="mkt-ou-sep">·</span>
-      <span class="mkt-ou-val xỉu">${aLabel} · ${fmt(m.handicapAway)}</span>
+      <span class="mkt-ou-val xỉu">${takerLabel} <span style="color:#4ade80">${takerMalay}</span></span>
     </div>`;
   }
   return `<div class="mkt-odds">
@@ -1023,7 +1038,7 @@ function marketOddsHTML(homeN, awayN, p) {
       <div class="mkt-cell"><div class="mkt-dec">${fmt(m.a)}</div><div class="mkt-imp">${imp(m.a)}</div><div class="mkt-team">✈️ ${aShort}</div></div>
     </div>
     ${handicapHTML}
-    ${m.overPoint ? `<div class="mkt-ou-row"><span class="mkt-ou-lbl">Tài/Xỉu ${m.overPoint} bàn</span><span class="mkt-ou-val tài">Tài ${fmt(m.overOdds)}</span><span class="mkt-ou-sep">·</span><span class="mkt-ou-val xỉu">Xỉu ${fmt(m.underOdds)}</span></div>` : ''}
+    ${m.overPoint ? `<div class="mkt-ou-row"><span class="mkt-ou-lbl">Tài/Xỉu ${m.overPoint}</span><span class="mkt-ou-val tài">Tài <span style="color:#4ade80">${fmtMalay(m.overOdds,false)}</span></span><span class="mkt-ou-sep">·</span><span class="mkt-ou-val xỉu">Xỉu <span style="color:#4ade80">${fmtMalay(m.underOdds,false)}</span></span></div>` : ''}
     ${valueLine}
   </div>`;
 }
