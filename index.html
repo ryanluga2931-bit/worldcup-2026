@@ -854,13 +854,14 @@ function pPoi(l,k){const f=[1,1,2,6,24,120,720,5040,40320];return k<=8?Math.exp(
 
 // ── MARKET ODDS (The Odds API — bet365 + 40 bookmakers) ──
 let _marketOdds = {}; // keyed by normalized "hometeam||awayteam"
+let _oddsDebug = {sportKey:'', events:[], status:''};
 
 function _normTeam(n) {
   return (n||'').toLowerCase().replace(/[^a-z]/g,'');
 }
 function getMarketOdds(homeN, awayN) {
   return _marketOdds[_normTeam(homeN)+'||'+_normTeam(awayN)]
-      || _marketOdds[_normTeam(awayN)+'||'+_normTeam(homeN)] // try reversed
+      || _marketOdds[_normTeam(awayN)+'||'+_normTeam(homeN)]
       || null;
 }
 
@@ -882,16 +883,20 @@ async function fetchMarketOdds() {
   if(!key) return;
   try {
     const sportKey = await _findWCSportKey(key);
+    _oddsDebug.sportKey = sportKey;
     const r = await fetch(
-      `https://api.the-odds-api.com/v4/sports/${sportKey}/odds/?apiKey=${key}&regions=uk&markets=h2h,totals&oddsFormat=decimal`,
+      `https://api.the-odds-api.com/v4/sports/${sportKey}/odds/?apiKey=${key}&regions=uk,eu,us&markets=h2h,totals&oddsFormat=decimal`,
       {cache:'no-store'}
     );
-    if(!r.ok) return;
+    if(!r.ok) { _oddsDebug.status = `HTTP ${r.status}`; return; }
     const data = await r.json();
+    _oddsDebug.events = data.map(ev=>ev.home_team+' vs '+ev.away_team);
     const newOdds = {};
     data.forEach(ev => {
-      // prefer bet365, fall back to first available bookmaker
-      const bk = ev.bookmakers?.find(b=>b.key==='bet365') || ev.bookmakers?.[0];
+      // prefer bet365, fall back to any bookmaker
+      const bk = ev.bookmakers?.find(b=>b.key==='bet365')
+              || ev.bookmakers?.find(b=>b.key==='pinnacle')
+              || ev.bookmakers?.[0];
       if(!bk) return;
       const h2h = bk.markets?.find(m=>m.key==='h2h');
       if(!h2h) return;
@@ -911,7 +916,8 @@ async function fetchMarketOdds() {
       };
     });
     _marketOdds = newOdds;
-  } catch(e) {}
+    _oddsDebug.status = `OK — ${data.length} events`;
+  } catch(e) { _oddsDebug.status = 'Error: '+e.message; }
 }
 
 // Render market odds block for AI panel
@@ -2852,7 +2858,7 @@ if(_heroEl) _heroObserver.observe(_heroEl);
 // ── INIT ──
 loadSchedule();
 loadScores().then(()=>loadPastResults()); // ensure _lastCurrentEvents is populated before past results merge
-fetchMarketOdds(); // load real bookmaker odds if API key is saved
+fetchMarketOdds().then(()=>showAdminSettings()); // load real bookmaker odds if API key is saved
 // Increment visit counter once per page load
 fetch('https://api.countapi.xyz/hit/worldcup2026-ryanluga/visits').catch(()=>{});
 
@@ -2971,7 +2977,12 @@ function showAdminSettings() {
   if(inp && key) inp.placeholder = '••••••••••••••• (đã lưu)';
   const cnt = Object.keys(_marketOdds).length;
   const st = document.getElementById('adm-odds-status');
-  if(st) st.textContent = key ? (cnt > 0 ? `✅ Đang dùng kèo ${cnt} trận` : '⚠️ Có key nhưng chưa tải được kèo') : 'Chưa có API key';
+  if(!st) return;
+  if(!key) { st.innerHTML = 'Chưa có API key'; return; }
+  const evList = _oddsDebug.events.length
+    ? `<br><small style="color:var(--muted);font-size:9px">Sport key: <b>${_oddsDebug.sportKey}</b> · ${_oddsDebug.status}<br>Trận có kèo: ${_oddsDebug.events.join(' | ') || '(không có)'}</small>`
+    : `<br><small style="color:var(--muted);font-size:9px">Sport key: <b>${_oddsDebug.sportKey||'chưa tải'}</b> · ${_oddsDebug.status||'chưa fetch'}</small>`;
+  st.innerHTML = cnt > 0 ? `✅ Đang dùng kèo <b>${cnt}</b> trận${evList}` : `⚠️ Chưa có kèo${evList}`;
 }
 
 // Session restore happens in switchTab when user opens admin tab
