@@ -125,7 +125,11 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .rv-badge.upset{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
 .rv-badge.thrash{background:rgba(139,92,246,.15);color:#c4b5fd;border:1px solid rgba(139,92,246,.3)}
 .rv-badge.drama{background:rgba(245,158,11,.13);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
-.rv-note{font-size:10px;color:var(--muted);font-weight:600}
+.rv-note{font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px}
+.rv-note.correct-score{background:rgba(139,92,246,.15);color:#c4b5fd}
+.rv-note.correct-close{background:rgba(34,197,94,.1);color:var(--green)}
+.rv-note.correct-winner{background:rgba(255,255,255,.05);color:var(--muted)}
+.rv-note.wrong{background:rgba(239,68,68,.08);color:#fca5a5}
 
 /* GOAL SCORERS */
 .scorers{display:flex;gap:12px}
@@ -1907,11 +1911,15 @@ function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p) {
   // AI accuracy note
   const aiNote = (() => {
     if(!hasScore) return '';
+    const exactH = p.pHome === hS, exactA = p.pAway === aS;
     const predDiff = p.pHome - p.pAway;
-    if(predDiff > 0 && homeWon) return `<span class="rv-note">🤖 AI đoán đúng kết quả</span>`;
-    if(predDiff < 0 && awayWon) return `<span class="rv-note">🤖 AI đoán đúng kết quả</span>`;
-    if(predDiff === 0 && draw) return `<span class="rv-note">🤖 AI đoán đúng hòa</span>`;
-    return `<span class="rv-note">🤖 AI đoán sai kết quả</span>`;
+    const correctWinner = (predDiff > 0 && homeWon) || (predDiff < 0 && awayWon) || (predDiff === 0 && draw);
+    if(exactH && exactA) return `<span class="rv-note correct-score">🎯 AI đoán ĐÚNG tỷ số ${p.pHome}-${p.pAway}!</span>`;
+    if(correctWinner && Math.abs(hS - p.pHome) <= 1 && Math.abs(aS - p.pAway) <= 1)
+      return `<span class="rv-note correct-close">✅ AI đúng kết quả, gần tỷ số (dự ${p.pHome}-${p.pAway})</span>`;
+    if(correctWinner)
+      return `<span class="rv-note correct-winner">☑️ AI đúng đội thắng, sai tỷ số (dự ${p.pHome}-${p.pAway})</span>`;
+    return `<span class="rv-note wrong">❌ AI sai (dự ${p.pHome}-${p.pAway})</span>`;
   })();
 
   return `<div class="result-banner">
