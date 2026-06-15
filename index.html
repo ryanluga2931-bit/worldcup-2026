@@ -992,12 +992,22 @@ function marketOddsHTML(homeN, awayN, p) {
     valueLine = `<div class="mkt-value">💡 AI thấy ${bigTeam} ${Math.abs(Math.round(bigDiff))}% ${dir} hơn thị trường${bigDiff > 0 ? ' → Có thể là kèo value!' : ''}</div>`;
   }
   // Handicap display: line is from home's perspective (e.g. -1.5 = home gives 1.5 goals)
+  function fmtHdp(n) {
+    if(n == null) return '';
+    const abs = Math.abs(n), sign = n < 0 ? '-' : n > 0 ? '+' : '';
+    const whole = Math.floor(abs);
+    const frac = Math.round((abs - whole) * 4); // quarters
+    const fracStr = frac === 0 ? '' : frac === 1 ? '¼' : frac === 2 ? '½' : '¾';
+    if(whole === 0 && frac === 0) return '0';
+    if(whole === 0) return sign + fracStr;
+    return sign + whole + fracStr;
+  }
   let handicapHTML = '';
   if(m.handicapLine != null && m.handicapHome && m.handicapAway) {
     const line = m.handicapLine;
-    const awayLine = line === 0 ? 0 : -line;
-    const hLabel = line > 0 ? `${hShort} +${line}` : `${hShort} ${line}`;
-    const aLabel = awayLine > 0 ? `${aShort} +${awayLine}` : `${aShort} ${awayLine}`;
+    const awayLine = -line;
+    const hLabel = `${hShort} ${fmtHdp(line)}`;
+    const aLabel = `${aShort} ${fmtHdp(awayLine)}`;
     handicapHTML = `<div class="mkt-ou-row">
       <span class="mkt-ou-lbl">Kèo chấp</span>
       <span class="mkt-ou-val tài">${hLabel} · ${fmt(m.handicapHome)}</span>
