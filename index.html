@@ -2121,7 +2121,7 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
         <div class="form-circles">${formCircles(p.awayForm)}</div>
       </div>
     </div>
-    ${marketOddsHTML(homeN, awayN, p)}
+    <div class="mkt-lazy" data-home="${homeN.replace(/"/g,'&quot;')}" data-away="${awayN.replace(/"/g,'&quot;')}" data-hw="${p.hW}" data-aw="${p.aW}"></div>
     <div class="conf-badge ${p.confidence}">🧠 Độ chính xác AI: ${p.confLabel}</div>
     ${upsetHTML}
     <div class="ai-comment">${aiComment(homeN, awayN, p, live, homeScore, awayScore)}</div>
@@ -2141,6 +2141,14 @@ function toggleAI(mid, btn) {
   toggle.classList.toggle('open', opening);
   panel.classList.toggle('open', opening);
   if(opening) {
+    // Lazy-render market odds now (after fetchMarketOdds has had time to complete)
+    const lazy = panel.querySelector('.mkt-lazy');
+    if(lazy) {
+      const miniP = {hW: parseInt(lazy.dataset.hw)||50, aW: parseInt(lazy.dataset.aw)||50};
+      const el = document.createElement('div');
+      el.innerHTML = marketOddsHTML(lazy.dataset.home, lazy.dataset.away, miniP);
+      lazy.replaceWith(el.firstElementChild || el);
+    }
     setTimeout(()=>{
       panel.querySelectorAll('.pb-fill[data-w]').forEach(el=>{
         el.style.width = el.dataset.w + '%';
