@@ -856,13 +856,33 @@ function pPoi(l,k){const f=[1,1,2,6,24,120,720,5040,40320];return k<=8?Math.exp(
 let _marketOdds = {}; // keyed by normalized "hometeam||awayteam"
 let _oddsDebug = {sportKey:'', events:[], status:''};
 
+// Canonical name map: ESPN/TS name → The Odds API name (normalized)
+const _TEAM_NORM_MAP = {
+  'unitedstates':'usa','côtedivoire':'ivorycoast','korerepublic':'southkorea',
+  'republicofkorea':'southkorea','czechia':'czechrepublic',
+  'bosniaherzegovina':'bosniaherzegovina','bosniaandherzegovina':'bosniaherzegovina',
+  'bosniaandherzegovina':'bosniaherzegovina','bosniaherzegovina':'bosniaherzegovina',
+  'türkiye':'turkey','curacao':'curaçao','curaao':'curaçao',
+  'trinidadtobago':'trinidadtobago','trinidadandtobago':'trinidadtobago',
+  'democraticrepublicofcongo':'drcongo','drcongo':'drcongo',
+};
 function _normTeam(n) {
-  return (n||'').toLowerCase().replace(/[^a-z]/g,'');
+  const raw = (n||'').toLowerCase().replace(/[^a-z]/g,'');
+  return _TEAM_NORM_MAP[raw] || raw;
 }
 function getMarketOdds(homeN, awayN) {
-  return _marketOdds[_normTeam(homeN)+'||'+_normTeam(awayN)]
-      || _marketOdds[_normTeam(awayN)+'||'+_normTeam(homeN)]
-      || null;
+  const hk = _normTeam(homeN), ak = _normTeam(awayN);
+  // exact normalized match (both orders)
+  const exact = _marketOdds[hk+'||'+ak] || _marketOdds[ak+'||'+hk];
+  if(exact) return exact;
+  // fuzzy: check if any stored key contains both team name fragments
+  const keys = Object.keys(_marketOdds);
+  for(const k of keys) {
+    const [a,b] = k.split('||');
+    if((a.includes(hk)||hk.includes(a)) && (b.includes(ak)||ak.includes(b))) return _marketOdds[k];
+    if((a.includes(ak)||ak.includes(a)) && (b.includes(hk)||hk.includes(b))) return _marketOdds[k];
+  }
+  return null;
 }
 
 async function _findWCSportKey(apiKey) {
