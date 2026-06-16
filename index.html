@@ -1219,22 +1219,21 @@ function predict(homeN, awayN, stageTier='group') {
   // Weighted form: recent games count more
   const hFm = formScoreWeighted(h.f), aFm = formScoreWeighted(a.f);
 
-  // xG v4: calibrated from WC2026 R1 (avg 2.14 goals/match observed vs 4.5+ from old formula)
-  // Attack vs opponent-defense (0.6/0.4 split), compressed form multiplier
+  // xG v4: calibrated for WC2026 — fix for both over-prediction (Spain 7-0) AND under-prediction (0-0)
+  // Key insight: old multiplier 3.1 was too HIGH for elite mismatches, but OK for mid-tier matches.
+  // Fix: keep multiplier reasonable (2.4/2.05) + cap ELO bonus logarithmically (no more runaway Spain)
   const hAtkVsDef = (h.a * 0.6 + (10 - a.d) * 0.4) / 10;
   const aAtkVsDef = (a.a * 0.6 + (10 - h.d) * 0.4) / 10;
-  // Reduced base multiplier + tighter form swing (was 3.1 * 0.72-1.28, now 1.78 * 0.88-1.12)
-  const hXGRaw = hAtkVsDef * 1.78 * (0.88 + hFm * 0.24);
-  const aXGRaw = aAtkVsDef * 1.54 * (0.88 + aFm * 0.24);
-  // ELO bonus: logarithmic + hard cap at 18% (old linear formula caused Spain 7-1 Cape Verde prediction)
-  const rawEloGap = Math.log(1 + Math.abs(eloDiff) / 180) * 0.13;
-  const eloGapBonus = Math.min(0.18, rawEloGap);
-  const hEloBoost = eloDiff > 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.4);
-  const aEloBoost = eloDiff < 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.4);
-  // WC tournament defense: teams defend more conservatively in early group stage
-  const stageMult = isKnockout ? 0.88 : 0.90;
-  const hXG = Math.max(0.25, hXGRaw * hEloBoost * stageMult);
-  const aXG = Math.max(0.15, aXGRaw * aEloBoost * stageMult);
+  const hXGRaw = hAtkVsDef * 2.4 * (0.80 + hFm * 0.40);
+  const aXGRaw = aAtkVsDef * 2.05 * (0.80 + aFm * 0.40);
+  // ELO bonus: logarithmic + hard cap at 22% — prevents Spain-level inflation while preserving Germany gap
+  const rawEloGap = Math.log(1 + Math.abs(eloDiff) / 160) * 0.14;
+  const eloGapBonus = Math.min(0.22, rawEloGap);
+  const hEloBoost = eloDiff > 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.35);
+  const aEloBoost = eloDiff < 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.35);
+  const stageMult = isKnockout ? 0.88 : 1.0;
+  const hXG = Math.max(0.30, hXGRaw * hEloBoost * stageMult);
+  const aXG = Math.max(0.18, aXGRaw * aEloBoost * stageMult);
 
   // Predicted score: Poisson mode = Math.floor(xG) — most likely single outcome
   const pHome = Math.floor(hXG);
