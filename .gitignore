@@ -1,0 +1,21 @@
+# Cá nhân — không đưa lên Git
+CLAUDE.local.md
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Files tạm
+*.tmp
+*.log
+
+# PDF/screenshots (tài liệu tham khảo cục bộ)
+*.pdf
+*.JPG
+*.jpg
+*.png
+*.mov
+*.mp4
+*.html
+*_files/

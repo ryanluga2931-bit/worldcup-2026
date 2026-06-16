@@ -862,6 +862,107 @@ function poissonInvCDF(lambda, u) {
 // Single Poisson PMF
 function pPoi(l,k){const f=[1,1,2,6,24,120,720,5040,40320];return k<=8?Math.exp(-l)*Math.pow(l,k)/f[k]:0;}
 
+// ── PREDICTION MEMORY SYSTEM ──
+// Stores predictions before match + actual results after → continuous learning
+const PRED_STORE = 'wc2026_predictions';
+
+function _loadPredStore() {
+  try { return JSON.parse(localStorage.getItem(PRED_STORE)||'{}'); } catch(e) { return {}; }
+}
+function _savePredStore(s) {
+  try { localStorage.setItem(PRED_STORE, JSON.stringify(s)); } catch(e) {}
+}
+
+function savePrediction(mid, homeN, awayN, p) {
+  const s = _loadPredStore();
+  if(s[mid]?.predicted) return; // already saved — don't overwrite
+  s[mid] = {
+    homeN, awayN,
+    predicted: { home: p.pHome, away: p.pAway, hW: p.hW, dr: p.dr, aW: p.aW,
+                 hXG: parseFloat(p.hXG), aXG: parseFloat(p.aXG) },
+    confidence: p.confidence, keyFactor: p.keyFactor,
+    ts: Date.now(), actual: null, accuracy: null, analysis: null
+  };
+  _savePredStore(s);
+}
+
+function updatePredictionResult(mid, actualHome, actualAway) {
+  const s = _loadPredStore();
+  const rec = s[mid];
+  if(!rec || rec.actual !== null) return; // not saved or already updated
+  const p = rec.predicted;
+  rec.actual = { home: actualHome, away: actualAway };
+  // Accuracy classification
+  const exactH = p.home === actualHome, exactA = p.away === actualAway;
+  const predW = p.hW > p.aW ? 'H' : p.aW > p.hW ? 'A' : 'D';
+  const realW = actualHome > actualAway ? 'H' : actualAway > actualHome ? 'A' : 'D';
+  const cwinner = predW === realW;
+  if(exactH && exactA) rec.accuracy = 'exact';
+  else if(cwinner && Math.abs(actualHome-p.home)<=1 && Math.abs(actualAway-p.away)<=1) rec.accuracy = 'close';
+  else if(cwinner) rec.accuracy = 'winner';
+  else rec.accuracy = 'wrong';
+  // Post-match analysis — why succeeded or failed
+  rec.analysis = _postMatchAnalysis(rec, actualHome, actualAway, predW, realW);
+  _savePredStore(s);
+}
+
+function _postMatchAnalysis(rec, aH, aA, predW, realW) {
+  const p = rec.predicted, hS = rec.homeN.split(' ').pop(), aS = rec.awayN.split(' ').pop();
+  if(rec.accuracy === 'exact') return `🎯 Mô hình dự đoán chính xác hoàn toàn — xG calibration tốt, ELO phản ánh đúng thực lực.`;
+  const reasons = [];
+  const hDiff = aH - p.home, aDiff = aA - p.away;
+  if(hDiff > 1) reasons.push(`${hS} ghi ${aH} bàn (AI dự ${p.home}) — hiệu suất tấn công vượt xG ${p.hXG}`);
+  else if(hDiff < -1) reasons.push(`${hS} chỉ ghi ${aH} bàn (AI dự ${p.home}) — xG không chuyển hóa, thủ môn xuất sắc hoặc dứt điểm kém`);
+  if(aDiff > 1) reasons.push(`${aS} ghi ${aA} bàn (AI dự ${p.away}) — bất ngờ từ đội khách, model đánh giá thấp`);
+  else if(aDiff < -1) reasons.push(`${aS} chỉ ghi ${aA} bàn — hàng thủ chủ nhà vững hơn dự kiến`);
+  if(predW !== realW) {
+    if(realW === 'D') reasons.push('Kết quả hòa — AI thường underfit draw (xác suất hòa thực tế cao hơn mô hình)');
+    else reasons.push(`Upset: ${realW==='H'?hS:aS} thắng bất ngờ — ELO/form chưa phản ánh được yếu tố tâm lý/chiến thuật`);
+  }
+  if(!reasons.length) reasons.push('Tỷ số lệch nhẹ nhưng kết quả đúng hướng');
+  return reasons.join(' · ');
+}
+
+function getPredictionAccuracy() {
+  const s = _loadPredStore();
+  const done = Object.values(s).filter(r => r.actual !== null);
+  if(!done.length) return null;
+  const total = done.length;
+  const exact = done.filter(r=>r.accuracy==='exact').length;
+  const close = done.filter(r=>r.accuracy==='close').length;
+  const winner = done.filter(r=>r.accuracy==='winner').length;
+  const wrong = done.filter(r=>r.accuracy==='wrong').length;
+  const correct = exact + close + winner;
+  const pct = Math.round(correct/total*100);
+  // Confidence calibration: if wrong streak → lower display confidence
+  const recent5 = done.slice(-5);
+  const recentWrong = recent5.filter(r=>r.accuracy==='wrong').length;
+  const calibration = recentWrong >= 3 ? 'struggling' : recentWrong >= 2 ? 'unstable' : 'stable';
+  return { total, exact, close, winner, wrong, correct, pct, calibration,
+           drawTotal: done.filter(r=>{ const rw=r.actual.home===r.actual.away; return rw; }).length,
+           drawPredicted: done.filter(r=>r.predicted.dr > r.predicted.hW && r.predicted.dr > r.predicted.aW).length };
+}
+
+function getPredictionRecord(mid) {
+  return _loadPredStore()[mid] || null;
+}
+
+function getPredictionHistoryHTML() {
+  const s = _loadPredStore();
+  const done = Object.values(s).filter(r=>r.actual!==null).slice(-10).reverse();
+  if(!done.length) return '<div style="color:var(--muted);font-size:12px;padding:8px 0">Chưa có trận nào kết thúc để phân tích</div>';
+  return done.map(r=>{
+    const icon = {exact:'🎯',close:'✅',winner:'☑️',wrong:'❌'}[r.accuracy]||'?';
+    const hS=r.homeN.split(' ').pop(), aS=r.awayN.split(' ').pop();
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px">
+      <span style="width:20px;text-align:center">${icon}</span>
+      <span style="flex:1;color:var(--text2)">${hS} vs ${aS}</span>
+      <span style="color:var(--muted)">Dự ${r.predicted.home}-${r.predicted.away}</span>
+      <span style="font-weight:700">Thực ${r.actual.home}-${r.actual.away}</span>
+    </div>`;
+  }).join('');
+}
+
 // ── MARKET ODDS (The Odds API — bet365 + 40 bookmakers) ──
 let _marketOdds = {}; // keyed by normalized "hometeam||awayteam"
 let _oddsDebug = {sportKey:'', events:[], status:''};
@@ -2197,9 +2298,20 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
       </div>
     </div>
     <div class="mkt-lazy" data-home="${homeN.replace(/"/g,'&quot;')}" data-away="${awayN.replace(/"/g,'&quot;')}" data-hw="${p.hW}" data-aw="${p.aW}"></div>
-    <div class="conf-badge ${p.confidence}">🧠 Độ chính xác AI: ${p.confLabel}</div>
+    <div class="conf-badge ${p.confidence}">🧠 ${p.confLabel}${(()=>{ const acc=getPredictionAccuracy(); return acc&&acc.total>=3?` · <span style="color:${acc.pct>=60?'#4ade80':acc.pct>=40?'#fbbf24':'#f87171'}">📊 ${acc.pct}% đúng (${acc.correct}/${acc.total})</span>`:''; })()}</div>
     ${upsetHTML}
     <div class="ai-comment">${aiComment(homeN, awayN, p, live, homeScore, awayScore)}</div>
+    ${(()=>{
+      const rec = getPredictionRecord(mid);
+      if(!rec || !rec.actual) return '';
+      const icon = {exact:'🎯',close:'✅',winner:'☑️',wrong:'❌'}[rec.accuracy]||'?';
+      const color = {exact:'#c4b5fd',close:'#4ade80',winner:'#94a3b8',wrong:'#fca5a5'}[rec.accuracy]||'#94a3b8';
+      return `<div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-size:9px;font-weight:800;letter-spacing:1px;color:var(--muted);margin-bottom:6px">📋 POST-MATCH ANALYSIS</div>
+        <div style="font-size:11px;font-weight:700;color:${color};margin-bottom:6px">${icon} ${rec.analysis}</div>
+        <div style="font-size:10px;color:var(--muted)">AI dự: <strong>${rec.predicted.home}-${rec.predicted.away}</strong> · Thực tế: <strong>${rec.actual.home}-${rec.actual.away}</strong> · xG ${rec.predicted.hXG}–${rec.predicted.aXG}</div>
+      </div>`;
+    })()}
   </div>`;
 }
 
@@ -2348,6 +2460,10 @@ function renderMatchCard(event) {
   else if(gn.match(/group [a-l]/i)) stageTier='group';
   const stageBadgeHTML = stageTier ? `<span class="badge stage stage-${stageTier}">${stageLabel||groupName.slice(0,14)}</span>` : '';
   const p = predict(homeN, awayN, stageTier);
+  // Auto-save prediction before match starts (or when first seen)
+  if(!finished) savePrediction(mid, homeN, awayN, p);
+  // Auto-update result when match finishes
+  if(finished && homeScore !== '' && awayScore !== '') updatePredictionResult(mid, +homeScore, +awayScore);
 
   // Hot match badge
   const hotBadge = (!live && p.isHot) ? `<span class="badge hot">🔥 HOT</span>` : '';
@@ -3014,6 +3130,7 @@ function showAdminDashboard() {
   document.getElementById('admin-dashboard').style.display = 'flex';
   loadAdminData();
   showAdminSettings();
+  setTimeout(renderPredictionStats, 100); // slight delay so DOM is ready
   _adminSessionStart = Date.now();
   if(_adminTimerInterval) clearInterval(_adminTimerInterval);
   _adminTimerInterval = setInterval(() => {
@@ -3107,6 +3224,49 @@ function showAdminSettings() {
     : `<br><small style="color:var(--muted);font-size:9px">Sport key: <b>${_oddsDebug.sportKey||'chưa tải'}</b> · ${_oddsDebug.status||'chưa fetch'}</small>`;
   st.innerHTML = cnt > 0 ? `✅ Đang dùng kèo <b>${cnt}</b> trận${evList}` : `⚠️ Chưa có kèo${evList}`;
 }
+
+// ── AI PREDICTION STATS (Admin) ──
+function renderPredictionStats() {
+  const el = document.getElementById('adm-pred-stats');
+  if(!el) return;
+  const acc = getPredictionAccuracy();
+  if(!acc) { el.innerHTML = '<div style="color:var(--muted);font-size:12px">Chưa có trận nào hoàn thành</div>'; return; }
+  const calColor = {stable:'#4ade80',unstable:'#fbbf24',struggling:'#f87171'}[acc.calibration]||'#94a3b8';
+  const bar = (n, t, color) => `<div style="background:rgba(255,255,255,0.05);border-radius:6px;height:6px;margin-top:4px"><div style="width:${t?Math.round(n/t*100):0}%;height:100%;border-radius:6px;background:${color};transition:width .8s"></div></div>`;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:22px;font-weight:900;color:${acc.pct>=60?'#4ade80':acc.pct>=40?'#fbbf24':'#f87171'}">${acc.pct}%</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px">ĐÚNG KQ</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:22px;font-weight:900;color:#c4b5fd">${acc.exact}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px">ĐÚNG TỶ SỐ</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:22px;font-weight:900;color:#f87171">${acc.wrong}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px">SAI</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:14px;font-weight:900;color:${calColor}">${{stable:'🟢 Ổn định',unstable:'🟡 Bất ổn',struggling:'🔴 Đang tệ'}[acc.calibration]}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px">5 TRẬN GẦN</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-weight:700">LỊCH SỬ DỰ ĐOÁN GẦN NHẤT</div>
+    ${getPredictionHistoryHTML()}
+    <div style="font-size:9px;color:var(--muted);margin-top:8px">Tổng ${acc.total} trận · ${acc.exact} đúng tỷ số · ${acc.close} gần đúng · ${acc.winner} đúng đội thắng · ${acc.wrong} sai</div>
+  `;
+}
+
+// Inject AI Prediction Stats section into Admin tab HTML (once)
+(function injectPredStatsSection() {
+  const adminDash = document.getElementById('admin-dashboard');
+  if(!adminDash || document.getElementById('adm-pred-stats')) return;
+  const sec = document.createElement('div');
+  sec.style.cssText = 'margin-top:18px';
+  sec.innerHTML = `<div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:10px">📊 AI Prediction Performance</div><div id="adm-pred-stats"></div>`;
+  adminDash.appendChild(sec);
+})();
 
 // Session restore happens in switchTab when user opens admin tab
 </script>
