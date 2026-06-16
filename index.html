@@ -496,7 +496,7 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .ptr-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
 
 /* PERFORMANCE: only hint compositing where animation actually happens */
-.score{will-change:transform}.momentum-fill{will-change:width}.pb-fill{will-change:width}
+.match-card.live .score{will-change:transform}.momentum-fill{will-change:width}.pb-fill{will-change:width}
 /* match-card hover: apply transform only on hover to avoid always-on GPU layer */
 .match-card:hover{transform:translateY(-2px)}
 
@@ -871,14 +871,13 @@ let _wcSportKeyCache = null; // cached after first successful lookup — avoids 
 const _TEAM_NORM_MAP = {
   'unitedstates':'usa',
   'cotedivoire':'ivorycoast','cdivoire':'ivorycoast',
-  'korerepublic':'southkorea','republicofkorea':'southkorea',
+  'korerepublic':'southkorea','korearepublic':'southkorea','republicofkorea':'southkorea',
   'czechia':'czechrepublic',
   'bosniaandherzegovina':'bosniaherzegovina',
   'turkiye':'turkey',
   'curacao':'curacao','curaao':'curacao',
   'trinidadandtobago':'trinidadtobago',
   'democraticrepublicofcongo':'drcongo','congodr':'drcongo',
-  'norway':'norway', // Norway not in TS — passthrough
 };
 function _normTeam(n) {
   // strip ALL non-ascii then lowercase then remove non a-z
@@ -2330,7 +2329,7 @@ function renderMatchCard(event) {
   const ht = sName==='STATUS_HALFTIME';
   const homeN = home.team?.displayName||'';
   const awayN = away.team?.displayName||'';
-  const mid = event.id||Math.random().toString(36).slice(2);
+  const mid = event.id||(nameHash((homeN||'')+'##'+(awayN||'')+'##'+(event.date||'')).toString(36));
   const homeScore = home.score??'';
   const awayScore = away.score??'';
   // upcoming matches may return score='0' from ESPN — treat as no score
@@ -2500,7 +2499,8 @@ async function fetchWithRetry(url, retries=3){
   let lastErr;
   for(let i=0;i<retries;i++){
     try{
-      const r=await fetch(url+'&_='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout?AbortSignal.timeout(8000):undefined});
+      const ctrl=new AbortController(); const tId=setTimeout(()=>ctrl.abort(),8000);
+      const r=await fetch(url+'&_='+Date.now(),{cache:'no-store',signal:ctrl.signal}).finally(()=>clearTimeout(tId));
       if(r.ok) return await r.json();
       // non-ok (429, 503 etc) → retry after backoff
       lastErr=new Error(`HTTP ${r.status}`);
@@ -2755,15 +2755,14 @@ function updateTicker(events) {
     el.innerHTML=msg.repeat(4);
     return;
   }
-  // Repeat enough times so ticker always fills viewport for smooth loop
-  const repeat=Math.max(2, Math.ceil(6/live.length));
-  el.innerHTML=items.repeat(repeat);
+  // Always 2x so CSS translateX(-50%) animation loops correctly
+  el.innerHTML = items + items;
 }
 
 // ── LOAD PAST RESULTS (days -2 to -14, run once to fill results tab with older matches) ──
 async function loadPastResults() {
   // Fetch up to 14 days back in parallel, skip yesterday(-1) which loadScores already covers
-  const offsets=[-2,-3,-4,-5,-6,-7,-8,-9,-10,-11,-12,-13,-14];
+  const offsets=[-2,-3,-4,-5,-6,-7]; // 7 days max to avoid ESPN rate limits
   try {
     const fetched=await Promise.all(
       offsets.map(i=>fetchWithRetry(`${ESPN_BASE}/scoreboard?limit=50&dates=${utcDate(i)}`).catch(()=>({events:[]})))
@@ -2887,8 +2886,23 @@ function switchTab(name) {
   if(name==='groups'&&!document.getElementById('groups-content').dataset.loaded) loadGroups();
   if((name==='live'||name==='results')&&_firstLoad) loadScores();
   if(name==='admin' && sessionStorage.getItem(ADMIN_KEY)==='1') showAdminDashboard();
+  try { localStorage.setItem('wc_lastTab', name); } catch(e){}
 }
 document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>switchTab(el.dataset.tab)));
+
+// Offline/online banner
+(function(){
+  const showOffline = () => {
+    let b = document.getElementById('offline-banner');
+    if(!b){ b=document.createElement('div'); b.id='offline-banner';
+      b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#ef4444;color:#fff;text-align:center;padding:8px;font-size:13px;font-weight:700;';
+      b.textContent='📡 Mất kết nối — sẽ thử lại khi có mạng'; document.body.prepend(b); }
+  };
+  const hideOffline = () => { document.getElementById('offline-banner')?.remove(); if(!_isLoading) loadScores(); };
+  window.addEventListener('offline', showOffline);
+  window.addEventListener('online', hideOffline);
+  if(!navigator.onLine) showOffline();
+})();
 
 // ── PULL TO REFRESH ──
 (function(){
@@ -2964,12 +2978,12 @@ const _heroEl=document.getElementById('featured-hero');
 if(_heroEl) _heroObserver.observe(_heroEl);
 
 // ── INIT ──
+// Restore last visited tab
+(()=>{ const t=localStorage.getItem('wc_lastTab'); if(t&&t!=='live') switchTab(t); })();
 loadSchedule();
-loadScores().then(()=>loadPastResults()); // ensure _lastCurrentEvents is populated before past results merge
+loadScores().then(()=>setTimeout(loadPastResults, 3000)); // stagger past results to avoid 23 concurrent ESPN fetches
 fetchMarketOdds().then(()=>showAdminSettings()); // load real bookmaker odds if API key is saved
 setInterval(()=>{ if(localStorage.getItem(ODDS_API_KEY_LS)) fetchMarketOdds(); }, 2*60*60*1000); // refresh every 2h
-// Increment visit counter once per page load
-fetch('https://api.countapi.xyz/hit/worldcup2026-ryanluga/visits').catch(()=>{});
 
 // ── ADMIN ──
 const ADMIN_PW = 'wc2026';
