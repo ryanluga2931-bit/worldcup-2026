@@ -616,6 +616,15 @@ main{-webkit-overflow-scrolling:touch}
 .champ-pct{font-size:12px;font-weight:800;min-width:36px;text-align:right}
 /* Live Insight — 1-line status below score on live cards */
 .live-insight{text-align:center;font-size:11px;font-weight:700;color:var(--text2);margin-top:7px;padding:4px 14px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:100px;letter-spacing:.25px;max-width:90%;margin-left:auto;margin-right:auto}
+/* Live Auto-Commentary Feed */
+.commentary-feed{margin:8px 0 2px;padding:0 4px}
+.commentary-feed-inner{display:flex;flex-direction:column;gap:2px;max-height:88px;overflow-y:auto;scrollbar-width:none}
+.commentary-feed-inner::-webkit-scrollbar{display:none}
+.cf-entry{display:flex;align-items:flex-start;gap:6px;padding:3px 8px;border-radius:7px;font-size:10.5px;font-weight:600;line-height:1.4;color:var(--text2);background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.045);animation:cfFadeIn .35s ease}
+.cf-entry.cf-new{border-color:rgba(245,158,11,.28);background:rgba(245,158,11,.07)}
+.cf-min{flex-shrink:0;font-size:9.5px;font-weight:800;color:var(--accent);min-width:28px}
+.cf-text{flex:1;color:var(--text2)}
+@keyframes cfFadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 /* MUST WATCH badge — top team clash */
 @keyframes mwPulse{0%,100%{border-color:rgba(245,158,11,.42);box-shadow:none}50%{border-color:rgba(245,158,11,.85);box-shadow:0 0 8px rgba(245,158,11,.3)}}
 .badge.mustwatch{background:linear-gradient(90deg,rgba(245,158,11,.18),rgba(239,68,68,.12));color:#fde68a;border:1px solid rgba(245,158,11,.42);animation:mwPulse 2.2s ease-in-out infinite}
@@ -1496,6 +1505,193 @@ function startCountdown(id, dateStr){
     const h=Math.floor(diff/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
     el.textContent=`⏱ Còn ${h>0?h+'g ':''}`+`${m}p ${s}s`;
   },1000);
+}
+
+// ── LIVE AUTO-COMMENTARY ──
+const _liveCommentary = new Map(); // mid → {entries:[{min,text}], lastScore, lastYC, lastRC, lastType, lastGenAt}
+
+function _commentMins(data) {
+  // Get live clock mins for this mid (from liveClockData if available)
+  const cd = liveClockData[data.mid];
+  if(cd && !cd.isHT) {
+    const elapsed = Math.floor((Date.now()-cd.startedAt)/1000);
+    return Math.floor((cd.initialSecs+elapsed)/60);
+  }
+  return data.rawMins||0;
+}
+
+function generateLiveCommentary(mid, homeN, awayN, p, comp, homeScore, awayScore, sName) {
+  const hS = parseInt(homeScore)||0;
+  const aS = parseInt(awayScore)||0;
+  const hShort = homeN.split(' ').pop();
+  const aShort = awayN.split(' ').pop();
+  const home = comp?.competitors?.find(c=>c.homeAway==='home');
+  const away = comp?.competitors?.find(c=>c.homeAway==='away');
+  const clockStr = comp?.status?.displayClock||'';
+  const rawMins = parseInt(clockStr)||0;
+  const isHT = sName==='STATUS_HALFTIME';
+  const isPKS = sName==='STATUS_SHOOTOUT';
+  const isET = ['STATUS_EXTRA_TIME','STATUS_OVERTIME'].includes(sName);
+
+  const state = _liveCommentary.get(mid) || {entries:[], lastScore:`${hS}-${aS}`, lastYC:0, lastRC:0, lastType:'', lastGenAt:0};
+  const now = Date.now();
+  const prevScore = state.lastScore;
+  const prevScoreParts = prevScore.split('-');
+  const prevH = parseInt(prevScoreParts[0])||0;
+  const prevA = parseInt(prevScoreParts[1])||0;
+  const mins = rawMins || (isHT ? 45 : 0);
+  const minStr = isHT ? 'HT' : isPKS ? 'PK' : mins>90 ? `90+${mins-90}` : `${mins}`;
+
+  // Track yellow/red cards
+  const hYC = parseInt(getStat(home,'yellowCards'))||0;
+  const aYC = parseInt(getStat(away,'yellowCards'))||0;
+  const hRC = parseInt(getStat(home,'redCards'))||0;
+  const aRC = parseInt(getStat(away,'redCards'))||0;
+  const curYC = hYC+aYC, curRC = hRC+aRC;
+
+  let newLine = null;
+  let lineType = '';
+
+  // Priority 1: Goal
+  if(hS !== prevH || aS !== prevA) {
+    if(hS > prevH) {
+      const goaleer = hS > aS ? '⚽ GOAAAAL!' : hS === aS ? '⚽ Bàn gỡ hòa!' : '⚽ Bàn rút ngắn!';
+      newLine = `${goaleer} ${hShort} ghi bàn → ${hS}-${aS}`;
+    } else if(aS > prevA) {
+      const goaleer = aS > hS ? '⚽ GOAAAAL!' : aS === hS ? '⚽ Bàn gỡ hòa!' : '⚽ Bàn rút ngắn!';
+      newLine = `${goaleer} ${aShort} ghi bàn → ${hS}-${aS}`;
+    }
+    lineType = 'goal';
+  }
+  // Priority 2: Red card
+  else if(curRC > state.lastRC) {
+    const newRC = curRC - state.lastRC;
+    if(hRC > (parseInt(prevScore.split('-')[0])||0)) newLine = `🟥 Thẻ đỏ! ${hShort} bị rút ngắn người`;
+    else newLine = `🟥 Thẻ đỏ! ${aShort} bị rút ngắn người`;
+    lineType = 'redcard';
+  }
+  // Priority 3: Yellow card (only if no yellow spam)
+  else if(curYC > state.lastYC && state.lastType !== 'yellowcard') {
+    newLine = `🟨 Thẻ vàng cho ${hYC > (state.lastHYC||0) ? hShort : aShort}`;
+    lineType = 'yellowcard';
+  }
+  // Priority 4: Milestone minutes
+  else if(!state.milestonesShown) {
+    state.milestonesShown = {};
+  }
+
+  // Check milestones if no priority event
+  if(!newLine) {
+    const milestones = [
+      {m:45,s:'STATUS_FIRST_HALF',t:'milestone45',txt:()=>`⏱ Sắp hết giờ hiệp 1 · ${hS}-${aS} · ${hShort} vs ${aShort}`},
+      {m:0,s:'STATUS_HALFTIME',t:'milestoneHT',txt:()=>`⏸ Nghỉ giữa hiệp · ${hS}-${aS} · Chờ hiệp 2`},
+      {m:60,s:'STATUS_SECOND_HALF',t:'milestone60',txt:()=>`⏱ 60' · ${hS===aS?'Hòa '+hS+'-'+aS:((hS>aS?hShort:aShort)+' đang dẫn '+hS+'-'+aS)}`},
+      {m:75,s:'STATUS_SECOND_HALF',t:'milestone75',txt:()=>`⚡ 75' · Còn 15 phút · ${hS===aS?'Vẫn hòa — kịch tính cao':((hS>aS?hShort:aShort)+' bảo vệ '+hS+'-'+aS)}`},
+      {m:85,s:'STATUS_SECOND_HALF',t:'milestone85',txt:()=>`🔥 85' · Giai đoạn quyết định! · ${hS}-${aS}`},
+      {m:90,s:'STATUS_SECOND_HALF',t:'milestone90',txt:()=>`⏰ 90' · Bù giờ đang tới · ${hS}-${aS}`},
+      {m:0,s:'STATUS_EXTRA_TIME',t:'milestoneET',txt:()=>`⚡ HIỆP PHỤ! · ${hS}-${aS} · Ai ghi trước thắng cuộc`},
+      {m:0,s:'STATUS_SHOOTOUT',t:'milestonePK',txt:()=>`🎯 LOẠT LUÂN LƯU! · ${hShort} vs ${aShort} · Ai vào?`},
+    ];
+    if(!state.milestonesShown) state.milestonesShown = {};
+    for(const ml of milestones) {
+      const key = ml.t;
+      if(state.milestonesShown[key]) continue;
+      const matchStatus = ml.s === sName;
+      const matchMins = ml.m === 0 || Math.abs(rawMins - ml.m) <= 1;
+      if(matchStatus && matchMins) {
+        newLine = ml.txt();
+        lineType = 'milestone';
+        state.milestonesShown[key] = true;
+        break;
+      }
+    }
+  }
+
+  // Priority 5: Possession swing (only check every ~30s, and not if same type repeated)
+  if(!newLine && now - state.lastGenAt >= 28000 && state.lastType !== 'possession') {
+    const hPoss = parseFloat(getStat(home,'possessionPct')||getStat(home,'possession'))||50;
+    const aPoss = 100 - hPoss;
+    if(hPoss >= 60) {
+      newLine = `📊 ${hShort} kiểm soát bóng ${Math.round(hPoss)}% · Đang áp đảo thế trận`;
+      lineType = 'possession';
+    } else if(aPoss >= 60) {
+      newLine = `📊 ${aShort} kiểm soát bóng ${Math.round(aPoss)}% · Đang áp đảo thế trận`;
+      lineType = 'possession';
+    }
+  }
+
+  // Priority 6: Shots surge
+  if(!newLine && now - state.lastGenAt >= 28000 && state.lastType !== 'shots') {
+    const hShots = parseInt(getStat(home,'totalShots'))||0;
+    const aShots = parseInt(getStat(away,'totalShots'))||0;
+    const prevHShots = state.lastHShots||0, prevAShots = state.lastAShots||0;
+    if(hShots - prevHShots >= 3) {
+      newLine = `🎯 ${hShort} đang sút dồn dập · ${hShots} cú tổng cộng`;
+      lineType = 'shots';
+    } else if(aShots - prevAShots >= 3) {
+      newLine = `🎯 ${aShort} đang sút dồn dập · ${aShots} cú tổng cộng`;
+      lineType = 'shots';
+    }
+    state.lastHShots = hShots;
+    state.lastAShots = aShots;
+  }
+
+  // Priority 7: Default every ~35s — rotating flavour
+  if(!newLine && now - state.lastGenAt >= 33000) {
+    const flavor = [
+      ()=>`⚽ ${hShort} ${hS} – ${aS} ${aShort} · ${minStr}'`,
+      ()=>`📡 AI dự báo tỷ số: ${p.pHome}-${p.pAway} · Thực tế: ${hS}-${aS}`,
+      ()=>`⚡ Gôl trong 10p tới: ${p.next10}% · Tài 2.5: ${p.over25}%`,
+      ()=>(p.momentum>58)?`🔴 ${hShort} đang áp đảo (${p.momentum}% momentum) · ${minStr}'`:`🔵 ${aShort} kiểm soát nhịp trận · ${minStr}'`,
+      ()=>`🧠 xG: ${hShort} ${p.hXG} – ${p.aXG} ${aShort} · Hiệu quả tấn công`,
+    ];
+    const idx = (state.entries.length) % flavor.length;
+    const candidate = flavor[idx]();
+    // Avoid if same type repeated
+    if(state.lastType !== 'flavor'+idx) {
+      newLine = candidate;
+      lineType = 'flavor'+idx;
+    } else {
+      newLine = flavor[(idx+1)%flavor.length]();
+      lineType = 'flavor'+((idx+1)%flavor.length);
+    }
+  }
+
+  // Update state
+  state.lastScore = `${hS}-${aS}`;
+  state.lastYC = curYC;
+  state.lastRC = curRC;
+  state.lastHYC = hYC;
+  state.lastAYC = aYC;
+  if(newLine) {
+    state.lastType = lineType;
+    state.lastGenAt = now;
+    state.mid = mid;
+    state.rawMins = rawMins;
+  }
+  _liveCommentary.set(mid, state);
+  return newLine ? {min: minStr, text: newLine} : null;
+}
+
+function updateLiveCommentaryFeed(mid, entry) {
+  const state = _liveCommentary.get(mid);
+  if(!state) return;
+  if(!state.entries) state.entries = [];
+  // Deduplicate: don't add if same text as last entry
+  if(state.entries.length && state.entries[0].text === entry.text) return;
+  state.entries.unshift(entry); // newest first
+  if(state.entries.length > 10) state.entries = state.entries.slice(0, 10);
+  _liveCommentary.set(mid, state);
+}
+
+function liveCommentaryHTML(mid) {
+  const state = _liveCommentary.get(mid);
+  const entries = state?.entries || [];
+  if(!entries.length) return '';
+  const rows = entries.map((e, i) =>
+    `<div class="cf-entry${i===0?' cf-new':''}"><span class="cf-min">${e.min}'</span><span class="cf-text">${e.text}</span></div>`
+  ).join('');
+  return `<div class="commentary-feed"><div class="commentary-feed-inner">${rows}</div></div>`;
 }
 
 // ── LIVE CLOCK (ticks every second between API calls) ──
@@ -2875,6 +3071,7 @@ function renderMatchCard(event) {
       </div>
       ${countdownHTML}
       ${live ? `<div class="live-insight"${commentData}>${liveInsight(homeN,awayN,p,homeScore,awayScore,comp.status?.displayClock||'',sName)}</div>` : ''}
+      ${live ? liveCommentaryHTML(mid) : ''}
     </div>
     <div class="match-footer">
       ${venue?`<div class="match-venue">📍 ${venue}</div>`:''}
@@ -3112,10 +3309,49 @@ function renderLive(events) {
     if(c.scoreChanged) animateScoreEl(c.mid);
     if(c.live) registerLiveClock(c.mid, c.displayClock, c.ht);
   });
+
+  // ── Generate & patch commentary feed for ALL live events each refresh ──
+  liveEvents.forEach(e=>{
+    const comp2 = e.competitions?.[0];
+    const sN2 = comp2?.status?.type?.name||'';
+    if(!LIVE_STATUSES.includes(sN2)) return;
+    const hc = comp2?.competitors?.find(c=>c.homeAway==='home');
+    const ac = comp2?.competitors?.find(c=>c.homeAway==='away');
+    const homeN2 = hc?.team?.displayName||'';
+    const awayN2 = ac?.team?.displayName||'';
+    const hScore2 = hc?.score||'0';
+    const aScore2 = ac?.score||'0';
+    const p2 = predict(homeN2, awayN2);
+    const newEntry = generateLiveCommentary(e.id, homeN2, awayN2, p2, comp2, hScore2, aScore2, sN2);
+    if(newEntry) {
+      updateLiveCommentaryFeed(e.id, newEntry);
+      // Patch commentary feed DOM in-place (avoids full card re-render)
+      const cardEl = el.querySelector(`[data-mid="${e.id}"]`);
+      if(cardEl) {
+        let feedEl = cardEl.querySelector('.commentary-feed');
+        const newFeedHTML = liveCommentaryHTML(e.id);
+        if(feedEl && newFeedHTML) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = newFeedHTML;
+          feedEl.replaceWith(tmp.firstElementChild);
+        } else if(!feedEl && newFeedHTML) {
+          const insightEl = cardEl.querySelector('.live-insight');
+          if(insightEl) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = newFeedHTML;
+            insightEl.after(tmp.firstElementChild);
+          }
+        }
+      }
+    }
+  });
+
   // Cleanup stale clock data for matches no longer live (Bug #1 fix)
   Object.keys(liveClockData).forEach(mid=>{ if(!liveIds.has(mid)) delete liveClockData[mid]; });
   // Cleanup stale score state for matches no longer in current window (Bug #3 fix)
   Object.keys(_prevScores).forEach(mid=>{ if(!liveIds.has(mid)) delete _prevScores[mid]; });
+  // Cleanup stale commentary state for matches no longer live
+  _liveCommentary.forEach((_,mid)=>{ if(!liveIds.has(mid)) _liveCommentary.delete(mid); });
   // Animate momentum bars — double-rAF ensures browser committed previous paint (prevents pop on slow devices)
   requestAnimationFrame(()=>{requestAnimationFrame(()=>{
     el.querySelectorAll('.momentum-fill[data-m]').forEach(b=>{b.style.width=b.dataset.m+'%';});
