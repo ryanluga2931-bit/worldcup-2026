@@ -171,6 +171,7 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .rv-note.correct-score{background:rgba(139,92,246,.15);color:#c4b5fd}
 .rv-note.correct-close{background:rgba(34,197,94,.1);color:var(--green)}
 .rv-note.correct-winner{background:rgba(255,255,255,.05);color:var(--muted)}
+.rv-note.near{background:rgba(245,158,11,.08);color:#fcd34d}
 .rv-note.wrong{background:rgba(239,68,68,.08);color:#fca5a5}
 
 /* GOAL SCORERS */
@@ -986,6 +987,7 @@ function updatePredictionResult(mid, actualHome, actualAway) {
   if(exactH && exactA) rec.accuracy = 'exact';
   else if(cwinner && Math.abs(actualHome-p.home)<=1 && Math.abs(actualAway-p.away)<=1) rec.accuracy = 'close';
   else if(cwinner) rec.accuracy = 'winner';
+  else if(Math.abs(actualHome-p.home)<=1 && Math.abs(actualAway-p.away)<=1) rec.accuracy = 'near'; // right score, wrong outcome
   else rec.accuracy = 'wrong';
   // Post-match analysis — why succeeded or failed
   rec.analysis = _postMatchAnalysis(rec, actualHome, actualAway, predW, realW);
@@ -1032,6 +1034,8 @@ function _postMatchAnalysis(rec, aH, aA, predW, realW) {
     parts.push(`Đúng đội thắng nhưng tỷ số lệch (dự ${p.home}-${p.away}, thực ${aH}-${aA}) — góc độ bàn thắng vẫn cần tinh chỉnh`);
   } else if(rec.accuracy === 'close') {
     parts.push(`Gần đúng — lệch ±1 bàn mỗi bên, hướng kết quả đúng`);
+  } else if(rec.accuracy === 'near') {
+    parts.push(`Sát tỷ số (dự ${p.home}-${p.away}, thực ${aH}-${aA}) nhưng sai kết quả — tỷ số lệch ít nhưng kết cục trận đấu ngoài dự đoán`);
   }
 
   if(!parts.length) parts.push(`Kết quả ${aH}-${aA} trong biên độ dự báo ${p.home}-${p.away} ±1 bàn`);
@@ -1046,14 +1050,15 @@ function getPredictionAccuracy() {
   const exact = done.filter(r=>r.accuracy==='exact').length;
   const close = done.filter(r=>r.accuracy==='close').length;
   const winner = done.filter(r=>r.accuracy==='winner').length;
+  const near = done.filter(r=>r.accuracy==='near').length;
   const wrong = done.filter(r=>r.accuracy==='wrong').length;
-  const correct = exact + close + winner;
+  const correct = exact + close + winner; // 'near' = sát tỷ số nhưng sai kết quả, không tính đúng
   const pct = Math.round(correct/total*100);
   // Confidence calibration: if wrong streak → lower display confidence
   const recent5 = done.slice(-5);
   const recentWrong = recent5.filter(r=>r.accuracy==='wrong').length;
   const calibration = recentWrong >= 3 ? 'struggling' : recentWrong >= 2 ? 'unstable' : 'stable';
-  return { total, exact, close, winner, wrong, correct, pct, calibration,
+  return { total, exact, close, winner, near, wrong, correct, pct, calibration,
            drawTotal: done.filter(r=>{ const rw=r.actual.home===r.actual.away; return rw; }).length,
            drawPredicted: done.filter(r=>r.predicted.dr > r.predicted.hW && r.predicted.dr > r.predicted.aW).length };
 }
@@ -1067,7 +1072,7 @@ function getPredictionHistoryHTML() {
   const done = Object.values(s).filter(r=>r.actual!==null).slice(-10).reverse();
   if(!done.length) return '<div style="color:var(--muted);font-size:12px;padding:8px 0">Chưa có trận nào kết thúc để phân tích</div>';
   return done.map(r=>{
-    const icon = {exact:'🎯',close:'✅',winner:'☑️',wrong:'❌'}[r.accuracy]||'?';
+    const icon = {exact:'🎯',close:'✅',winner:'☑️',near:'⚠️',wrong:'❌'}[r.accuracy]||'?';
     const hS=r.homeN.split(' ').pop(), aS=r.awayN.split(' ').pop();
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px">
       <span style="width:20px;text-align:center">${icon}</span>
@@ -2392,7 +2397,7 @@ function shareMatch(homeN, awayN, homeScore, awayScore, predH, predA, accuracy) 
   let text;
   if(homeScore !== '' && awayScore !== '') {
     // Finished match
-    const accIcon = {exact:'🎯',close:'✅',winner:'☑️',wrong:'❌'}[accuracy] || '🔮';
+    const accIcon = {exact:'🎯',close:'✅',winner:'☑️',near:'⚠️',wrong:'❌'}[accuracy] || '🔮';
     text = `⚽ ${hF} ${hS} ${homeScore}–${awayScore} ${aS} ${aF}\n🏆 FIFA World Cup 2026\n\n🧠 AI dự: ${predH}-${predA} ${accIcon}\n📊 Xem dự đoán: ${APP_URL}`;
   } else {
     // Upcoming
@@ -2505,6 +2510,7 @@ function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p, mid) {
       return `<span class="rv-note correct-close">✅ AI đúng kết quả, gần tỷ số (dự ${predH}-${predA})</span>`;
     if(correctWinner)
       return `<span class="rv-note correct-winner">☑️ AI đúng đội thắng, sai tỷ số (dự ${predH}-${predA})</span>`;
+    if(Math.abs(predH-hS)<=1 && Math.abs(predA-aS)<=1) return `<span class="rv-note near">⚠️ AI sát tỷ số (dự ${predH}-${predA}), sai kết quả</span>`;
     return `<span class="rv-note wrong">❌ AI sai (dự ${predH}-${predA})</span>`;
   })();
 
@@ -2798,7 +2804,7 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
       const acc = getPredictionAccuracy();
       const rec = getPredictionRecord(mid);
       if(!rec || !rec.actual) return '';
-      const icon = {exact:'🎯',close:'✅',winner:'☑️',wrong:'❌'}[rec.accuracy]||'?';
+      const icon = {exact:'🎯',close:'✅',winner:'☑️',near:'⚠️',wrong:'❌'}[rec.accuracy]||'?';
       const color = {exact:'#c4b5fd',close:'#4ade80',winner:'#64748b',wrong:'#fca5a5'}[rec.accuracy]||'#94a3b8';
       const bgColor = {exact:'rgba(196,181,253,0.07)',close:'rgba(74,222,128,0.06)',winner:'rgba(148,163,184,0.05)',wrong:'rgba(252,165,165,0.07)'}[rec.accuracy]||'rgba(255,255,255,0.03)';
       const borderColor = {exact:'rgba(196,181,253,0.3)',close:'rgba(74,222,128,0.25)',winner:'rgba(100,116,139,0.2)',wrong:'rgba(252,165,165,0.3)'}[rec.accuracy]||'var(--border)';
