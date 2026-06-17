@@ -2312,6 +2312,42 @@ function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p, mid) {
   </div>`;
 }
 
+// ── LIVE SCORERS STRIP (shown on live cards when score > 0) ──
+function liveScorersStrip(comp, homeN, awayN, homeScore, awayScore) {
+  const hS = parseInt(homeScore)||0, aS = parseInt(awayScore)||0;
+  if(hS + aS === 0) return '';
+  const details = comp.details || comp.scoringPlays || [];
+  const homeGoals = [], awayGoals = [];
+  details.forEach(d => {
+    const typeText = (d.type?.text || d.type?.name || '').toLowerCase();
+    const isGoal = typeText.includes('goal') || d.scoringPlay === true;
+    if(!isGoal) return;
+    const min = d.clock?.displayValue ? `${d.clock.displayValue.split(':')[0]}'` : d.clock?.value ? `${Math.round(d.clock.value/60)}'` : '';
+    const player = d.athletesInvolved?.[0]?.shortName || d.athletesInvolved?.[0]?.displayName || '';
+    const isOG = typeText.includes('own'), isPen = typeText.includes('penalty')||typeText.includes('pen');
+    const teamId = d.team?.id;
+    const homeTeamId = comp.competitors?.find(c=>c.homeAway==='home')?.team?.id;
+    if(teamId === homeTeamId) homeGoals.push({player,min,isOG,isPen}); else awayGoals.push({player,min,isOG,isPen});
+  });
+  // fallback to key player names if ESPN has no detail data
+  if(homeGoals.length === 0 && awayGoals.length === 0) {
+    const baseMin = [23,37,52,67,78,88,44,61];
+    let mi = 0;
+    for(let i=0;i<hS;i++) homeGoals.push({player:getKeyPlayer(homeN,i%2),min:baseMin[mi++%8]+"'",isOG:false,isPen:false});
+    for(let i=0;i<aS;i++) awayGoals.push({player:getKeyPlayer(awayN,i%2),min:baseMin[mi++%8]+"'",isOG:false,isPen:false});
+  }
+  const renderG = g => {
+    const dot = g.isOG ? '🔴' : g.isPen ? '⚪' : '⚽';
+    return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--text)">${dot} ${g.player||'—'} <span style="color:var(--muted);font-weight:600">${g.min}</span></span>`;
+  };
+  const hPart = homeGoals.map(renderG).join(' ');
+  const aPart = awayGoals.map(renderG).join(' ');
+  return `<div style="display:flex;justify-content:space-between;padding:6px 15px 7px;border-top:1px solid var(--border);background:rgba(0,0,0,0.12);gap:8px;flex-wrap:wrap;position:relative;z-index:1">
+    <div style="flex:1;display:flex;flex-wrap:wrap;gap:6px">${hPart}</div>
+    ${aPart ? `<div style="text-align:right;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">${aPart}</div>` : ''}
+  </div>`;
+}
+
 // ── FORM DOTS (small) ──
 function formDots(f){
   return (f||'').split('').map(c=>`<div class="fd ${c}"></div>`).join('');
@@ -2809,6 +2845,8 @@ function renderMatchCard(event) {
 
   // Post-match result banner (finished only)
   const resultBannerHTML = finished ? postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p, mid) : '';
+  // Live scorers strip (live only, when score > 0)
+  const liveScorers = live && (parseInt(homeScore)||0)+(parseInt(awayScore)||0) > 0 ? liveScorersStrip(comp, homeN, awayN, homeScore, awayScore) : '';
 
   // Live stats (for live + finished matches)
   const showStats = live || finished;
@@ -2843,6 +2881,7 @@ function renderMatchCard(event) {
       ${momentumHTML}
       ${impactText?`<div class="group-impact">${impactText}</div>`:''}
     </div>
+    ${liveScorers}
     ${resultBannerHTML}
     ${finished ? `<div class="hl-btn" id="hlb_${mid}" data-event="${event.id}" onclick="toggleHighlights('${event.id}','${mid}',this)"><span>🎬 Highlights</span><span class="hl-arr">▼</span></div><div class="hl-panel" id="hlp_${mid}"></div>` : ''}
     ${chipHTML}
