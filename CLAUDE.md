@@ -95,3 +95,17 @@ Mỗi match card có:
 - User **không dùng terminal** — mọi thứ qua Claude
 - Commit message tiếng Anh, ngắn gọn, mô tả đúng thay đổi
 - **Sau mỗi lần nâng cấp: recheck toàn bộ — tìm dead variables, CSS conflicts, undefined refs, cascade issues — fix đến khi sạch hoàn toàn trước khi push**
+
+## Agent rules — bắt buộc
+
+### Khi dùng multi-agent để audit/fix
+1. **Luôn có 1 agent verify live data** — fetch ESPN API thực tế, so sánh team names với DB, không chỉ đọc code
+2. **Luôn có 1 agent check UI consistency** — các giá trị hiển thị cùng nhau phải nhất quán: pick + kèo + tỷ số + odds phải kể cùng 1 câu chuyện. Nếu predicted 1-1 thì không được recommend Kèo -1.5
+3. **Không chấp nhận agent chỉ đọc code rồi báo "OK"** — phải trace data flow từ input (ESPN name, ELO) → compute (predict, calcAsianOdds) → output (rendered HTML chip) và verify từng bước
+
+### Consistency rules cho prediction display
+- `pickLabel` (🏆 / 🤝) phải match `pHome vs pAway`, không dùng win%
+- `keoLabel` trong AI chip phải derive từ `pHome - pAway`, không dùng `hcDisplay` độc lập
+- `hcLabel` trong odds table (kèo thị trường) dùng ELO-based là đúng — đây là market line, không phải AI pick
+- Nếu `pHome == pAway` → chip hiện `🤝 Hòa` + `Kèo 0`, dù ELO gap lớn đến đâu
+- ESPN team name → `getTS()` lookup phải luôn trả về đúng team, không fallback 1620. Verify bằng cách fetch ESPN API thực tế và check từng tên
