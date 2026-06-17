@@ -822,11 +822,11 @@ const TS = {
   'USA':{r:1622,a:7.4,d:7.2,f:'WDWWW'},'United States':{r:1622,a:7.4,d:7.2,f:'WDWWW'},
   'Mexico':{r:1602,a:7.1,d:7.1,f:'DWWWW'},
   'Serbia':{r:1592,a:7.2,d:6.9,f:'WWDWW'},'Ecuador':{r:1514,a:6.4,d:6.7,f:'WWDLL'},
-  'Japan':{r:1575,a:7.1,d:7.5,f:'DWWWD'},'Canada':{r:1558,a:6.6,d:7.2,f:'WWLDD'},
+  'Japan':{r:1640,a:7.3,d:7.7,f:'DWWWD'} /* raised: WC2022 beat Germany+Spain, WC2026 beat Belgium */,'Canada':{r:1558,a:6.6,d:7.2,f:'WWLDD'},
   'Poland':{r:1542,a:6.8,d:7.0,f:'DWWWL'},
   'South Korea':{r:1556,a:6.9,d:6.9,f:'WDLWW'},'Ivory Coast':{r:1510,a:6.3,d:6.6,f:'WDWLW'},
   'Senegal':{r:1582,a:7.0,d:7.3,f:'WWDWL'},'Scotland':{r:1533,a:6.5,d:6.7,f:'DWWWW'},
-  'Sweden':{r:1628,a:7.4,d:7.1,f:'WDWWW'},
+  'Sweden':{r:1628,a:7.4,d:7.1,f:'WDWWW'}, // NOT at WC2026 — kept for historical lookups only
   'Wales':{r:1480,a:6.0,d:6.3,f:'WDWLW'},'Algeria':{r:1490,a:6.3,d:6.2,f:'WWWDL'},
   'Tunisia':{r:1465,a:6.0,d:5.8,f:'DWWLL'},
   'Australia':{r:1518,a:6.4,d:7.2,f:'WWLWW'},'Nigeria':{r:1492,a:6.3,d:6.2,f:'WDWWL'},
@@ -1251,7 +1251,7 @@ function predict(homeN, awayN, stageTier='group') {
   const h = getTS(homeN), a = getTS(awayN);
   const homeBoost = WC_HOSTS.has(homeN) ? 20 : 0;
   const eloDiff = (h.r + homeBoost) - a.r;
-  const winP = 1 / (1 + Math.pow(10, -eloDiff / 350));
+  const winP = 1 / (1 + Math.pow(10, -eloDiff / 400)); // FIFA standard divisor (was 350)
 
   // Draw probability: group stage WC2026 observed ~38% draw rate (vs model's 27%)
   const isKnockout = ['r16','qf','semi','final'].includes(stageTier);
@@ -1270,8 +1270,9 @@ function predict(homeN, awayN, stageTier='group') {
   // xG v4: calibrated for WC2026 — fix for both over-prediction (Spain 7-0) AND under-prediction (0-0)
   // Key insight: old multiplier 3.1 was too HIGH for elite mismatches, but OK for mid-tier matches.
   // Fix: keep multiplier reasonable (2.4/2.05) + cap ELO bonus logarithmically (no more runaway Spain)
-  const hAtkVsDef = (h.a * 0.6 + (10 - a.d) * 0.4) / 10;
-  const aAtkVsDef = (a.a * 0.6 + (10 - h.d) * 0.4) / 10;
+  // Defense-first weighting (45/55): research shows defensive strength more predictive in WC
+  const hAtkVsDef = (h.a * 0.45 + (10 - a.d) * 0.55) / 10;
+  const aAtkVsDef = (a.a * 0.45 + (10 - h.d) * 0.55) / 10;
   // Defense compression: when both teams have elite defenses, xG is lower than base formula suggests
   const combinedDef = h.d + a.d;
   const defCompression = combinedDef > 14.5 ? Math.max(0.82, 1 - (combinedDef - 14.5) * 0.04) : 1.0;
@@ -1280,15 +1281,30 @@ function predict(homeN, awayN, stageTier='group') {
   // ELO bonus: raised scale 0.14→0.18 and cap 0.22→0.32 — better calibrated vs market odds (agent audit 2026-06-17)
   const rawEloGap = Math.log(1 + Math.abs(eloDiff) / 160) * 0.18;
   const eloGapBonus = Math.min(0.32, rawEloGap);
-  const hEloBoost = eloDiff > 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.35);
-  const aEloBoost = eloDiff < 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.35);
+  // Underdog suppression raised 0.35→0.85: at cap 0.32, underdog xG multiplier = 1-0.32*0.85=0.728 (was 0.888)
+  const hEloBoost = eloDiff > 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.85);
+  const aEloBoost = eloDiff < 0 ? (1 + eloGapBonus) : (1 - eloGapBonus * 0.85);
   const stageMult = isKnockout ? 0.88 : 1.0;
-  const hXG = Math.max(0.30, hXGRaw * hEloBoost * stageMult);
-  const aXG = Math.max(0.18, aXGRaw * aEloBoost * stageMult);
+  // ELO-derived xG floors: stronger teams always threaten, weak teams don't always
+  const hFloor = Math.max(0.10, 0.05 + h.r / 10000);
+  const aFloor = Math.max(0.08, 0.03 + a.r / 10000);
+  const hXG = Math.max(hFloor, hXGRaw * hEloBoost * stageMult);
+  const aXG = Math.max(aFloor, aXGRaw * aEloBoost * stageMult);
 
-  // Predicted score: Poisson mode = Math.floor(xG) — most likely single outcome
-  const pHome = Math.floor(hXG);
-  const pAway = Math.floor(aXG);
+  // Draw-aware scoreline: if draw probability > 22%, check if equal-score is most likely outcome
+  // Fixes systematic failure where Math.floor never outputs draws for evenly matched games
+  let pHome, pAway;
+  if (!isKnockout && drawP > 0.22) {
+    const drawScore = Math.floor((hXG + aXG) / 2);
+    const pDraw = Math.exp(-hXG) * Math.pow(hXG, drawScore) / [1,1,2,6,24,120,720][drawScore]
+                * Math.exp(-aXG) * Math.pow(aXG, drawScore) / [1,1,2,6,24,120,720][drawScore];
+    const pHomeWin = Math.exp(-hXG) * Math.pow(hXG, drawScore+1) / [1,1,2,6,24,120,720][Math.min(drawScore+1,6)]
+                   * Math.exp(-aXG) * Math.pow(aXG, drawScore)   / [1,1,2,6,24,120,720][drawScore];
+    if (pDraw > pHomeWin * 0.85) { pHome = drawScore; pAway = drawScore; }
+    else { pHome = Math.floor(hXG); pAway = Math.floor(aXG); }
+  } else {
+    pHome = Math.floor(hXG); pAway = Math.floor(aXG);
+  }
 
   const totalXG = hXG + aXG;
   const over25 = Math.min(88, Math.max(12, Math.round((1-Math.exp(-totalXG)*(1+totalXG+totalXG*totalXG/2))*100)));
