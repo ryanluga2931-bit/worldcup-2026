@@ -520,7 +520,7 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 /* Smooth touch scroll */
 main{-webkit-overflow-scrolling:touch}
 
-@media(max-width:600px){header{padding:32px 13px 18px}.tab-bar{display:none}.bottom-nav{display:block}.team-flag{font-size:34px}.score{font-size:36px}main{padding:0 9px 88px}.match-card:hover{transform:none}}
+@media(max-width:600px){header{padding:32px 13px 18px}.tab-bar{display:none}.bottom-nav{display:block}.team-flag{font-size:34px}.score{font-size:36px}main{padding:0 9px 88px}.match-card:hover{transform:none}.match-card.live::after{animation:none}}
 @media(min-width:601px){.bottom-nav{display:none}}
 
 /* FEATURED HERO — top live match spotlight */
@@ -600,6 +600,7 @@ main{-webkit-overflow-scrolling:touch}
   <h1>⚽ World Cup 2026</h1>
   <p>🇺🇸 USA &nbsp;·&nbsp; 🇨🇦 Canada &nbsp;·&nbsp; 🇲🇽 Mexico &nbsp;&nbsp;|&nbsp;&nbsp; 48 đội · 104 trận</p>
   <span id="last-update">Đang tải...</span>
+  <div id="ai-accuracy-badge" style="display:none;margin-top:10px;font-size:11px;color:var(--muted)"></div>
 </header>
 
 <!-- FEATURED LIVE MATCH HERO (populated by renderLive) -->
@@ -895,6 +896,9 @@ function _loadPredStore() {
   try { return JSON.parse(localStorage.getItem(PRED_STORE)||'{}'); } catch(e) { return {}; }
 }
 function _savePredStore(s) {
+  // Prune entries older than 30 days to prevent localStorage bloat
+  const cutoff=Date.now()-30*864e5;
+  Object.keys(s).forEach(k=>{if((s[k].ts||0)<cutoff) delete s[k];});
   try { localStorage.setItem(PRED_STORE, JSON.stringify(s)); } catch(e) {}
 }
 
@@ -2619,7 +2623,7 @@ function renderMatchCard(event) {
   const liveStatsBlock = showStats ? liveStatsHTML(home, away, p) : '';
 
   const html = `
-  <div class="${cardClass}" id="mc_${mid}">
+  <div class="${cardClass}" id="mc_${mid}" data-mid="${mid}">
     ${featuredStrip}
     <div class="card-top">
       <span class="match-time">${timeVN(event.date)}${stageLabel?` · <span style="font-size:9px;color:var(--muted);font-weight:700">${stageLabel}</span>`:''}${wsChip}</span>
@@ -2662,7 +2666,8 @@ function renderMatchCard(event) {
   </div>`;
 
   return { html, mid, upcoming, date: event.date, live, ht: sName==='STATUS_HALFTIME',
-           displayClock: comp.status?.displayClock||'', scoreChanged: _scoreChanged };
+           displayClock: comp.status?.displayClock||'', scoreChanged: _scoreChanged,
+           cardKey: `${mid}|${homeScore}|${awayScore}|${sName}|${comp.status?.displayClock||''}` };
 }
 
 // ── CONSTANTS ──
@@ -2675,6 +2680,7 @@ let _nextInterval = 60;
 let _prevDoneIds = '';
 let _pastEvents = []; // finished matches from days before yesterday, loaded once
 let _lastCurrentEvents = []; // last events from loadScores, kept so loadPastResults can re-render
+const _cardChangeKey = new Map(); // mid → cardKey string for diff-patch renderLive (preserves scroll + open panels)
 
 // ── DATE UTILS ──
 function utcDate(offset=0){
@@ -2705,6 +2711,7 @@ async function fetchWithRetry(url, retries=3){
 async function loadScores() {
   if(_isLoading) return;
   _isLoading = true;
+  _nextInterval = 60; // safe default — prevents 5s hammering if try block throws early
   const btn=document.getElementById('refreshBtn');
   btn?.classList.add('spinning');
 
@@ -2737,10 +2744,14 @@ async function loadScores() {
     const doneIds=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name)).map(e=>e.id).sort().join(',');
     if(doneIds!==_prevDoneIds){_prevDoneIds=doneIds;renderResults(events);}
     updateTicker(events);
-    // Update match stats bar
-    const liveN=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name)).length;
-    const doneN=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name)).length;
-    const nsN=events.filter(e=>e.competitions?.[0]?.status?.type?.name==='STATUS_SCHEDULED').length;
+    // Update match stats bar — single pass instead of 3 filters
+    const {liveN,doneN,nsN}=events.reduce((a,e)=>{
+      const s=e.competitions?.[0]?.status?.type?.name;
+      if(LIVE_STATUSES.includes(s)) a.liveN++;
+      else if(DONE_STATUSES.includes(s)) a.doneN++;
+      else if(s==='STATUS_SCHEDULED') a.nsN++;
+      return a;
+    },{liveN:0,doneN:0,nsN:0});
     const msb=document.getElementById('matchStatsBar');
     if(msb){
       if(events.length>0){
@@ -2757,6 +2768,9 @@ async function loadScores() {
     const now=new Date().toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
     const luEl=document.getElementById('last-update');
     if(luEl){ luEl.dataset.base=`🔄 ${now}`; luEl.textContent=`🔄 ${now}`; }
+    // Update AI accuracy badge in header (builds trust + return visits)
+    const accB=document.getElementById('ai-accuracy-badge');
+    if(accB){const acc=getPredictionAccuracy();if(acc&&acc.total>=3){const col=acc.pct>=60?'#4ade80':acc.pct>=40?'#fbbf24':'#f87171';accB.innerHTML=`🧠 AI: <span style="color:${col};font-weight:800">${acc.pct}% chính xác</span> · ${acc.correct}/${acc.total} trận`;accB.style.display='block';}else accB.style.display='none';}
   } catch(e) {
     _nextInterval = 30;
     const errBtn=`<br><button onclick="loadScores()" style="margin-top:9px;padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button>`;
@@ -2782,8 +2796,7 @@ async function loadScores() {
 function renderLive(events) {
   const el=document.getElementById('live-content');
   const liveEvents=events.filter(e=>LIVE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name));
-  const openPanels=saveOpenPanels('live-content');
-  // Do NOT clearAllCountdowns() here — that would wipe Schedule tab countdowns on every 10s refresh
+  // Note: openPanels save/restore replaced by per-card state preservation in diff-patch below
 
   if(!liveEvents.length){
     // Find next upcoming match to show a helpful hint
@@ -2805,8 +2818,8 @@ function renderLive(events) {
         </div>`;
       }
     }
+    _cardChangeKey.clear();
     el.innerHTML=`<div class="loading" style="padding:44px 20px">😴 Hiện không có trận nào đang diễn ra.${nextMatchHTML}<span style="font-size:12px;margin-top:12px;display:block;color:var(--muted)">Kiểm tra tab <strong>Lịch thi đấu</strong> để xem toàn bộ lịch.</span></div>`;
-    restoreOpenPanels(openPanels,'live-content');
     const heroEl2=document.getElementById('featured-hero');
     if(heroEl2) heroEl2.style.display='none';
     updateMiniBar([]);
@@ -2819,26 +2832,65 @@ function renderLive(events) {
     return false;
   }
 
-  const cards=[];
-  let html=`<div class="match-group-label">🔴 Đang diễn ra · ${liveEvents.length} trận</div>`;
-  liveEvents.forEach(e=>{const r=renderMatchCard(e);if(r){cards.push(r);html+=r.html;}});
-  el.innerHTML=html;
-  restoreOpenPanels(openPanels,'live-content');
-  cards.forEach(c=>{
+  // ── DIFF-PATCH: only update cards that actually changed (preserves scroll + open panels) ──
+  const liveIds = new Set(liveEvents.map(e=>e.id));
+
+  // Ensure group label exists; update count without full replace
+  let labelEl = el.querySelector('.match-group-label');
+  if (!labelEl) {
+    el.innerHTML = `<div class="match-group-label">🔴 Đang diễn ra · ${liveEvents.length} trận</div>`;
+    labelEl = el.querySelector('.match-group-label');
+  } else {
+    labelEl.textContent = `🔴 Đang diễn ra · ${liveEvents.length} trận`;
+  }
+
+  const cards=[], newOrChanged=[];
+  liveEvents.forEach(e=>{
+    const r=renderMatchCard(e);
+    if(!r) return;
+    cards.push(r);
+    const existing=el.querySelector(`[data-mid="${r.mid}"]`);
+    // Skip if card content unchanged and already in DOM
+    if(_cardChangeKey.get(r.mid)===r.cardKey && existing) {
+      if(r.live) registerLiveClock(r.mid, r.displayClock, r.ht);
+      return;
+    }
+    _cardChangeKey.set(r.mid, r.cardKey);
+    newOrChanged.push(r);
+    // Save open panel state for this specific card before replacing it
+    const wasAiOpen=existing?.querySelector('.ai-panel.open')!==null;
+    const hlOpen=[...existing?.querySelectorAll('.hl-btn.open')||[]].map(b=>b.dataset.event);
+    if(existing) {
+      existing.outerHTML=r.html;
+    } else {
+      el.appendChild(Object.assign(document.createElement('div'),{innerHTML:r.html}).firstElementChild);
+    }
+    // Restore panel state for replaced card only
+    if(wasAiOpen||hlOpen.length) {
+      const st={ai:wasAiOpen?new Set([r.mid]):new Set(), hl:new Set(hlOpen.filter(Boolean))};
+      restoreOpenPanels(st,'live-content');
+    }
+  });
+
+  // Remove cards no longer live
+  el.querySelectorAll('[data-mid]').forEach(node=>{
+    if(!liveIds.has(node.dataset.mid)){_cardChangeKey.delete(node.dataset.mid);node.remove();}
+  });
+
+  newOrChanged.forEach(c=>{
     if(c.scoreChanged) animateScoreEl(c.mid);
     if(c.live) registerLiveClock(c.mid, c.displayClock, c.ht);
   });
   // Cleanup stale clock data for matches no longer live (Bug #1 fix)
-  const liveIds=new Set(liveEvents.map(e=>e.id));
   Object.keys(liveClockData).forEach(mid=>{ if(!liveIds.has(mid)) delete liveClockData[mid]; });
   // Cleanup stale score state for matches no longer in current window (Bug #3 fix)
   Object.keys(_prevScores).forEach(mid=>{ if(!liveIds.has(mid)) delete _prevScores[mid]; });
-  // Animate momentum bars (start at 0, transition to target width)
-  setTimeout(()=>{
-    el.querySelectorAll('.momentum-fill[data-m]').forEach(el=>{el.style.width=el.dataset.m+'%';});
-  }, 60);
+  // Animate momentum bars — double-rAF ensures browser committed previous paint (prevents pop on slow devices)
+  requestAnimationFrame(()=>{requestAnimationFrame(()=>{
+    el.querySelectorAll('.momentum-fill[data-m]').forEach(b=>{b.style.width=b.dataset.m+'%';});
+  });});
   // GOAL notification: flash title if any score changed
-  const anyGoal = cards.some(c=>c.scoreChanged);
+  const anyGoal = newOrChanged.some(c=>c.scoreChanged);
   if(anyGoal) {
     document.title = '⚽ GOAAAAL! · World Cup 2026';
     setTimeout(()=>{ document.title=`🔴 ${liveEvents.length} Live · ⚽ World Cup 2026`; }, 3000);
