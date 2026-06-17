@@ -2427,11 +2427,17 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
         else if(p.eloDiff>80) lines.push(`📊 <strong>${hxg>axg?hN:aN}</strong> nhỉnh hơn về trình độ`);
         else lines.push(`⚖️ Hai đội ngang tầm nhau`);
         // Cơ hội ghi bàn
-        if(Math.abs(diff)>1.0) lines.push(`⚽ <strong>${diff>0?hN:aN}</strong> tạo ra nhiều cơ hội nguy hiểm hơn (${diff>0?hxg:axg} vs ${diff>0?axg:hxg})`);
+        if(Math.abs(diff)>1.0) lines.push(`⚽ <strong>${diff>0?hN:aN}</strong> tạo ra nhiều cơ hội nguy hiểm hơn (${(diff>0?hxg:axg).toFixed(1)} vs ${(diff>0?axg:hxg).toFixed(1)})`);
         else lines.push(`🎯 Số cơ hội ghi bàn hai bên khá đều nhau`);
         // Lý do tỷ số cụ thể
-        if(p.pHome===p.pAway && p.dr>20) lines.push(`🤝 Xác suất hòa cao (${p.dr}%) — AI thiên về kịch bản cầm hòa`);
-        else if(p.pHome>p.pAway) lines.push(`✅ Dự đoán <strong>${hN}</strong> thắng ${p.pHome}-${p.pAway}`);
+        if(p.pHome===p.pAway && p.dr>20) {
+          const strongerN = hxg>axg ? hN : aN;
+          const weakerN   = hxg>axg ? aN : hN;
+          if(p.eloDiff>150)
+            lines.push(`🛡️ Dù vậy, <strong>${weakerN}</strong> có thể cầm hòa nếu phòng thủ tốt — xác suất hòa ${p.dr}%`);
+          else
+            lines.push(`🤝 Xác suất hòa cao (${p.dr}%) — AI thiên về kịch bản cầm chân nhau`);
+        } else if(p.pHome>p.pAway) lines.push(`✅ Dự đoán <strong>${hN}</strong> thắng ${p.pHome}-${p.pAway}`);
         else lines.push(`✅ Dự đoán <strong>${aN}</strong> thắng ${p.pHome}-${p.pAway}`);
         return lines.join('<br>');
       })()}</div>
