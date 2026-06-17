@@ -2022,7 +2022,13 @@ function aiPickChipHTML(homeN, awayN, p, o) {
   const absSD = Math.abs(scoreDiff);
   let keoLabel;
   if (absSD === 0) {
-    keoLabel = 'Kèo 0';
+    // Draw predicted: if market has a handicap, recommend taking the underdog side
+    if (o.hcLabel && o.hcLabel !== '0' && o.hcLabel !== 'PKC') {
+      const underdogShort = (!o.homeFav ? homeN : awayN).split(' ').pop();
+      keoLabel = `Chọn ${underdogShort} +${o.hcLabel}`;
+    } else {
+      keoLabel = 'Kèo 0 / Hòa';
+    }
   } else {
     const sign = scoreDiff > 0 ? '-' : '+';
     if (absSD === 1)      keoLabel = `Kèo ${sign}0.5/1`;
@@ -2043,8 +2049,9 @@ function aiPickChipHTML(homeN, awayN, p, o) {
 }
 
 function quickVerdictHTML(homeN, awayN, p, o) {
-  const winner = p.hW > p.aW ? homeN : p.aW > p.hW ? awayN : null;
-  const loser  = p.hW > p.aW ? awayN : p.aW > p.hW ? homeN : null;
+  // Use predicted score as source of truth for winner — not win% which can contradict the score
+  const winner = p.pHome > p.pAway ? homeN : p.pHome < p.pAway ? awayN : null;
+  const loser  = p.pHome > p.pAway ? awayN : p.pHome < p.pAway ? homeN : null;
   const hShort = homeN.split(' ').pop(), aShort = awayN.split(' ').pop();
   const wShort = winner ? winner.split(' ').pop() : hShort;
   const lShort = loser  ? loser.split(' ').pop()  : aShort;
@@ -2380,6 +2387,18 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
     <div class="pred-score">
       <div class="pred-lbl">⚽ Dự đoán tỷ số</div>
       <div class="pred-nums">${p.pHome} – ${p.pAway}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5">
+        xG: <strong>${p.hXG}</strong> vs <strong>${p.aXG}</strong> &nbsp;·&nbsp;
+        ELO: <strong>${p.eloDiff > 0 ? '+' : ''}${p.eloDiff}</strong> &nbsp;·&nbsp;
+        Hòa: <strong>${p.dr}%</strong>
+        ${parseFloat(p.hXG) > 0.7 && parseFloat(p.aXG) > 0.7 && p.dr > 20
+          ? `<br>⚠️ xG hai bên gần nhau + xác suất hòa cao → tỷ số sít sao, ưu tiên Xỉu/Hòa`
+          : parseFloat(p.hXG) - parseFloat(p.aXG) > 1.0
+          ? `<br>💡 xG lệch lớn (${(parseFloat(p.hXG)-parseFloat(p.aXG)).toFixed(1)}) → ${homeN.split(' ').pop()} tấn công áp đảo`
+          : parseFloat(p.aXG) - parseFloat(p.hXG) > 1.0
+          ? `<br>💡 xG lệch lớn (${(parseFloat(p.aXG)-parseFloat(p.hXG)).toFixed(1)}) → ${awayN.split(' ').pop()} nguy hiểm hơn`
+          : ''}
+      </div>
     </div>
     <div class="sl-section">
       <div class="sl-title">📊 Top tỷ số có thể xảy ra</div>
