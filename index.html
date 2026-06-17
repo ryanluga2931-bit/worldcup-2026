@@ -2017,7 +2017,7 @@ function quickVerdictHTML(homeN, awayN, p, o) {
 }
 
 // ── POST-MATCH RESULT BANNER ──
-function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p) {
+function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p, mid) {
   const hS = parseInt(homeScore)||0, aS = parseInt(awayScore)||0;
   const diff = Math.abs(hS - aS);
   const total = hS + aS;
@@ -2095,18 +2095,21 @@ function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p) {
 
   const hasScore = homeScore !== '' && awayScore !== '';
 
-  // AI accuracy note
+  // AI accuracy note — use STORED prediction (not live-recalculated p) to prevent retroactive score-fixing
+  // Bug: when teamStats update after match, p.pHome/pAway changes and may coincidentally match actual result
   const aiNote = (() => {
     if(!hasScore) return '';
-    const exactH = p.pHome === hS, exactA = p.pAway === aS;
-    const predDiff = p.pHome - p.pAway;
+    const rec = mid ? getPredictionRecord(mid) : null;
+    const predH = rec?.predicted?.home ?? p.pHome;
+    const predA = rec?.predicted?.away ?? p.pAway;
+    const predDiff = predH - predA;
     const correctWinner = (predDiff > 0 && homeWon) || (predDiff < 0 && awayWon) || (predDiff === 0 && draw);
-    if(exactH && exactA) return `<span class="rv-note correct-score">🎯 AI đoán ĐÚNG tỷ số ${p.pHome}-${p.pAway}!</span>`;
-    if(correctWinner && Math.abs(hS - p.pHome) <= 1 && Math.abs(aS - p.pAway) <= 1)
-      return `<span class="rv-note correct-close">✅ AI đúng kết quả, gần tỷ số (dự ${p.pHome}-${p.pAway})</span>`;
+    if(predH === hS && predA === aS) return `<span class="rv-note correct-score">🎯 AI đoán ĐÚNG tỷ số ${predH}-${predA}!</span>`;
+    if(correctWinner && Math.abs(hS - predH) <= 1 && Math.abs(aS - predA) <= 1)
+      return `<span class="rv-note correct-close">✅ AI đúng kết quả, gần tỷ số (dự ${predH}-${predA})</span>`;
     if(correctWinner)
-      return `<span class="rv-note correct-winner">☑️ AI đúng đội thắng, sai tỷ số (dự ${p.pHome}-${p.pAway})</span>`;
-    return `<span class="rv-note wrong">❌ AI sai (dự ${p.pHome}-${p.pAway})</span>`;
+      return `<span class="rv-note correct-winner">☑️ AI đúng đội thắng, sai tỷ số (dự ${predH}-${predA})</span>`;
+    return `<span class="rv-note wrong">❌ AI sai (dự ${predH}-${predA})</span>`;
   })();
 
   return `<div class="result-banner">
@@ -2585,7 +2588,7 @@ function renderMatchCard(event) {
   const verdictHTML = !finished ? quickVerdictHTML(homeN, awayN, p, o) : '';
 
   // Post-match result banner (finished only)
-  const resultBannerHTML = finished ? postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p) : '';
+  const resultBannerHTML = finished ? postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p, mid) : '';
 
   // Live stats (for live + finished matches)
   const showStats = live || finished;
