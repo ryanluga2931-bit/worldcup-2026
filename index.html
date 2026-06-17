@@ -962,13 +962,14 @@ function _savePredStore(s) {
 
 function savePrediction(mid, homeN, awayN, p) {
   const s = _loadPredStore();
-  if(s[mid]?.predicted) return; // already saved — don't overwrite
+  if(s[mid]?.actual !== null && s[mid]?.actual !== undefined) return; // match ended — never overwrite final prediction
+  const existing = s[mid];
   s[mid] = {
     homeN, awayN,
     predicted: { home: p.pHome, away: p.pAway, hW: p.hW, dr: p.dr, aW: p.aW,
                  hXG: parseFloat(p.hXG), aXG: parseFloat(p.aXG) },
     confidence: p.confidence, keyFactor: p.keyFactor,
-    ts: Date.now(), actual: null, accuracy: null, analysis: null
+    ts: existing?.ts ?? Date.now(), actual: null, accuracy: null, analysis: null
   };
   _savePredStore(s);
 }
@@ -3893,7 +3894,11 @@ function renderPredictionStats() {
   if(!adminDash || document.getElementById('adm-pred-stats')) return;
   const sec = document.createElement('div');
   sec.style.cssText = 'margin-top:18px';
-  sec.innerHTML = `<div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:10px">📊 AI Prediction Performance</div><div id="adm-pred-stats"></div>`;
+  sec.innerHTML = `<div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:10px">📊 AI Prediction Performance</div><div id="adm-pred-stats"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="if(confirm('Xóa toàn bộ cache dự đoán chưa có kết quả?')){const s=_loadPredStore();Object.keys(s).forEach(k=>{if(s[k].actual===null||s[k].actual===undefined)delete s[k]});_savePredStore(s);alert('Đã xóa predictions chưa kết thúc. App sẽ tính lại khi refresh.');}" style="background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer">🗑️ Xóa cache dự đoán chưa kết thúc</button>
+      <button onclick="if(confirm('Xóa TẤT CẢ lịch sử dự đoán?')){localStorage.removeItem('wc2026_predictions');alert('Đã xóa toàn bộ.');}" style="background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer">🗑️ Xóa tất cả lịch sử</button>
+    </div>`;
   adminDash.appendChild(sec);
 })();
 
