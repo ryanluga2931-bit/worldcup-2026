@@ -2355,17 +2355,17 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
       </div>
     </div>
     <div class="mkt-lazy" data-home="${homeN.replace(/"/g,'&quot;')}" data-away="${awayN.replace(/"/g,'&quot;')}" data-hw="${p.hW}" data-aw="${p.aW}"></div>
-    <div class="conf-badge ${p.confidence}">🧠 ${p.confLabel}${(()=>{ const acc=getPredictionAccuracy(); return acc&&acc.total>=3?` · <span style="color:${acc.pct>=60?'#4ade80':acc.pct>=40?'#fbbf24':'#f87171'}">📊 ${acc.pct}% đúng (${acc.correct}/${acc.total})</span>`:''; })()}</div>
+    ${(()=>{ const acc=getPredictionAccuracy(); return `<div class="conf-badge ${p.confidence}">🧠 ${p.confLabel}${acc&&acc.total>=3?` · <span style="color:${acc.pct>=60?'#4ade80':acc.pct>=40?'#fbbf24':'#f87171'}">📊 ${acc.pct}% đúng (${acc.correct}/${acc.total})</span>`:''}</div>`; })()}
     ${upsetHTML}
     <div class="ai-comment">${aiComment(homeN, awayN, p, live, homeScore, awayScore)}</div>
     ${(()=>{
+      const acc = getPredictionAccuracy();
       const rec = getPredictionRecord(mid);
       if(!rec || !rec.actual) return '';
       const icon = {exact:'🎯',close:'✅',winner:'☑️',wrong:'❌'}[rec.accuracy]||'?';
       const color = {exact:'#c4b5fd',close:'#4ade80',winner:'#64748b',wrong:'#fca5a5'}[rec.accuracy]||'#94a3b8';
       const bgColor = {exact:'rgba(196,181,253,0.07)',close:'rgba(74,222,128,0.06)',winner:'rgba(148,163,184,0.05)',wrong:'rgba(252,165,165,0.07)'}[rec.accuracy]||'rgba(255,255,255,0.03)';
       const borderColor = {exact:'rgba(196,181,253,0.3)',close:'rgba(74,222,128,0.25)',winner:'rgba(100,116,139,0.2)',wrong:'rgba(252,165,165,0.3)'}[rec.accuracy]||'var(--border)';
-      const acc = getPredictionAccuracy();
       const learnNote = acc && acc.total >= 5 ? (
         acc.pct < 40 ? `⚠️ AI đang học — draw rate cao hơn dự kiến ở WC2026 (${acc.drawTotal||0}/${acc.total} hòa).`
         : acc.pct >= 65 ? `📈 Model đang cải thiện tốt (${acc.pct}% chính xác).`
@@ -2742,11 +2742,15 @@ async function loadScores() {
     const doneN=events.filter(e=>DONE_STATUSES.includes(e.competitions?.[0]?.status?.type?.name)).length;
     const nsN=events.filter(e=>e.competitions?.[0]?.status?.type?.name==='STATUS_SCHEDULED').length;
     const msb=document.getElementById('matchStatsBar');
-    if(msb&&events.length>0){
-      msb.style.display='flex';
-      document.getElementById('msbLive').textContent=liveN;
-      document.getElementById('msbDone').textContent=doneN;
-      document.getElementById('msbNs').textContent=nsN;
+    if(msb){
+      if(events.length>0){
+        msb.style.display='flex';
+        document.getElementById('msbLive').textContent=liveN;
+        document.getElementById('msbDone').textContent=doneN;
+        document.getElementById('msbNs').textContent=nsN;
+      } else {
+        msb.style.display='none';
+      }
     }
     const hasLive=liveN>0;
     _nextInterval = scoreChanged ? 5 : hasLive ? 10 : 60;
