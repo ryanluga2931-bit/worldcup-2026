@@ -2068,6 +2068,34 @@ function quickVerdictHTML(homeN, awayN, p, o) {
   return `<div class="quick-verdict">${verdict}</div>`;
 }
 
+// ── SHARE MATCH ──
+function shareMatch(homeN, awayN, homeScore, awayScore, predH, predA, accuracy) {
+  const APP_URL = 'https://ryanluga2931-bit.github.io/worldcup-2026/';
+  const hF = flag(homeN), aF = flag(awayN);
+  const hS = homeN.split(' ').pop(), aS = awayN.split(' ').pop();
+  let text;
+  if(homeScore !== '' && awayScore !== '') {
+    // Finished match
+    const accIcon = {exact:'🎯',close:'✅',winner:'☑️',wrong:'❌'}[accuracy] || '🔮';
+    text = `⚽ ${hF} ${hS} ${homeScore}–${awayScore} ${aS} ${aF}\n🏆 FIFA World Cup 2026\n\n🧠 AI dự: ${predH}-${predA} ${accIcon}\n📊 Xem dự đoán: ${APP_URL}`;
+  } else {
+    // Upcoming
+    const winner = predH > predA ? hS : predA > predH ? aS : 'Hòa';
+    text = `🔮 AI dự đoán WC2026\n${hF} ${hS} vs ${aS} ${aF}\n⚽ Tỷ số: ${predH}-${predA} · ${winner} thắng\n📊 ${APP_URL}`;
+  }
+  if(navigator.share) {
+    navigator.share({ title: `⚽ WC2026 · ${hS} vs ${aS}`, text, url: APP_URL }).catch(()=>{});
+  } else {
+    navigator.clipboard?.writeText(text).then(()=>{
+      const t=document.createElement('div');
+      t.textContent='✅ Đã copy! Dán vào Zalo/FB';
+      Object.assign(t.style,{position:'fixed',bottom:'90px',left:'50%',transform:'translateX(-50%)',background:'#22c55e',color:'#000',padding:'8px 18px',borderRadius:'100px',fontWeight:'800',fontSize:'13px',zIndex:'9999'});
+      document.body.appendChild(t);
+      setTimeout(()=>t.remove(),2500);
+    });
+  }
+}
+
 // ── POST-MATCH RESULT BANNER ──
 function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p, mid) {
   const hS = parseInt(homeScore)||0, aS = parseInt(awayScore)||0;
@@ -2164,8 +2192,10 @@ function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p, mid) {
     return `<span class="rv-note wrong">❌ AI sai (dự ${predH}-${predA})</span>`;
   })();
 
+  const rec2 = mid ? getPredictionRecord(mid) : null;
+  const shareBtn = `<button onclick="shareMatch('${homeN.replace(/'/g,"\\'")}','${awayN.replace(/'/g,"\\'")}','${hS}','${aS}','${rec2?.predicted?.home??p.pHome}','${rec2?.predicted?.away??p.pAway}','${rec2?.accuracy||''}')" style="margin-left:8px;background:none;border:1px solid rgba(255,255,255,0.15);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='rgba(255,255,255,0.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'">📤 Chia sẻ</button>`;
   return `<div class="result-banner">
-    <div class="result-verdict">${badge}${aiNote}</div>
+    <div class="result-verdict">${badge}${aiNote}${shareBtn}</div>
     ${scorersHTML}
   </div>`;
 }
@@ -3037,6 +3067,8 @@ function updateTicker(events) {
   }
   // Always 2x so CSS translateX(-50%) animation loops correctly
   el.innerHTML = items + items;
+  // Dynamic speed: ~4s per live match item, min 10s max 60s
+  el.style.animationDuration = Math.min(60, Math.max(10, live.length * 4)) + 's';
 }
 
 // ── LOAD PAST RESULTS (days -2 to -14, run once to fill results tab with older matches) ──
@@ -3266,18 +3298,22 @@ fetchMarketOdds().then(()=>showAdminSettings()); // load real bookmaker odds if 
 setInterval(()=>{ if(localStorage.getItem(ODDS_API_KEY_LS)) fetchMarketOdds(); }, 2*60*60*1000); // refresh every 2h
 
 // ── ADMIN ──
-const ADMIN_PW = 'wc2026';
+// Password stored as SHA-256 hash — plaintext không nằm trong source
+const ADMIN_HASH = '1a8837466e2762afd8d407d67cab479239f1380ef44bd6ae0c887fbcaff8f20f';
 const ADMIN_KEY = 'adm_auth';
+const ADMIN_EXPIRY_MS = 2 * 60 * 60 * 1000; // 2 giờ tự logout
 let _adminTimerInterval = null;
 let _adminSessionStart = Date.now();
 
-function adminLogin() {
+async function adminLogin() {
   const val = document.getElementById('admin-pw-input').value;
-  if(val !== ADMIN_PW) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(val));
+  const hash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  if(hash !== ADMIN_HASH) {
     document.getElementById('admin-pw-err').style.display = 'block';
     return;
   }
-  sessionStorage.setItem(ADMIN_KEY, '1');
+  sessionStorage.setItem(ADMIN_KEY, Date.now().toString());
   showAdminDashboard();
 }
 
@@ -3302,6 +3338,8 @@ function showAdminDashboard() {
     const m = Math.floor(s / 60), sec = s % 60;
     const el = document.getElementById('adm-time');
     if(el) el.textContent = m + ':' + String(sec).padStart(2,'0');
+    // Auto-logout after 2 hours
+    if(Date.now() - _adminSessionStart > ADMIN_EXPIRY_MS) adminLogout();
   }, 1000);
 }
 
