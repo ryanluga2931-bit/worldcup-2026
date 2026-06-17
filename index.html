@@ -2387,18 +2387,23 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
     <div class="pred-score">
       <div class="pred-lbl">⚽ Dự đoán tỷ số</div>
       <div class="pred-nums">${p.pHome} – ${p.pAway}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5">
-        xG: <strong>${p.hXG}</strong> vs <strong>${p.aXG}</strong> &nbsp;·&nbsp;
-        ELO: <strong>${p.eloDiff > 0 ? '+' : ''}${p.eloDiff}</strong> &nbsp;·&nbsp;
-        Hòa: <strong>${p.dr}%</strong>
-        ${parseFloat(p.hXG) > 0.7 && parseFloat(p.aXG) > 0.7 && p.dr > 20
-          ? `<br>⚠️ xG hai bên gần nhau + xác suất hòa cao → tỷ số sít sao, ưu tiên Xỉu/Hòa`
-          : parseFloat(p.hXG) - parseFloat(p.aXG) > 1.0
-          ? `<br>💡 xG lệch lớn (${(parseFloat(p.hXG)-parseFloat(p.aXG)).toFixed(1)}) → ${homeN.split(' ').pop()} tấn công áp đảo`
-          : parseFloat(p.aXG) - parseFloat(p.hXG) > 1.0
-          ? `<br>💡 xG lệch lớn (${(parseFloat(p.aXG)-parseFloat(p.hXG)).toFixed(1)}) → ${awayN.split(' ').pop()} nguy hiểm hơn`
-          : ''}
-      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6">${(()=>{
+        const hxg=parseFloat(p.hXG), axg=parseFloat(p.aXG), diff=hxg-axg;
+        const hN=homeN.split(' ').pop(), aN=awayN.split(' ').pop();
+        const lines=[];
+        // Sức mạnh tổng thể
+        if(p.eloDiff>200) lines.push(`⚡ <strong>${hxg>axg?hN:aN}</strong> mạnh hơn hẳn trên bảng xếp hạng FIFA`);
+        else if(p.eloDiff>80) lines.push(`📊 <strong>${hxg>axg?hN:aN}</strong> nhỉnh hơn về trình độ`);
+        else lines.push(`⚖️ Hai đội ngang tầm nhau`);
+        // Cơ hội ghi bàn
+        if(Math.abs(diff)>1.0) lines.push(`⚽ <strong>${diff>0?hN:aN}</strong> tạo ra nhiều cơ hội nguy hiểm hơn (${diff>0?hxg:axg} vs ${diff>0?axg:hxg})`);
+        else lines.push(`🎯 Số cơ hội ghi bàn hai bên khá đều nhau`);
+        // Lý do tỷ số cụ thể
+        if(p.pHome===p.pAway && p.dr>20) lines.push(`🤝 Xác suất hòa cao (${p.dr}%) — AI thiên về kịch bản cầm hòa`);
+        else if(p.pHome>p.pAway) lines.push(`✅ Dự đoán <strong>${hN}</strong> thắng ${p.pHome}-${p.pAway}`);
+        else lines.push(`✅ Dự đoán <strong>${aN}</strong> thắng ${p.pHome}-${p.pAway}`);
+        return lines.join('<br>');
+      })()}</div>
     </div>
     <div class="sl-section">
       <div class="sl-title">📊 Top tỷ số có thể xảy ra</div>
