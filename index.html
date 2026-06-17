@@ -1427,7 +1427,7 @@ function aiComment(homeN, awayN, p, live=false, hs='', as_='') {
 
   // ── Default: moderate advantage ──
   return pick([
-    `${wShort} nhỉnh hơn với <strong>${p.hW > p.aW ? p.hW : p.aW}%</strong> win rate và xG ${wXG} — ưu thế rõ nhưng chưa áp đảo. ${wFmLbl} là tín hiệu tốt. Kèo chấp ${p.hW > p.aW ? '0/0.5' : '0/0.5'} hợp lý.`,
+    `${wShort} nhỉnh hơn với <strong>${p.hW > p.aW ? p.hW : p.aW}%</strong> win rate và xG ${wXG} — ưu thế rõ nhưng chưa áp đảo. ${wFmLbl} là tín hiệu tốt. Dự đoán ${p.pHome}-${p.pAway} hợp lý.`,
     `ELO chênh lệch ${p.eloDiff} điểm — đủ để ${wShort} là favorit nhưng không phải "mồi ngon". ${lShort} đang ${lFmLbl} và hoàn toàn có thể cầm hòa nếu phòng thủ tốt. Dự đoán ${p.pHome}-${p.pAway}.`,
     `Mô hình: ${wShort} ${p.hW > p.aW ? p.hW : p.aW}% · Hòa ${p.dr}% · ${lShort} ${p.hW > p.aW ? p.aW : p.hW}%. Trận này phụ thuộc nhiều vào phong độ cá nhân của ${p.hW>p.aW?h1:a1} — khi ngôi sao nổ, mọi tính toán đều thay đổi.`,
     `${wFmLbl === 'phong độ ổn định' ? wShort+' vào trận với sự ổn định đáng tin' : wShort+' '+wFmLbl}. Còn ${lShort} ${lFmLbl}. xG ${p.hXG}-${p.aXG} dự báo trận đấu có bàn thắng ở cả hai phía — BTTS ${p.btts}% đáng chú ý.`,
@@ -1664,8 +1664,10 @@ function calcAsianOdds(homeN, awayN, p) {
     const fc=pW3+(pW2-pW3)*0.5; favHK=ahHK(fc); undHK=ahHK(1-fc);
   } else if(hcLabel==='1.5') {
     favHK=ahHK(pW2); undHK=ahHK(1-pW2);
-  } else { // 1.5/2: wins by 3+ = full, wins by 2 = half
+  } else if(hcLabel==='1.5/2') { // wins by 3+ = full, wins by 2 = half
     const fc=pW3+(pW2-pW3)*0.5; favHK=ahHK(fc); undHK=ahHK(1-fc);
+  } else { // '2': push on 2-goal win, full win on 3+
+    const fc=pW3; favHK=ahHK(fc); undHK=ahHK(1-fc);
   }
 
   const hAH = (homeFav ? favHK : undHK).toFixed(2);
@@ -1731,7 +1733,7 @@ function oddsTableHTMLFromObj(homeN, awayN, p, o) {
   return `<div class="odds-table">
     <!-- Row 1: Kèo chấp — inline team · odds · (line) · odds · team (kqbd.mobi style) -->
     <div class="odds-hc-row">
-      <span class="odds-hc-lbl">Chấp</span>
+      <span class="odds-hc-lbl">Kèo thị trường</span>
       <div class="odds-hc-inner">
         <span class="odds-hc-team giver">${giverName}</span>
         <span class="odds-hc-num${giverFav?' fav':''}">${giverOdds}</span>
@@ -2058,6 +2060,9 @@ function quickVerdictHTML(homeN, awayN, p, o) {
   const pick = arr => arr[seed % arr.length];
   const diff = Math.abs(p.hW - p.aW);
   const ouLabel = parseFloat(o.tOdds||'2') < parseFloat(o.xOdds||'2') ? `Tài ${o.ouLine}` : `Xỉu ${o.ouLine}`;
+  // Score-derived kèo label for verdict text — must match predicted score, not ELO market line
+  const _sd = p.pHome - p.pAway;
+  const _scoreKeo = _sd === 0 ? 'Kèo 0' : _sd === 1 ? 'Kèo -0.5/1' : _sd === -1 ? 'Kèo +0.5/1' : _sd >= 2 ? 'Kèo -1.5' : 'Kèo +1.5';
 
   let verdict;
   if(p.isUpset) {
@@ -2076,7 +2081,7 @@ function quickVerdictHTML(homeN, awayN, p, o) {
     verdict = pick([
       `✅ <strong>${wShort}</strong> áp đảo trên bảng số — ${p.hW > p.aW ? p.hW : p.aW}% win rate, xG ${p.hW >= p.aW ? p.hXG : p.aXG}, ELO +${p.eloDiff}. Nếu <strong>${wStar}</strong> vào phong độ tốt, đây là trận thắng cần thiết để mở màn.`,
       `🏆 <strong>${wShort}</strong> mạnh hơn toàn diện — không cần bàn luận nhiều. <strong>${wStar}</strong> và <strong>${p.hW >= p.aW ? h2 : a2}</strong> là cặp đôi nguy hiểm nhất trận. Dự đoán ${p.pHome}-${p.pAway}.`,
-      `💪 <strong>${wShort}</strong> trong ${wFmLbl} — đây là lúc để khẳng định đẳng cấp. ${lShort} cần phép màu. Kèo chấp ${o.hcDisplay} hoàn toàn phù hợp với thực lực.`,
+      `💪 <strong>${wShort}</strong> trong ${wFmLbl} — đây là lúc để khẳng định đẳng cấp. ${lShort} cần phép màu. AI chọn ${_scoreKeo} — phù hợp với thực lực.`,
     ]);
   } else if(p.over25 > 68) {
     verdict = pick([
@@ -2091,12 +2096,12 @@ function quickVerdictHTML(homeN, awayN, p, o) {
     ]);
   } else if(p.confidence === 'high') {
     verdict = pick([
-      `✅ Độ tin cao — <strong>${wShort}</strong> vượt trội và ổn định (${wFmLbl}). <strong>${wStar}</strong> là chìa khóa mở khoá hàng thủ ${lShort}. Kèo ${o.hcDisplay} phản ánh đúng thực lực.`,
+      `✅ Độ tin cao — <strong>${wShort}</strong> vượt trội và ổn định (${wFmLbl}). <strong>${wStar}</strong> là chìa khóa mở khoá hàng thủ ${lShort}. AI dự đoán ${_scoreKeo} — phản ánh đúng thực lực.`,
       `📌 <strong>${wShort}</strong> là lựa chọn an toàn nhất hôm nay: ELO cao hơn, form tốt hơn, xG ${p.hW>=p.aW?p.hXG:p.aXG} vs ${p.hW>=p.aW?p.aXG:p.hXG}. Dự đoán ${p.pHome}-${p.pAway} với độ tin cao.`,
     ]);
   } else {
     verdict = pick([
-      `📊 <strong>${wShort}</strong> nhỉnh hơn nhưng chưa áp đảo (${diff}% cách biệt). <strong>${wStar}</strong> cần vào phong độ tốt. Kèo ${o.hcDisplay} hợp lý — ${lShort} ${lFmLbl}, đừng coi thường.`,
+      `📊 <strong>${wShort}</strong> nhỉnh hơn nhưng chưa áp đảo (${diff}% cách biệt). <strong>${wStar}</strong> cần vào phong độ tốt. AI chọn ${_scoreKeo} — ${lShort} ${lFmLbl}, đừng coi thường.`,
       `🔍 Mô hình: <strong>${wShort}</strong> ${p.hW>p.aW?p.hW:p.aW}% · Hòa ${p.dr}% · <strong>${lShort}</strong> ${p.hW>p.aW?p.aW:p.hW}%. Trận cân sức — <strong>${wStar}</strong> và <strong>${lStar}</strong> là hai nhân tố quyết định. Theo dõi hiệp 1.`,
       `⚡ <strong>${wShort}</strong> nhỉnh hơn về ELO (+${p.eloDiff}) và đang ${wFmLbl}. Tuy nhiên ${lShort} ${lFmLbl} — đừng bỏ qua khả năng bất ngờ. Phân tích: Tài/Xỉu ${ouLabel} có giá trị hơn cửa 1x2.`,
     ]);
