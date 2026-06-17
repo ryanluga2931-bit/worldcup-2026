@@ -1935,6 +1935,28 @@ const KEY_PLAYERS = {
   'South Korea':['Son Heung-min','L. Kang-in'],'Switzerland':['G. Xhaka','X. Shaqiri'],
   'Australia':['M. Leckie','A. Redmayne'],'Serbia':['A. Mitrović','D. Vlahović'],
   'Iran':['S. Azmoun','M. Taremi'],'Saudi Arabia':['S. Al-Dawsari','F. Al-Bulayhi'],
+  'DR Congo':['S. Bolasie','M. Bakambu'],'Congo DR':['S. Bolasie','M. Bakambu'],
+  'Ivory Coast':['S. Aurier','W. Zaha'],'Cameroon':['V. Aboubakar','A. Onana'],
+  'Ghana':['T. Partey','J. Ayew'],'Nigeria':['V. Osimhen','A. Iheanacho'],
+  'Algeria':['R. Mahrez','I. Slimani'],'Egypt':['M. Salah','K. Elneny'],
+  'Tunisia':['H. Msakni','Y. Msakni'],'Mali':['M. Diallo','H. Traoré'],
+  'Panama':['R. Torres','A. Murillo'],'Honduras':['A. Mejía','R. Quioto'],
+  'Costa Rica':['B. Ruiz','J. Venegas'],'Jamaica':['M. Antonio','D. Jackson'],
+  'Venezuela':['S. Soteldo','J. Arango'],'Bolivia':['M. Moreno','C. Coimbra'],
+  'Chile':['E. Vargas','A. Vidal'],'Peru':['P. Guerrero','C. Cueva'],
+  'Paraguay':['M. Almiron','J. Benítez'],'Qatar':['A. Afif','A. Ali'],
+  'Jordan':['Y. Al-Naimat','M. Al-Rashdan'],'Uzbekistan':['O. Shomurodov','J. Jaloliddinov'],
+  'New Zealand':['C. Wood','T. Payne'],'Australia':['M. Leckie','M. Goodwin'],
+  'Iraq':['A. Al-Rashid','M. Daoud'],'Kuwait':['B. Al-Rashidi','Y. Al-Moutairi'],
+  'Bahrain':['A. Al-Aswad','H. Al-Hayki'],'Oman':['B. Al-Mandhar','A. Al-Ghassani'],
+  'Czech Republic':['T. Souček','P. Schick'],'Czechia':['T. Souček','P. Schick'],
+  'Slovakia':['M. Duda','M. Hamšík'],'Hungary':['D. Szoboszlai','A. Sallai'],
+  'Romania':['N. Stanciu','G. Ianis'],'Bosnia-Herzegovina':['E. Džeko','M. Pjanić'],
+  'Bosnia and Herzegovina':['E. Džeko','M. Pjanić'],'Albania':['A. Broja','R. Jakupović'],
+  'Austria':['M. Sabitzer','D. Laimer'],'Scotland':['A. Robertson','K. Tierney'],
+  'Norway':['E. Haaland','M. Ødegaard'],'Finland':['T. Pukki','G. Taylor'],
+  'Wales':['G. Bale','A. Ramsey'],'Ireland':['S. Collins','E. Ogbene'],
+  'Slovenia':['J. Oblak','B. Šeško'],'Georgia':['K. Kvaratskhelia','G. Mamardashvili'],
 };
 function getKeyPlayer(name, idx=0) {
   const p = KEY_PLAYERS[name];
@@ -2079,11 +2101,20 @@ function quickVerdictHTML(homeN, awayN, p, o) {
       `🎲 Đây là trận AI "không dám chắc" — ${wShort} ${p.hW > p.aW ? p.hW : p.aW}% không đủ áp đảo. Cú phạt đền, thẻ đỏ hay sai lầm thủ môn là thứ quyết định ở những trận như vậy.`,
     ]);
   } else if(!winner) {
-    verdict = pick([
-      `⚖️ Cân bằng tuyệt đối — <strong>${hShort}</strong> và <strong>${aShort}</strong> chia đều mọi chỉ số. Kịch bản hòa ${p.dr}% không phải ngẫu nhiên. <strong>${h1}</strong> vs <strong>${a1}</strong> sẽ là trận đấu trong trận đấu.`,
-      `🤝 AI không dám đặt cửa nào trong trận này — ${p.hW}% vs ${p.aW}% là sự cân bằng hiếm thấy. Over/Under ${ouLabel} là lựa chọn thông minh hơn khi kết quả quá khó đoán.`,
-      `📊 Khi ELO ngang nhau và form tương đồng, bàn thắng đầu tiên sẽ quyết định tất cả. <strong>${h1}</strong> và <strong>${a1}</strong> — ai ghi trước sẽ thắng tâm lý.`,
-    ]);
+    if(p.eloDiff > 150) {
+      // Strong favorite predicted to draw — underdog holding on
+      verdict = pick([
+        `🛡️ <strong>${lShort}</strong> phòng thủ kiên cường — dù ${wShort} mạnh hơn rõ ràng, AI dự đoán ${lShort} cầm hòa được. Xác suất hòa ${p.dr}% không nhỏ. <strong>${lStar}</strong> là chìa khóa.`,
+        `⚔️ <strong>${wShort}</strong> áp đảo về đẳng cấp nhưng không dễ phá vỡ hàng thủ của ${lShort}. Kịch bản 1-1 hoặc 0-0 là hoàn toàn có thể. Xem <strong>${wStar}</strong> có bứt phá được không.`,
+        `🤝 Dù ${wShort} nhỉnh hơn, AI thấy ${lShort} đủ sức cầm hòa hôm nay. Kèo chấp là lựa chọn — <strong>${lShort} +${o.hcLabel||'0.5'}</strong> an toàn hơn.`,
+      ]);
+    } else {
+      verdict = pick([
+        `⚖️ Hai đội ngang tầm — <strong>${hShort}</strong> và <strong>${aShort}</strong> không có cách biệt rõ rệt. Kịch bản hòa ${p.dr}% không phải ngẫu nhiên. <strong>${h1}</strong> vs <strong>${a1}</strong> sẽ là điểm nhấn.`,
+        `🤝 AI không dám đặt cửa nào trong trận này — ${p.hW}% vs ${p.aW}% là sự cân bằng hiếm thấy. Over/Under ${ouLabel} là lựa chọn thông minh hơn khi kết quả quá khó đoán.`,
+        `📊 Hai đội ngang nhau về trình độ và phong độ — bàn thắng đầu tiên sẽ quyết định tất cả. <strong>${h1}</strong> và <strong>${a1}</strong> — ai ghi trước sẽ thắng tâm lý.`,
+      ]);
+    }
   } else if(diff > 35) {
     verdict = pick([
       `✅ <strong>${wShort}</strong> áp đảo trên bảng số — ${p.hW > p.aW ? p.hW : p.aW}% win rate, xG ${p.hW >= p.aW ? p.hXG : p.aXG}, ELO +${p.eloDiff}. Nếu <strong>${wStar}</strong> vào phong độ tốt, đây là trận thắng cần thiết để mở màn.`,
