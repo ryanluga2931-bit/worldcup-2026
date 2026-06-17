@@ -1800,10 +1800,18 @@ function startRefreshCountdown(secs){
 }
 
 // ── STATUS BADGE ──
+function fmtClock(raw){
+  if(!raw) return '';
+  const parts=raw.split(':');
+  const mins=parseInt(parts[0]||0), secs=parseInt(parts[1]||0);
+  if(mins>=120) return `120'+${mins-120}`;
+  if(mins>=90) return secs>0 ? `90'+${mins-90+1}` : `90'+${mins-90}`;
+  return `${mins}:${String(secs).padStart(2,'0')}`;
+}
 function statusBadge(status, mid, urgent=false){
   if(!status) return '';
   const s=status.type?.name||'';
-  const min=status.displayClock||'';
+  const min=fmtClock(status.displayClock||'');
   const u = urgent ? ' urgent' : '';
   if(['STATUS_FIRST_HALF','STATUS_SECOND_HALF','STATUS_IN_PROGRESS'].includes(s)) return `<span class="badge live${u}">🔴 <span id="clk_${mid}">${min}</span></span>`;
   if(s==='STATUS_HALFTIME') return `<span class="badge ht">⏸ <span id="clk_${mid}">HT</span></span>`;
@@ -3017,8 +3025,8 @@ function renderMatchCard(event) {
   // Watchability score
   const ws = watchabilityScore(homeN, awayN, stageTier, intensity, live, homeScore, awayScore);
   const wsClass = ws>=8.5?'hot':ws>=7?'warm':'cool';
-  const wsIcon = ws>=8.5?'🔥':ws>=7?'⭐':'📺';
-  const wsChip = !finished ? `<span class="ws-chip ${wsClass}">${wsIcon} ${ws}</span>` : '';
+  const wsLabel = ws>=8.5?'🔥 Đỉnh':ws>=7?'⭐ Hay':'📺 Xem';
+  const wsChip = !finished ? `<span class="ws-chip ${wsClass}" title="Độ hấp dẫn ${ws}/10">${wsLabel}</span>` : '';
   // Commentary pool for live rotation (stored as JSON in data-lines attr)
   const commentLines = live ? [
     liveInsight(homeN,awayN,p,homeScore,awayScore,comp.status?.displayClock||'',sName),
