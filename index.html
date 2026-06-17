@@ -1149,15 +1149,16 @@ function marketOddsHTML(homeN, awayN, p) {
     const dir = bigDiff > 0 ? 'cao' : 'thấp';
     valueLine = `<div class="mkt-value">💡 AI thấy ${bigTeam} ${Math.abs(Math.round(bigDiff))}% ${dir} hơn thị trường${bigDiff > 0 ? ' → Có thể là kèo value!' : ''}</div>`;
   }
-  // Handicap line → VN quarter format: 0.75→"½-1", 1.25→"1-1½", 1.0→"1", 0.5→"½"
+  // Handicap line → VN format: 0.5→"0.5", 1.5→"1.5" (decimal, không dùng ½ để tránh nhầm với quarter ball)
+  // Quarter ball dùng range: 0.75→"0.5-1", 1.25→"1-1.5", 1.75→"1.5-2"
   function fmtHdpLine(abs) {
     const whole = Math.floor(abs);
     const frac = Math.round((abs - whole) * 4);
     if(frac === 0) return whole === 0 ? '0' : String(whole);
-    if(frac === 2) return whole === 0 ? '½' : whole + '½';
+    if(frac === 2) return whole === 0 ? '0.5' : whole + '.5';
     // quarter ball = split line (VN shows as range)
-    if(frac === 1) return whole === 0 ? '0-½' : whole+'-'+whole+'½';
-    if(frac === 3) return whole+'½-'+(whole+1);
+    if(frac === 1) return whole === 0 ? '0-0.5' : whole+'-'+whole+'.5';
+    if(frac === 3) return whole+'.5-'+(whole+1);
     return String(abs);
   }
   // Decimal odds → Malay odds display (signed HK style like five88)
