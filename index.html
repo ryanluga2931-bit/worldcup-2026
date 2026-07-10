@@ -3721,6 +3721,8 @@ if(_heroEl) _heroObserver.observe(_heroEl);
 // ── INIT ──
 // Restore last visited tab
 (()=>{ const t=localStorage.getItem('wc_lastTab'); if(t&&t!=='live') switchTab(t); })();
+// Count visit once per browser session (abacus counter — countapi.xyz is dead)
+(()=>{ try{ if(!sessionStorage.getItem('wc_visited')){ sessionStorage.setItem('wc_visited','1'); fetch('https://abacus.jasoncameron.dev/hit/worldcup2026-ryanluga/visits').catch(()=>{}); } }catch(e){} })();
 loadSchedule();
 loadScores().then(()=>setTimeout(loadPastResults, 3000)); // stagger past results to avoid 23 concurrent ESPN fetches
 fetchMarketOdds().then(()=>showAdminSettings()); // load real bookmaker odds if API key is saved
@@ -3775,7 +3777,7 @@ function showAdminDashboard() {
 async function loadAdminData() {
   // Visit counter — read current value (GET, not hit, to avoid double counting)
   try {
-    const r = await fetch('https://api.countapi.xyz/get/worldcup2026-ryanluga/visits');
+    const r = await fetch('https://abacus.jasoncameron.dev/get/worldcup2026-ryanluga/visits');
     const d = await r.json();
     const el = document.getElementById('adm-total');
     if(el) el.textContent = (d.value != null ? d.value : 0).toLocaleString('vi-VN');
