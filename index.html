@@ -640,6 +640,7 @@ main{-webkit-overflow-scrolling:touch}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 }
+.ic{width:1em;height:1em;display:inline-block;vertical-align:-0.14em;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -677,8 +678,8 @@ main{-webkit-overflow-scrolling:touch}
 <div class="tab-bar">
   <div class="tab active" data-tab="schedule">📅 Lịch thi đấu</div>
   <div class="tab" data-tab="live">🔴 Live</div>
-  <div class="tab" data-tab="results">✅ Kết quả</div>
-  <div class="tab" data-tab="groups">🏆 Bảng xếp hạng</div>
+  <div class="tab" data-tab="results"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Kết quả</div>
+  <div class="tab" data-tab="groups"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> Bảng xếp hạng</div>
   <div class="tab" data-tab="stream">📺 Xem trực tiếp</div>
   <div class="tab" data-tab="admin">⚙️ Admin</div>
 </div>
@@ -721,8 +722,8 @@ main{-webkit-overflow-scrolling:touch}
     <div class="stream-sec-title">🟢 Miễn phí</div>
     <div class="stream-grid">
       <a href="https://vtvgo.vn" target="_blank" rel="noopener" class="stream-card"><span class="stream-icon">📡</span><span class="stream-name">VTV Go</span><span class="stream-tag">VTV3 · VTV2</span><span class="stream-free">MIỄN PHÍ</span></a>
-      <a href="https://vtv.vn/truyen-hinh-truc-tuyen/vtv3.htm" target="_blank" rel="noopener" class="stream-card"><span class="stream-icon">🎬</span><span class="stream-name">VTV3 Live</span><span class="stream-tag">Web</span><span class="stream-free">MIỄN PHÍ</span></a>
-      <a href="https://www.fifa.com/fifaplus" target="_blank" rel="noopener" class="stream-card"><span class="stream-icon">🏆</span><span class="stream-name">FIFA+</span><span class="stream-tag">Official</span><span class="stream-free">MIỄN PHÍ</span></a>
+      <a href="https://vtv.vn/truyen-hinh-truc-tuyen/vtv3.htm" target="_blank" rel="noopener" class="stream-card"><span class="stream-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16"/><path d="M17 4v16"/><path d="M3 9h4"/><path d="M17 9h4"/><path d="M3 15h4"/><path d="M17 15h4"/></svg></span><span class="stream-name">VTV3 Live</span><span class="stream-tag">Web</span><span class="stream-free">MIỄN PHÍ</span></a>
+      <a href="https://www.fifa.com/fifaplus" target="_blank" rel="noopener" class="stream-card"><span class="stream-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span><span class="stream-name">FIFA+</span><span class="stream-tag">Official</span><span class="stream-free">MIỄN PHÍ</span></a>
     </div>
     <div class="stream-sec-title">💎 Premium</div>
     <div class="stream-grid">
@@ -734,7 +735,7 @@ main{-webkit-overflow-scrolling:touch}
     <div class="stream-grid">
       <a href="https://www.foxsports.com/soccer/fifa-world-cup" target="_blank" rel="noopener" class="stream-card"><span class="stream-icon">🦊</span><span class="stream-name">FOX Sports</span><span class="stream-tag">EN · USA</span><span style="font-size:10px;color:var(--muted)">VPN cần</span></a>
       <a href="https://www.bbc.co.uk/sport/football/world-cup" target="_blank" rel="noopener" class="stream-card"><span class="stream-icon">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span class="stream-name">BBC Sport</span><span class="stream-tag">EN · UK</span><span style="font-size:10px;color:var(--muted)">VPN cần</span></a>
-      <a href="https://www.espn.com/soccer" target="_blank" rel="noopener" class="stream-card"><span class="stream-icon">📊</span><span class="stream-name">ESPN</span><span class="stream-tag">Stats</span><span style="font-size:10px;color:var(--muted)">VPN cần</span></a>
+      <a href="https://www.espn.com/soccer" target="_blank" rel="noopener" class="stream-card"><span class="stream-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg></span><span class="stream-name">ESPN</span><span class="stream-tag">Stats</span><span style="font-size:10px;color:var(--muted)">VPN cần</span></a>
     </div>
     <div style="margin-top:16px;padding:13px 15px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.18);border-radius:var(--radius-sm);font-size:12px;color:#fcd34d">💡 <strong>Tip:</strong> Dùng VTV Go app trên iPhone/iPad để xem miễn phí chất lượng Full HD, không cần VPN.</div>
   </section>
@@ -802,8 +803,8 @@ main{-webkit-overflow-scrolling:touch}
   <div class="bottom-nav-inner">
     <div class="bnav-item active" data-tab="schedule"><span class="bnav-icon">📅</span>Lịch</div>
     <div class="bnav-item" data-tab="live"><span class="bnav-icon">🔴</span>Live</div>
-    <div class="bnav-item" data-tab="results"><span class="bnav-icon">✅</span>Kết quả</div>
-    <div class="bnav-item" data-tab="groups"><span class="bnav-icon">🏆</span>BXH</div>
+    <div class="bnav-item" data-tab="results"><span class="bnav-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>Kết quả</div>
+    <div class="bnav-item" data-tab="groups"><span class="bnav-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></span>BXH</div>
     <div class="bnav-item" data-tab="stream"><span class="bnav-icon">📺</span>Xem</div>
     <div class="bnav-item" data-tab="admin"><span class="bnav-icon">⚙️</span>Admin</div>
   </div>
@@ -1009,7 +1010,7 @@ function _postMatchAnalysis(rec, aH, aA, predW, realW) {
   const hXG = p.hXG || 0, aXG = p.aXG || 0;
 
   if(rec.accuracy === 'exact') {
-    return `🎯 Dự đoán CHÍNH XÁC ${p.home}-${p.away}! Mô hình dự báo bàn thắng và đẳng cấp đội phản ánh đúng thực lực hai đội.`;
+    return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Dự đoán CHÍNH XÁC ${p.home}-${p.away}! Mô hình dự báo bàn thắng và đẳng cấp đội phản ánh đúng thực lực hai đội.`;
   }
 
   const parts = [];
@@ -1100,7 +1101,7 @@ function getPredictionHistoryHTML() {
   const done = Object.values(s).filter(r=>r.actual!==null).slice(-10).reverse();
   if(!done.length) return '<div style="color:var(--muted);font-size:12px;padding:8px 0">Chưa có trận nào kết thúc để phân tích</div>';
   return done.map(r=>{
-    const icon = {exact:'🎯',close:'✅',winner:'☑️',near:'⚠️',wrong:'❌'}[r.accuracy]||'?';
+    const icon = {exact:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>',close:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>',winner:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11.5 14 16 8.5"/><rect x="3.5" y="3.5" width="17" height="17" rx="3"/></svg>',near:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg>',wrong:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>'}[r.accuracy]||'?';
     const hS=r.homeN.split(' ').pop(), aS=r.awayN.split(' ').pop();
     return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px">
       <span style="width:20px;text-align:center">${icon}</span>
@@ -1219,11 +1220,11 @@ function marketOddsHTML(homeN, awayN, p) {
   const key = localStorage.getItem(ODDS_API_KEY_LS)||'';
   if(!key) {
     return `<div class="mkt-odds mkt-nokey">
-      <div class="mkt-title">📊 Kèo thị trường</div>
+      <div class="mkt-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Kèo thị trường</div>
       <div class="mkt-nokey-msg">Chưa có API key · <a href="https://the-odds-api.com" target="_blank" style="color:#818cf8">Lấy key miễn phí</a> · Dán vào tab <strong>⚙️ Admin → Cài đặt</strong></div>
     </div>`;
   }
-  if(!m) return `<div class="mkt-odds mkt-nodata"><div class="mkt-title">📊 Kèo thị trường</div><div class="mkt-nokey-msg">Chưa có kèo cho trận này (trận đã kết thúc hoặc chưa mở kèo)</div></div>`;
+  if(!m) return `<div class="mkt-odds mkt-nodata"><div class="mkt-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Kèo thị trường</div><div class="mkt-nokey-msg">Chưa có kèo cho trận này (trận đã kết thúc hoặc chưa mở kèo)</div></div>`;
   const fmt = v => v ? v.toFixed(2) : '–';
   const imp = v => v ? Math.round(100/v)+'%' : '–';
   const hShort = homeN.split(' ').pop(), aShort = awayN.split(' ').pop();
@@ -1280,7 +1281,7 @@ function marketOddsHTML(homeN, awayN, p) {
     </div>`;
   }
   return `<div class="mkt-odds">
-    <div class="mkt-title">📊 Kèo thị trường · <span style="color:var(--muted)">${m.source}</span></div>
+    <div class="mkt-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Kèo thị trường · <span style="color:var(--muted)">${m.source}</span></div>
     <div class="mkt-1x2">
       <div class="mkt-cell"><div class="mkt-dec">${fmt(m.h)}</div><div class="mkt-imp">${imp(m.h)}</div><div class="mkt-team">🏠 ${hShort}</div></div>
       <div class="mkt-cell"><div class="mkt-dec">${fmt(m.d)}</div><div class="mkt-imp">${imp(m.d)}</div><div class="mkt-team">🤝 Hòa</div></div>
@@ -1303,19 +1304,19 @@ function calcKeyFactor(homeN, awayN, h, a, hFm, aFm, eloDiff, hXG, aXG) {
   const abs = Math.abs(eloDiff);
   if(abs > 200) {
     const stronger = eloDiff > 0 ? hShort : aShort;
-    return `⚡ Đẳng cấp chênh lệch lớn — ${stronger} vượt trội ${Math.round(abs)} ELO điểm`;
+    return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> Đẳng cấp chênh lệch lớn — ${stronger} vượt trội ${Math.round(abs)} ELO điểm`;
   }
-  if(hFm > 0.82) return `🔥 ${hShort} đang thăng hoa — phong độ xuất sắc gần đây`;
-  if(aFm > 0.82) return `🔥 ${aShort} đang thăng hoa — phong độ xuất sắc gần đây`;
+  if(hFm > 0.82) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> ${hShort} đang thăng hoa — phong độ xuất sắc gần đây`;
+  if(aFm > 0.82) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> ${aShort} đang thăng hoa — phong độ xuất sắc gần đây`;
   if(hXG - aXG > 0.85) return `⚽ ${hShort} tạo cơ hội áp đảo — xG cao hơn ${(hXG-aXG).toFixed(1)} goals`;
   if(aXG - hXG > 0.85) return `⚽ ${aShort} nguy hiểm hơn — xG cao hơn ${(aXG-hXG).toFixed(1)} goals`;
   if(h.d > 8.0 && a.a < 7.0) return `🛡 ${hShort} hàng thủ kiên cố — ${aShort} khó xuyên phá`;
   if(a.d > 8.0 && h.a < 7.0) return `🛡 ${aShort} hàng thủ kiên cố — ${hShort} khó xuyên phá`;
-  if(hFm < 0.25) return `⚠️ ${hShort} phong độ kém — đang sa sút nghiêm trọng`;
-  if(aFm < 0.25) return `⚠️ ${aShort} phong độ kém — đang sa sút nghiêm trọng`;
-  if(abs < 60) return `🎯 Trận đấu cân bằng — biến số cao, khó dự đoán`;
+  if(hFm < 0.25) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> ${hShort} phong độ kém — đang sa sút nghiêm trọng`;
+  if(aFm < 0.25) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> ${aShort} phong độ kém — đang sa sút nghiêm trọng`;
+  if(abs < 60) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Trận đấu cân bằng — biến số cao, khó dự đoán`;
   const edge = eloDiff > 0 ? hShort : aShort;
-  return `📊 ${edge} nhỉnh hơn về đẳng cấp (ELO +${Math.round(abs)}) — lợi thế nhỏ nhưng đủ`;
+  return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> ${edge} nhỉnh hơn về đẳng cấp (ELO +${Math.round(abs)}) — lợi thế nhỏ nhưng đủ`;
 }
 
 function predict(homeN, awayN, stageTier='group') {
@@ -1446,17 +1447,17 @@ function aiComment(homeN, awayN, p, live=false, hs='', as_='') {
     const hS=parseInt(hs)||0, aS=parseInt(as_)||0, tot=hS+aS;
     const predHome = p.pHome > p.pAway;
     if(hS > aS && !predHome && p.pAway > p.pHome) return `😱 <strong>BẤT NGỜ ĐANG XẢY RA!</strong> ${hShort} đang dẫn ${hs}-${as_} dù AI dự đoán ${aShort} thắng. Khoảng cách đẳng cấp đang bị xóa bỏ hoàn toàn!`;
-    if(aS > hS && predHome) return `🚨 <strong>${aShort} đang tạo cú sốc lịch sử!</strong> AI dự đoán ${hShort} thắng nhưng tỷ số nói điều ngược lại. Trận đấu hoàn toàn lật ngược!`;
-    if(tot>=4) return `⚡ ${hs}-${as_} — đây là trận đấu điên rồ nhất vòng này! AI dự báo tổng ${totalXG} bàn nhưng thực tế đang vượt xa. Ai ghi tiếp sẽ định đoạt.`;
-    if(tot>=2) return `🔥 Tỷ số ${hs}-${as_} đang diễn ra đúng kịch bản nhiều bàn. Còn 45+ phút, bàn thắng thứ ${tot+1} hoàn toàn trong tầm tay.`;
+    if(aS > hS && predHome) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f04444" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1 10 0"/><path d="M4 21h16"/><path d="M12 4V2"/><path d="m5 7-1-1"/><path d="m19 7 1-1"/></svg> <strong>${aShort} đang tạo cú sốc lịch sử!</strong> AI dự đoán ${hShort} thắng nhưng tỷ số nói điều ngược lại. Trận đấu hoàn toàn lật ngược!`;
+    if(tot>=4) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> ${hs}-${as_} — đây là trận đấu điên rồ nhất vòng này! AI dự báo tổng ${totalXG} bàn nhưng thực tế đang vượt xa. Ai ghi tiếp sẽ định đoạt.`;
+    if(tot>=2) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> Tỷ số ${hs}-${as_} đang diễn ra đúng kịch bản nhiều bàn. Còn 45+ phút, bàn thắng thứ ${tot+1} hoàn toàn trong tầm tay.`;
     if(tot===1) return `⏱ Bàn thắng đầu tiên đã đến (${hs}-${as_}). AI dự báo ${p.pHome}-${p.pAway} — ${winnerN ? wShort+' vẫn đang kiểm soát kịch bản' : 'mọi thứ vẫn còn mở'}.`;
     return `⏱ Tỷ số vẫn ${hs}-${as_} — đúng kịch bản "chậm nổ" mà AI dự báo. ${wShort} đang giữ thế trận, dự báo sẽ ghi ${wXG} bàn.`;
   }
 
   // ── Upset alert ──
   if(p.isUpset) return pick([
-    `🚨 <strong>Cảnh báo UPSET!</strong> ${lShort} có đến <strong>${p.aW >= p.hW ? p.aW : p.hW - (p.hW-p.aW)}%</strong> cơ hội gây sốc dù kém ELO ${p.eloDiff} điểm. Lịch sử World Cup đầy những "Cameroon 1990" hay "Nhật Bản 2022" — hãy cẩn thận với cửa dưới.`,
-    `⚠️ ${wShort} là favorite nhưng biên độ quá hẹp. ${lFmLbl === 'phong độ thiếu ổn định (hòa gần nhất)' ? lShort+' đang bất ổn' : lShort+' '+lFmLbl} có thể là yếu tố thay đổi cuộc chơi. Kèo chấp nên cân nhắc kỹ.`,
+    `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f04444" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1 10 0"/><path d="M4 21h16"/><path d="M12 4V2"/><path d="m5 7-1-1"/><path d="m19 7 1-1"/></svg> <strong>Cảnh báo UPSET!</strong> ${lShort} có đến <strong>${p.aW >= p.hW ? p.aW : p.hW - (p.hW-p.aW)}%</strong> cơ hội gây sốc dù kém ELO ${p.eloDiff} điểm. Lịch sử World Cup đầy những "Cameroon 1990" hay "Nhật Bản 2022" — hãy cẩn thận với cửa dưới.`,
+    `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> ${wShort} là favorite nhưng biên độ quá hẹp. ${lFmLbl === 'phong độ thiếu ổn định (hòa gần nhất)' ? lShort+' đang bất ổn' : lShort+' '+lFmLbl} có thể là yếu tố thay đổi cuộc chơi. Kèo chấp nên cân nhắc kỹ.`,
     `🎲 Mô hình cảnh báo rủi ro cao cho trận này. ${wShort} chỉ nhỉnh hơn ${diff}% — trong bóng đá, khoảng cách đó có thể bị xóa bỏ bởi một pha phạt đền hay một cú sút xa bất ngờ.`,
   ]);
 
@@ -1478,7 +1479,7 @@ function aiComment(homeN, awayN, p, live=false, hs='', as_='') {
 
   // ── High scoring ──
   if(p.over25 > 70) return pick([
-    `🔥 Đêm bàn thắng đang đến! Dự báo tổng ${totalXG} bàn, kèo Tài 2.5 chiếm <strong>${p.over25}%</strong> khả năng. Cả hai cùng ghi bàn ${p.btts}% — cả hai khung thành đều trong tầm ngắm. Đây là trận để tận hưởng.`,
+    `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> Đêm bàn thắng đang đến! Dự báo tổng ${totalXG} bàn, kèo Tài 2.5 chiếm <strong>${p.over25}%</strong> khả năng. Cả hai cùng ghi bàn ${p.btts}% — cả hai khung thành đều trong tầm ngắm. Đây là trận để tận hưởng.`,
     `Hai hàng công đang cực kỳ sắc bén: ${hShort} dự báo ghi ${p.hXG} bàn, ${aShort} dự báo ghi ${p.aXG} bàn. Mô hình tin <strong>Tài 2.5 bàn: ${p.over25}%</strong> — tức là trong 3 trận như vậy, 2 trận sẽ có ít nhất 3 bàn.`,
     `Cả hai cùng ghi bàn ${p.btts}% + Tài 2.5 (${p.over25}%) — combo hấp dẫn nhất hôm nay. ${wShort} sẽ tấn công, ${lShort} sẽ phản công, và khán giả sẽ được hưởng lợi. Kịch bản dự đoán: ${p.pHome}-${p.pAway}.`,
   ]);
@@ -1506,7 +1507,7 @@ function aiComment(homeN, awayN, p, live=false, hs='', as_='') {
 }
 
 // ── REACTIONS ──
-const REMOJIS = ['🔥','⚽','😱','👏','💔'];
+const REMOJIS = ['<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg>','⚽','😱','👏','💔'];
 function getRx(id){ return JSON.parse(localStorage.getItem('rx_'+id)||'[0,0,0,0,0]'); }
 function getMyRx(id){ const v=localStorage.getItem('mrx_'+id); return v===null?-1:parseInt(v); }
 function doReact(id,i){
@@ -1619,11 +1620,11 @@ function generateLiveCommentary(mid, homeN, awayN, p, comp, homeScore, awayScore
       {m:45,s:'STATUS_FIRST_HALF',t:'milestone45',txt:()=>`⏱ Sắp hết giờ hiệp 1 · ${hS}-${aS} · ${hShort} vs ${aShort}`},
       {m:0,s:'STATUS_HALFTIME',t:'milestoneHT',txt:()=>`⏸ Nghỉ giữa hiệp · ${hS}-${aS} · Chờ hiệp 2`},
       {m:60,s:'STATUS_SECOND_HALF',t:'milestone60',txt:()=>`⏱ 60' · ${hS===aS?'Hòa '+hS+'-'+aS:((hS>aS?hShort:aShort)+' đang dẫn '+hS+'-'+aS)}`},
-      {m:75,s:'STATUS_SECOND_HALF',t:'milestone75',txt:()=>`⚡ 75' · Còn 15 phút · ${hS===aS?'Vẫn hòa — kịch tính cao':((hS>aS?hShort:aShort)+' bảo vệ '+hS+'-'+aS)}`},
-      {m:85,s:'STATUS_SECOND_HALF',t:'milestone85',txt:()=>`🔥 85' · Giai đoạn quyết định! · ${hS}-${aS}`},
+      {m:75,s:'STATUS_SECOND_HALF',t:'milestone75',txt:()=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> 75' · Còn 15 phút · ${hS===aS?'Vẫn hòa — kịch tính cao':((hS>aS?hShort:aShort)+' bảo vệ '+hS+'-'+aS)}`},
+      {m:85,s:'STATUS_SECOND_HALF',t:'milestone85',txt:()=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> 85' · Giai đoạn quyết định! · ${hS}-${aS}`},
       {m:90,s:'STATUS_SECOND_HALF',t:'milestone90',txt:()=>`⏰ 90' · Bù giờ đang tới · ${hS}-${aS}`},
-      {m:0,s:'STATUS_EXTRA_TIME',t:'milestoneET',txt:()=>`⚡ HIỆP PHỤ! · ${hS}-${aS} · Ai ghi trước thắng cuộc`},
-      {m:0,s:'STATUS_SHOOTOUT',t:'milestonePK',txt:()=>`🎯 LOẠT LUÂN LƯU! · ${hShort} vs ${aShort} · Ai vào?`},
+      {m:0,s:'STATUS_EXTRA_TIME',t:'milestoneET',txt:()=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> HIỆP PHỤ! · ${hS}-${aS} · Ai ghi trước thắng cuộc`},
+      {m:0,s:'STATUS_SHOOTOUT',t:'milestonePK',txt:()=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> LOẠT LUÂN LƯU! · ${hShort} vs ${aShort} · Ai vào?`},
     ];
     if(!state.milestonesShown) state.milestonesShown = {};
     for(const ml of milestones) {
@@ -1645,10 +1646,10 @@ function generateLiveCommentary(mid, homeN, awayN, p, comp, homeScore, awayScore
     const hPoss = parseFloat(getStat(home,'possessionPct')||getStat(home,'possession'))||50;
     const aPoss = 100 - hPoss;
     if(hPoss >= 60) {
-      newLine = `📊 ${hShort} kiểm soát bóng ${Math.round(hPoss)}% · Đang áp đảo thế trận`;
+      newLine = `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> ${hShort} kiểm soát bóng ${Math.round(hPoss)}% · Đang áp đảo thế trận`;
       lineType = 'possession';
     } else if(aPoss >= 60) {
-      newLine = `📊 ${aShort} kiểm soát bóng ${Math.round(aPoss)}% · Đang áp đảo thế trận`;
+      newLine = `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> ${aShort} kiểm soát bóng ${Math.round(aPoss)}% · Đang áp đảo thế trận`;
       lineType = 'possession';
     }
   }
@@ -1659,10 +1660,10 @@ function generateLiveCommentary(mid, homeN, awayN, p, comp, homeScore, awayScore
     const aShots = parseInt(getStat(away,'totalShots'))||0;
     const prevHShots = state.lastHShots||0, prevAShots = state.lastAShots||0;
     if(hShots - prevHShots >= 3) {
-      newLine = `🎯 ${hShort} đang sút dồn dập · ${hShots} cú tổng cộng`;
+      newLine = `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> ${hShort} đang sút dồn dập · ${hShots} cú tổng cộng`;
       lineType = 'shots';
     } else if(aShots - prevAShots >= 3) {
-      newLine = `🎯 ${aShort} đang sút dồn dập · ${aShots} cú tổng cộng`;
+      newLine = `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> ${aShort} đang sút dồn dập · ${aShots} cú tổng cộng`;
       lineType = 'shots';
     }
     state.lastHShots = hShots;
@@ -1674,9 +1675,9 @@ function generateLiveCommentary(mid, homeN, awayN, p, comp, homeScore, awayScore
     const flavor = [
       ()=>`⚽ ${hShort} ${hS} – ${aS} ${aShort} · ${minStr}'`,
       ()=>`📡 AI dự báo tỷ số: ${p.pHome}-${p.pAway} · Thực tế: ${hS}-${aS}`,
-      ()=>`⚡ Gôl trong 10p tới: ${p.next10}% · Tài 2.5: ${p.over25}%`,
+      ()=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> Gôl trong 10p tới: ${p.next10}% · Tài 2.5: ${p.over25}%`,
       ()=>(p.momentum>58)?`🔴 ${hShort} đang áp đảo (${p.momentum}% momentum) · ${minStr}'`:`🔵 ${aShort} kiểm soát nhịp trận · ${minStr}'`,
-      ()=>`🧠 xG: ${hShort} ${p.hXG} – ${p.aXG} ${aShort} · Hiệu quả tấn công`,
+      ()=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 0 0-5.9-.8A3 3 0 0 0 3.5 9a3 3 0 0 0 .5 5.5A2.5 2.5 0 0 0 7 19a2.5 2.5 0 0 0 5 .5Z"/><path d="M12 5a3 3 0 0 1 5.9-.8A3 3 0 0 1 20.5 9a3 3 0 0 1-.5 5.5A2.5 2.5 0 0 1 17 19a2.5 2.5 0 0 1-5 .5Z"/></svg> xG: ${hShort} ${p.hXG} – ${p.aXG} ${aShort} · Hiệu quả tấn công`,
     ];
     const idx = (state.entries.length) % flavor.length;
     const candidate = flavor[idx]();
@@ -1850,7 +1851,7 @@ function statusBadge(status, mid, urgent=false){
   if(s==='STATUS_HALFTIME') return `<span class="badge ht">⏸ <span id="clk_${mid}">HT</span></span>`;
   if(['STATUS_EXTRA_TIME','STATUS_OVERTIME'].includes(s)) return `<span class="badge live${u}">🔴 ET <span id="clk_${mid}">${min}</span></span>`;
   if(s==='STATUS_SHOOTOUT') return `<span class="badge live urgent">🔴 PKS</span>`;
-  if(['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'].includes(s)) return `<span class="badge ft">✅ FT</span>`;
+  if(['STATUS_FINAL','STATUS_FULL_TIME','STATUS_FULL_PEN'].includes(s)) return `<span class="badge ft"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> FT</span>`;
   return `<span class="badge ns">${status.type?.description||'Sắp đấu'}</span>`;
 }
 
@@ -2171,7 +2172,7 @@ function liveStatsHTML(home, away, p) {
   </div>`;
 
   return `<div class="live-stats">
-    <div class="ls-title">📊 Live Stats</div>
+    <div class="ls-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Live Stats</div>
     ${xgHTML}
     ${circlesHTML}
     ${shotsHTML}
@@ -2307,7 +2308,7 @@ function h2hHTML(homeN, awayN) {
 function aiPickChipHTML(homeN, awayN, p, o) {
   // pickLabel from predicted score, not win% — score is the actual prediction users see
   const predictedWinner = p.pHome > p.pAway ? homeN : p.pHome < p.pAway ? awayN : null;
-  const pickLabel = predictedWinner ? `🏆 ${predictedWinner.split(' ').pop()}` : '🤝 Hòa';
+  const pickLabel = predictedWinner ? `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> ${predictedWinner.split(' ').pop()}` : '🤝 Hòa';
   // keoLabel must match predicted score — ELO hcDisplay alone causes contradiction (e.g. predict 1-1 but recommend -1.5)
   const scoreDiff = p.pHome - p.pAway;
   const absSD = Math.abs(scoreDiff);
@@ -2331,7 +2332,7 @@ function aiPickChipHTML(homeN, awayN, p, o) {
   const confText = p.confidence==='high' ? 'Tin cao' : p.confidence==='medium' ? 'Trung bình' : 'Rủi ro';
 
   return `<div class="ai-pick-chip">
-    <span style="font-size:9px;font-weight:800;color:var(--muted);letter-spacing:.8px;text-transform:uppercase">🤖 AI Chọn</span>
+    <span style="font-size:9px;font-weight:800;color:var(--muted);letter-spacing:.8px;text-transform:uppercase"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="2.5"/><path d="M12 5v4"/><circle cx="12" cy="3.6" r="1.2"/><path d="M9 14v1.5"/><path d="M15 14v1.5"/></svg> AI Chọn</span>
     <span class="apc-badge pick">${pickLabel}</span>
     <span class="apc-badge keo">${keoLabel}</span>
     <span class="apc-badge ou">${ouLabel}</span>
@@ -2366,8 +2367,8 @@ function quickVerdictHTML(homeN, awayN, p, o) {
   let verdict;
   if(p.isUpset) {
     verdict = pick([
-      `🚨 Cảnh báo UPSET! <strong>${lShort}</strong> đang ${lFmLbl} — đội này có thể gây sốc hôm nay. Theo dõi sát <strong>${lStar}</strong>, cầu thủ có thể tạo khác biệt bất ngờ.`,
-      `⚠️ <strong>${wShort}</strong> là cửa trên nhưng biên độ quá hẹp (chênh ${diff}%). <strong>${lStar}</strong> của ${lShort} đang trong ${lFmLbl} — đủ để đảo lộn mọi dự đoán.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f04444" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1 10 0"/><path d="M4 21h16"/><path d="M12 4V2"/><path d="m5 7-1-1"/><path d="m19 7 1-1"/></svg> Cảnh báo UPSET! <strong>${lShort}</strong> đang ${lFmLbl} — đội này có thể gây sốc hôm nay. Theo dõi sát <strong>${lStar}</strong>, cầu thủ có thể tạo khác biệt bất ngờ.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> <strong>${wShort}</strong> là cửa trên nhưng biên độ quá hẹp (chênh ${diff}%). <strong>${lStar}</strong> của ${lShort} đang trong ${lFmLbl} — đủ để đảo lộn mọi dự đoán.`,
       `🎲 Đây là trận AI "không dám chắc" — ${wShort} ${p.hW > p.aW ? p.hW : p.aW}% không đủ áp đảo. Cú phạt đền, thẻ đỏ hay sai lầm thủ môn là thứ quyết định ở những trận như vậy.`,
     ]);
   } else if(!winner) {
@@ -2382,20 +2383,20 @@ function quickVerdictHTML(homeN, awayN, p, o) {
       verdict = pick([
         `⚖️ Hai đội ngang tầm — <strong>${hShort}</strong> và <strong>${aShort}</strong> không có cách biệt rõ rệt. Kịch bản hòa ${p.dr}% không phải ngẫu nhiên. <strong>${h1}</strong> vs <strong>${a1}</strong> sẽ là điểm nhấn.`,
         `🤝 AI không dám đặt cửa nào trong trận này — ${p.hW}% vs ${p.aW}% là sự cân bằng hiếm thấy. Over/Under ${ouLabel} là lựa chọn thông minh hơn khi kết quả quá khó đoán.`,
-        `📊 Hai đội ngang nhau về trình độ và phong độ — bàn thắng đầu tiên sẽ quyết định tất cả. <strong>${h1}</strong> và <strong>${a1}</strong> — ai ghi trước sẽ thắng tâm lý.`,
+        `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Hai đội ngang nhau về trình độ và phong độ — bàn thắng đầu tiên sẽ quyết định tất cả. <strong>${h1}</strong> và <strong>${a1}</strong> — ai ghi trước sẽ thắng tâm lý.`,
       ]);
     }
   } else if(diff > 35) {
     verdict = pick([
-      `✅ <strong>${wShort}</strong> áp đảo trên bảng số — ${p.hW > p.aW ? p.hW : p.aW}% win rate, xG ${p.hW >= p.aW ? p.hXG : p.aXG}, ELO +${p.eloDiff}. Nếu <strong>${wStar}</strong> vào phong độ tốt, đây là trận thắng cần thiết để mở màn.`,
-      `🏆 <strong>${wShort}</strong> mạnh hơn toàn diện — không cần bàn luận nhiều. <strong>${wStar}</strong> và <strong>${p.hW >= p.aW ? h2 : a2}</strong> là cặp đôi nguy hiểm nhất trận. Dự đoán ${p.pHome}-${p.pAway}.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> <strong>${wShort}</strong> áp đảo trên bảng số — ${p.hW > p.aW ? p.hW : p.aW}% win rate, xG ${p.hW >= p.aW ? p.hXG : p.aXG}, ELO +${p.eloDiff}. Nếu <strong>${wStar}</strong> vào phong độ tốt, đây là trận thắng cần thiết để mở màn.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> <strong>${wShort}</strong> mạnh hơn toàn diện — không cần bàn luận nhiều. <strong>${wStar}</strong> và <strong>${p.hW >= p.aW ? h2 : a2}</strong> là cặp đôi nguy hiểm nhất trận. Dự đoán ${p.pHome}-${p.pAway}.`,
       `💪 <strong>${wShort}</strong> trong ${wFmLbl} — đây là lúc để khẳng định đẳng cấp. ${lShort} cần phép màu. AI chọn ${_scoreKeo} — phù hợp với thực lực.`,
     ]);
   } else if(p.over25 > 68) {
     verdict = pick([
-      `🔥 <strong>${wShort}</strong> thắng trong trận cầu mãn nhãn — Over ${o.ouLine} ${p.over25}% được mô hình ủng hộ mạnh. <strong>${h1}</strong> và <strong>${a1}</strong> đều đủ nguy hiểm để ghi bàn. BTTS ${p.btts}%.`,
-      `⚡ Đây là trận để xem, không phải để tính toán — tổng xG ${(parseFloat(p.hXG)+parseFloat(p.aXG)).toFixed(1)} hứa hẹn nhiều bàn thắng. <strong>${wShort}</strong> sẽ thắng nhưng con đường đến đó không bằng phẳng.`,
-      `🎯 <strong>${wShort}</strong> tấn công mạnh (xG ${p.hW>=p.aW?p.hXG:p.aXG}) và ${lShort} cũng không phòng thủ thuần túy (xG ${p.hW>=p.aW?p.aXG:p.hXG}). Over ${o.ouLine} là lựa chọn khôn ngoan hôm nay.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> <strong>${wShort}</strong> thắng trong trận cầu mãn nhãn — Over ${o.ouLine} ${p.over25}% được mô hình ủng hộ mạnh. <strong>${h1}</strong> và <strong>${a1}</strong> đều đủ nguy hiểm để ghi bàn. BTTS ${p.btts}%.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> Đây là trận để xem, không phải để tính toán — tổng xG ${(parseFloat(p.hXG)+parseFloat(p.aXG)).toFixed(1)} hứa hẹn nhiều bàn thắng. <strong>${wShort}</strong> sẽ thắng nhưng con đường đến đó không bằng phẳng.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> <strong>${wShort}</strong> tấn công mạnh (xG ${p.hW>=p.aW?p.hXG:p.aXG}) và ${lShort} cũng không phòng thủ thuần túy (xG ${p.hW>=p.aW?p.aXG:p.hXG}). Over ${o.ouLine} là lựa chọn khôn ngoan hôm nay.`,
     ]);
   } else if(p.over25 < 38) {
     verdict = pick([
@@ -2404,14 +2405,14 @@ function quickVerdictHTML(homeN, awayN, p, o) {
     ]);
   } else if(p.confidence === 'high') {
     verdict = pick([
-      `✅ Độ tin cao — <strong>${wShort}</strong> vượt trội và ổn định (${wFmLbl}). <strong>${wStar}</strong> là chìa khóa mở khoá hàng thủ ${lShort}. AI dự đoán ${_scoreKeo} — phản ánh đúng thực lực.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Độ tin cao — <strong>${wShort}</strong> vượt trội và ổn định (${wFmLbl}). <strong>${wStar}</strong> là chìa khóa mở khoá hàng thủ ${lShort}. AI dự đoán ${_scoreKeo} — phản ánh đúng thực lực.`,
       `📌 <strong>${wShort}</strong> là lựa chọn an toàn nhất hôm nay: ELO cao hơn, form tốt hơn, xG ${p.hW>=p.aW?p.hXG:p.aXG} vs ${p.hW>=p.aW?p.aXG:p.hXG}. Dự đoán ${p.pHome}-${p.pAway} với độ tin cao.`,
     ]);
   } else {
     verdict = pick([
-      `📊 <strong>${wShort}</strong> nhỉnh hơn nhưng chưa áp đảo (${diff}% cách biệt). <strong>${wStar}</strong> cần vào phong độ tốt. AI chọn ${_scoreKeo} — ${lShort} ${lFmLbl}, đừng coi thường.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> <strong>${wShort}</strong> nhỉnh hơn nhưng chưa áp đảo (${diff}% cách biệt). <strong>${wStar}</strong> cần vào phong độ tốt. AI chọn ${_scoreKeo} — ${lShort} ${lFmLbl}, đừng coi thường.`,
       `🔍 Mô hình: <strong>${wShort}</strong> ${p.hW>p.aW?p.hW:p.aW}% · Hòa ${p.dr}% · <strong>${lShort}</strong> ${p.hW>p.aW?p.aW:p.hW}%. Trận cân sức — <strong>${wStar}</strong> và <strong>${lStar}</strong> là hai nhân tố quyết định. Theo dõi hiệp 1.`,
-      `⚡ <strong>${wShort}</strong> nhỉnh hơn về ELO (+${p.eloDiff}) và đang ${wFmLbl}. Tuy nhiên ${lShort} ${lFmLbl} — đừng bỏ qua khả năng bất ngờ. Phân tích: Tài/Xỉu ${ouLabel} có giá trị hơn cửa 1x2.`,
+      `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> <strong>${wShort}</strong> nhỉnh hơn về ELO (+${p.eloDiff}) và đang ${wFmLbl}. Tuy nhiên ${lShort} ${lFmLbl} — đừng bỏ qua khả năng bất ngờ. Phân tích: Tài/Xỉu ${ouLabel} có giá trị hơn cửa 1x2.`,
     ]);
   }
   return `<div class="quick-verdict">${verdict}</div>`;
@@ -2425,19 +2426,19 @@ function shareMatch(homeN, awayN, homeScore, awayScore, predH, predA, accuracy) 
   let text;
   if(homeScore !== '' && awayScore !== '') {
     // Finished match
-    const accIcon = {exact:'🎯',close:'✅',winner:'☑️',near:'⚠️',wrong:'❌'}[accuracy] || '🔮';
-    text = `⚽ ${hF} ${hS} ${homeScore}–${awayScore} ${aS} ${aF}\n🏆 FIFA World Cup 2026\n\n🧠 AI dự: ${predH}-${predA} ${accIcon}\n📊 Xem dự đoán: ${APP_URL}`;
+    const accIcon = {exact:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>',close:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>',winner:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11.5 14 16 8.5"/><rect x="3.5" y="3.5" width="17" height="17" rx="3"/></svg>',near:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg>',wrong:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>'}[accuracy] || '🔮';
+    text = `⚽ ${hF} ${hS} ${homeScore}–${awayScore} ${aS} ${aF}\n<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> FIFA World Cup 2026\n\n<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 0 0-5.9-.8A3 3 0 0 0 3.5 9a3 3 0 0 0 .5 5.5A2.5 2.5 0 0 0 7 19a2.5 2.5 0 0 0 5 .5Z"/><path d="M12 5a3 3 0 0 1 5.9-.8A3 3 0 0 1 20.5 9a3 3 0 0 1-.5 5.5A2.5 2.5 0 0 1 17 19a2.5 2.5 0 0 1-5 .5Z"/></svg> AI dự: ${predH}-${predA} ${accIcon}\n<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Xem dự đoán: ${APP_URL}`;
   } else {
     // Upcoming
     const winner = predH > predA ? hS : predA > predH ? aS : 'Hòa';
-    text = `🔮 AI dự đoán WC2026\n${hF} ${hS} vs ${aS} ${aF}\n⚽ Tỷ số: ${predH}-${predA} · ${winner} thắng\n📊 ${APP_URL}`;
+    text = `🔮 AI dự đoán WC2026\n${hF} ${hS} vs ${aS} ${aF}\n⚽ Tỷ số: ${predH}-${predA} · ${winner} thắng\n<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> ${APP_URL}`;
   }
   if(navigator.share) {
     navigator.share({ title: `⚽ WC2026 · ${hS} vs ${aS}`, text, url: APP_URL }).catch(()=>{});
   } else {
     navigator.clipboard?.writeText(text).then(()=>{
       const t=document.createElement('div');
-      t.textContent='✅ Đã copy! Dán vào Zalo/FB';
+      t.textContent='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Đã copy! Dán vào Zalo/FB';
       Object.assign(t.style,{position:'fixed',bottom:'90px',left:'50%',transform:'translateX(-50%)',background:'#22c55e',color:'#000',padding:'8px 18px',borderRadius:'100px',fontWeight:'800',fontSize:'13px',zIndex:'9999'});
       document.body.appendChild(t);
       setTimeout(()=>t.remove(),2500);
@@ -2463,13 +2464,13 @@ function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p, mid) {
     const wasUpset = predictedWinner && predictedWinner !== winner;
 
     if(wasUpset) {
-      badge = `<span class="rv-badge upset">🚨 BẤT NGỜ! ${wShort} thắng</span>`;
+      badge = `<span class="rv-badge upset"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f04444" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1 10 0"/><path d="M4 21h16"/><path d="M12 4V2"/><path d="m5 7-1-1"/><path d="m19 7 1-1"/></svg> BẤT NGỜ! ${wShort} thắng</span>`;
     } else if(diff >= 3) {
-      badge = `<span class="rv-badge thrash">🎯 Thắng đậm ${hS}-${aS}</span>`;
+      badge = `<span class="rv-badge thrash"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Thắng đậm ${hS}-${aS}</span>`;
     } else if(total >= 4) {
-      badge = `<span class="rv-badge drama">⚡ Kịch tính ${hS}-${aS}</span>`;
+      badge = `<span class="rv-badge drama"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> Kịch tính ${hS}-${aS}</span>`;
     } else {
-      badge = `<span class="rv-badge win">✅ ${wShort} thắng ${hS}-${aS}</span>`;
+      badge = `<span class="rv-badge win"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> ${wShort} thắng ${hS}-${aS}</span>`;
     }
   }
 
@@ -2533,13 +2534,13 @@ function postMatchBanner(comp, homeN, awayN, homeScore, awayScore, p, mid) {
     const predA = rec?.predicted?.away ?? p.pAway;
     const predDiff = predH - predA;
     const correctWinner = (predDiff > 0 && homeWon) || (predDiff < 0 && awayWon) || (predDiff === 0 && draw);
-    if(predH === hS && predA === aS) return `<span class="rv-note correct-score">🎯 AI đoán ĐÚNG tỷ số ${predH}-${predA}!</span>`;
+    if(predH === hS && predA === aS) return `<span class="rv-note correct-score"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> AI đoán ĐÚNG tỷ số ${predH}-${predA}!</span>`;
     if(correctWinner && Math.abs(hS - predH) <= 1 && Math.abs(aS - predA) <= 1)
-      return `<span class="rv-note correct-close">✅ AI đúng kết quả, gần tỷ số (dự ${predH}-${predA})</span>`;
+      return `<span class="rv-note correct-close"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> AI đúng kết quả, gần tỷ số (dự ${predH}-${predA})</span>`;
     if(correctWinner)
-      return `<span class="rv-note correct-winner">☑️ AI đúng đội thắng, sai tỷ số (dự ${predH}-${predA})</span>`;
-    if(Math.abs(predH-hS)<=1 && Math.abs(predA-aS)<=1) return `<span class="rv-note near">⚠️ AI sát tỷ số (dự ${predH}-${predA}), sai kết quả</span>`;
-    return `<span class="rv-note wrong">❌ AI sai (dự ${predH}-${predA})</span>`;
+      return `<span class="rv-note correct-winner"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11.5 14 16 8.5"/><rect x="3.5" y="3.5" width="17" height="17" rx="3"/></svg> AI đúng đội thắng, sai tỷ số (dự ${predH}-${predA})</span>`;
+    if(Math.abs(predH-hS)<=1 && Math.abs(predA-aS)<=1) return `<span class="rv-note near"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> AI sát tỷ số (dự ${predH}-${predA}), sai kết quả</span>`;
+    return `<span class="rv-note wrong"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg> AI sai (dự ${predH}-${predA})</span>`;
   })();
 
   const rec2 = mid ? getPredictionRecord(mid) : null;
@@ -2628,23 +2629,23 @@ function liveInsight(homeN, awayN, p, homeScore, awayScore, clockStr, sName) {
   const isPKS = sName==='STATUS_SHOOTOUT';
   const hShort = homeN.split(' ').pop();
   const aShort = awayN.split(' ').pop();
-  if(isPKS) return '🎯 Loạt đá luân lưu quyết định!';
+  if(isPKS) return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Loạt đá luân lưu quyết định!';
   if(isET && diff===0) return `⏰ Hiệp phụ · Hòa ${hS}-${aS} — ai ghi trước thắng!`;
   if(isET && diff>0) return `🔒 ${hShort} dẫn ${hS}-${aS} · Đang giữ vững hiệp phụ`;
-  if(isET && diff<0) return `⚡ ${aShort} dẫn ${hS}-${aS} · ${hShort} cần bàn gỡ`;
+  if(isET && diff<0) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> ${aShort} dẫn ${hS}-${aS} · ${hShort} cần bàn gỡ`;
   if(sName==='STATUS_HALFTIME') return `⏸ Giải lao · ${hS}-${aS} · Chờ hiệp 2`;
   if(mins>=85 && diff===0) return `😰 Hòa ${hS}-${aS} · Còn ít phút — cực kỳ căng thẳng!`;
   if(mins>=85 && diff===1) return `🔒 ${hShort} bảo vệ ${hS}-${aS} · ${mins}' — ${aShort} tìm bàn gỡ`;
-  if(mins>=85 && diff===-1) return `⚡ ${aShort} dẫn ${hS}-${aS} · ${mins}' — ${hShort} phải ghi gấp!`;
-  if(mins>=85 && diff>1) return `✅ ${hShort} gần như chắc thắng ${hS}-${aS}`;
-  if(mins>=70 && diff===0) return `🔥 Hòa ${hS}-${aS} · ${mins}' — trận chiến chưa ngã ngũ`;
-  if(total>=4) return `🔥 Trận cầu mãn nhãn ${hS}-${aS} · Đã ${total} bàn thắng!`;
+  if(mins>=85 && diff===-1) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> ${aShort} dẫn ${hS}-${aS} · ${mins}' — ${hShort} phải ghi gấp!`;
+  if(mins>=85 && diff>1) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> ${hShort} gần như chắc thắng ${hS}-${aS}`;
+  if(mins>=70 && diff===0) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> Hòa ${hS}-${aS} · ${mins}' — trận chiến chưa ngã ngũ`;
+  if(total>=4) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> Trận cầu mãn nhãn ${hS}-${aS} · Đã ${total} bàn thắng!`;
   if(total>=3) return `⚽ ${hS}-${aS} · Nhiều bàn — rất hấp dẫn!`;
   if(diff>1) return `💪 ${hShort} kiểm soát ${hS}-${aS} · ${mins}'`;
   if(diff<-1) return `💪 ${aShort} kiểm soát ${hS}-${aS} · ${mins}'`;
   if(p.momentum>60) return `🔴 ${hShort} đang áp đảo bóng · ${mins}'`;
   if(p.momentum<40) return `🔵 ${aShort} kiểm soát trận · ${mins}'`;
-  if(total===0 && mins<20) return `🎬 Hiệp 1 · Đang làm nóng · ${mins}'`;
+  if(total===0 && mins<20) return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16"/><path d="M17 4v16"/><path d="M3 9h4"/><path d="M17 9h4"/><path d="M3 15h4"/><path d="M17 15h4"/></svg> Hiệp 1 · Đang làm nóng · ${mins}'`;
   return `⚽ ${hShort} ${hS} – ${aS} ${aShort} · ${mins}'`;
 }
 
@@ -2667,11 +2668,11 @@ function watchabilityScore(homeN, awayN, stageTier, intensity, live, homeScore, 
 
 // Group / stage impact text for live cards
 function groupImpactText(stageTier) {
-  if(stageTier==='final')  return '🏆 CHUNG KẾT · Nhà vô địch được quyết định hôm nay!';
-  if(stageTier==='semi')   return '⚡ BÁN KẾT · Thắng → Vào Chung kết';
-  if(stageTier==='qf')     return '🎯 TỨ KẾT · Thắng → Vào Bán kết';
-  if(stageTier==='r16')    return '🎯 VÒNG 16 · Thắng → Vào Tứ kết';
-  return '📊 Vòng bảng · Win +3pts · Hòa +1pt';
+  if(stageTier==='final')  return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> CHUNG KẾT · Nhà vô địch được quyết định hôm nay!';
+  if(stageTier==='semi')   return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> BÁN KẾT · Thắng → Vào Chung kết';
+  if(stageTier==='qf')     return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> TỨ KẾT · Thắng → Vào Bán kết';
+  if(stageTier==='r16')    return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> VÒNG 16 · Thắng → Vào Tứ kết';
+  return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Vòng bảng · Win +3pts · Hòa +1pt';
 }
 
 // ELO-based tournament champion probability
@@ -2691,10 +2692,10 @@ function championOdds() {
 function parseStageLabel(raw) {
   if(!raw) return '';
   const r = raw.toLowerCase();
-  if(r.includes('final')&&!r.includes('semi')&&!r.includes('quarter')&&!r.includes('round of')) return '🏆 CHUNG KẾT';
-  if(r.includes('semifinal')||r.includes('semi-final')||(r.includes('semi')&&r.includes('final'))) return '⚡ BÁN KẾT';
-  if(r.includes('quarterfinal')||r.includes('quarter-final')||(r.includes('quarter')&&r.includes('final'))) return '🎯 TỨ KẾT';
-  if(r.includes('round of 16')||r.includes('round of sixteen')) return '🎯 VÒNG 16';
+  if(r.includes('final')&&!r.includes('semi')&&!r.includes('quarter')&&!r.includes('round of')) return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> CHUNG KẾT';
+  if(r.includes('semifinal')||r.includes('semi-final')||(r.includes('semi')&&r.includes('final'))) return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> BÁN KẾT';
+  if(r.includes('quarterfinal')||r.includes('quarter-final')||(r.includes('quarter')&&r.includes('final'))) return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> TỨ KẾT';
+  if(r.includes('round of 16')||r.includes('round of sixteen')) return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> VÒNG 16';
   const gm = raw.match(/Group [A-L]/i);
   if(gm) return gm[0];
   return raw.slice(0,20);
@@ -2717,7 +2718,7 @@ function calcIntensity(clockStr, homeScore, awayScore, sName) {
 function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='') {
   const upsetTeam = p.hW < p.aW ? homeN : awayN;
   const upsetPct = Math.min(p.hW, p.aW);
-  const upsetHTML = p.isUpset ? `<div class="upset-alert">🚨 <strong>UPSET ALERT</strong> — <strong>${upsetTeam}</strong> là cửa dưới nhưng có tới <strong>${upsetPct}%</strong> cơ hội gây sốc (ELO gap ${p.eloDiff}pt)!</div>` : '';
+  const upsetHTML = p.isUpset ? `<div class="upset-alert"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f04444" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1 10 0"/><path d="M4 21h16"/><path d="M12 4V2"/><path d="m5 7-1-1"/><path d="m19 7 1-1"/></svg> <strong>UPSET ALERT</strong> — <strong>${upsetTeam}</strong> là cửa dưới nhưng có tới <strong>${upsetPct}%</strong> cơ hội gây sốc (ELO gap ${p.eloDiff}pt)!</div>` : '';
   const h1 = getKeyPlayer(homeN, 0), h2 = getKeyPlayer(homeN, 1);
   const a1 = getKeyPlayer(awayN, 0), a2 = getKeyPlayer(awayN, 1);
   const goalTiming = Math.min(72, Math.max(28, Math.round((parseFloat(p.hXG)+parseFloat(p.aXG))/5.5*100)));
@@ -2733,12 +2734,12 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
         const hN=homeN.split(' ').pop(), aN=awayN.split(' ').pop();
         const lines=[];
         // Sức mạnh tổng thể
-        if(p.eloDiff>200) lines.push(`⚡ <strong>${hxg>axg?hN:aN}</strong> mạnh hơn hẳn trên bảng xếp hạng FIFA`);
-        else if(p.eloDiff>80) lines.push(`📊 <strong>${hxg>axg?hN:aN}</strong> nhỉnh hơn về trình độ`);
+        if(p.eloDiff>200) lines.push(`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> <strong>${hxg>axg?hN:aN}</strong> mạnh hơn hẳn trên bảng xếp hạng FIFA`);
+        else if(p.eloDiff>80) lines.push(`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> <strong>${hxg>axg?hN:aN}</strong> nhỉnh hơn về trình độ`);
         else lines.push(`⚖️ Hai đội ngang tầm nhau`);
         // Cơ hội ghi bàn
         if(Math.abs(diff)>1.0) lines.push(`⚽ <strong>${diff>0?hN:aN}</strong> tạo ra nhiều cơ hội nguy hiểm hơn (${(diff>0?hxg:axg).toFixed(1)} vs ${(diff>0?axg:hxg).toFixed(1)})`);
-        else lines.push(`🎯 Số cơ hội ghi bàn hai bên khá đều nhau`);
+        else lines.push(`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg> Số cơ hội ghi bàn hai bên khá đều nhau`);
         // Lý do tỷ số cụ thể
         if(p.pHome===p.pAway && p.dr>20) {
           const strongerN = hxg>axg ? hN : aN;
@@ -2747,13 +2748,13 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
             lines.push(`🛡️ Dù vậy, <strong>${weakerN}</strong> có thể cầm hòa nếu phòng thủ tốt — xác suất hòa ${p.dr}%`);
           else
             lines.push(`🤝 Xác suất hòa cao (${p.dr}%) — AI thiên về kịch bản cầm chân nhau`);
-        } else if(p.pHome>p.pAway) lines.push(`✅ Dự đoán <strong>${hN}</strong> thắng ${p.pHome}-${p.pAway}`);
-        else lines.push(`✅ Dự đoán <strong>${aN}</strong> thắng ${p.pHome}-${p.pAway}`);
+        } else if(p.pHome>p.pAway) lines.push(`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Dự đoán <strong>${hN}</strong> thắng ${p.pHome}-${p.pAway}`);
+        else lines.push(`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Dự đoán <strong>${aN}</strong> thắng ${p.pHome}-${p.pAway}`);
         return lines.join('<br>');
       })()}</div>
     </div>
     <div class="sl-section">
-      <div class="sl-title">📊 Top tỷ số có thể xảy ra</div>
+      <div class="sl-title"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Top tỷ số có thể xảy ra</div>
       ${(p.topScores||[]).map((s,i)=>`
       <div class="sl-row${i===0?' sl-top':''}">
         <span class="sl-score">${s.label}</span>
@@ -2784,7 +2785,7 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
       <span class="pb-pct">${p.btts}%</span>
     </div>
     <div class="prob-bar-row">
-      <span class="pb-label">⚡ Bàn thắng trước HT</span>
+      <span class="pb-label"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> Bàn thắng trước HT</span>
       <div class="pb-track"><div class="pb-fill blue" style="width:0" data-w="${goalTiming}"></div></div>
       <span class="pb-pct">${goalTiming}%</span>
     </div>
@@ -2825,30 +2826,30 @@ function aiPanelHTML(mid, homeN, awayN, p, live=false, homeScore='', awayScore='
       </div>
     </div>
     <div class="mkt-lazy" data-home="${homeN.replace(/"/g,'&quot;')}" data-away="${awayN.replace(/"/g,'&quot;')}" data-hw="${p.hW}" data-aw="${p.aW}"></div>
-    ${(()=>{ const acc=getPredictionAccuracy(); return `<div class="conf-badge ${p.confidence}">🧠 ${p.confLabel}${acc&&acc.total>=3?` · <span style="color:${acc.pct>=60?'#4ade80':acc.pct>=40?'#fbbf24':'#f87171'}">📊 ${acc.pct}% đúng (${acc.correct}/${acc.total})</span>`:''}</div>`; })()}
+    ${(()=>{ const acc=getPredictionAccuracy(); return `<div class="conf-badge ${p.confidence}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 0 0-5.9-.8A3 3 0 0 0 3.5 9a3 3 0 0 0 .5 5.5A2.5 2.5 0 0 0 7 19a2.5 2.5 0 0 0 5 .5Z"/><path d="M12 5a3 3 0 0 1 5.9-.8A3 3 0 0 1 20.5 9a3 3 0 0 1-.5 5.5A2.5 2.5 0 0 1 17 19a2.5 2.5 0 0 1-5 .5Z"/></svg> ${p.confLabel}${acc&&acc.total>=3?` · <span style="color:${acc.pct>=60?'#4ade80':acc.pct>=40?'#fbbf24':'#f87171'}"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> ${acc.pct}% đúng (${acc.correct}/${acc.total})</span>`:''}</div>`; })()}
     ${upsetHTML}
     <div class="ai-comment">${aiComment(homeN, awayN, p, live, homeScore, awayScore)}</div>
     ${(()=>{
       const acc = getPredictionAccuracy();
       const rec = getPredictionRecord(mid);
       if(!rec || !rec.actual) return '';
-      const icon = {exact:'🎯',close:'✅',winner:'☑️',near:'⚠️',wrong:'❌'}[rec.accuracy]||'?';
+      const icon = {exact:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>',close:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>',winner:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11.5 11.5 14 16 8.5"/><rect x="3.5" y="3.5" width="17" height="17" rx="3"/></svg>',near:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg>',wrong:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>'}[rec.accuracy]||'?';
       const color = {exact:'#c4b5fd',close:'#4ade80',winner:'#64748b',wrong:'#fca5a5'}[rec.accuracy]||'#94a3b8';
       const bgColor = {exact:'rgba(196,181,253,0.07)',close:'rgba(74,222,128,0.06)',winner:'rgba(148,163,184,0.05)',wrong:'rgba(252,165,165,0.07)'}[rec.accuracy]||'rgba(255,255,255,0.03)';
       const borderColor = {exact:'rgba(196,181,253,0.3)',close:'rgba(74,222,128,0.25)',winner:'rgba(100,116,139,0.2)',wrong:'rgba(252,165,165,0.3)'}[rec.accuracy]||'var(--border)';
       const learnNote = acc && acc.total >= 5 ? (
-        acc.pct < 40 ? `⚠️ AI đang học — draw rate cao hơn dự kiến ở WC2026 (${acc.drawTotal||0}/${acc.total} hòa).`
-        : acc.pct >= 65 ? `📈 Model đang cải thiện tốt (${acc.pct}% chính xác).`
-        : `📊 Độ chính xác hiện tại ${acc.pct}% trên ${acc.total} trận.`
+        acc.pct < 40 ? `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> AI đang học — draw rate cao hơn dự kiến ở WC2026 (${acc.drawTotal||0}/${acc.total} hòa).`
+        : acc.pct >= 65 ? `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17 9 11l4 4 8-8"/><path d="M15 7h6v6"/></svg> Model đang cải thiện tốt (${acc.pct}% chính xác).`
+        : `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Độ chính xác hiện tại ${acc.pct}% trên ${acc.total} trận.`
       ) : '';
       return `<div style="margin-top:10px;padding:12px 14px;background:${bgColor};border-radius:10px;border:1px solid ${borderColor}">
         <div style="font-size:9px;font-weight:800;letter-spacing:1.2px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-          📋 NHẬN ĐỊNH SAU TRẬN
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1.2"/><path d="M16 5h1.5A1.5 1.5 0 0 1 19 6.5v13A1.5 1.5 0 0 1 17.5 21h-11A1.5 1.5 0 0 1 5 19.5v-13A1.5 1.5 0 0 1 6.5 5H8"/></svg> NHẬN ĐỊNH SAU TRẬN
           <span style="margin-left:auto;font-size:9px;padding:2px 6px;background:${color};color:#0f172a;border-radius:4px;font-weight:700">${icon} ${rec.accuracy?.toUpperCase()||'?'}</span>
         </div>
         <div style="font-size:12px;line-height:1.55;color:${color};margin-bottom:8px;font-weight:600">${rec.analysis}</div>
         <div style="display:flex;gap:12px;font-size:10px;color:var(--muted);border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
-          <span>🤖 Dự: <strong style="color:var(--text)">${rec.predicted.home}-${rec.predicted.away}</strong></span>
+          <span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="2.5"/><path d="M12 5v4"/><circle cx="12" cy="3.6" r="1.2"/><path d="M9 14v1.5"/><path d="M15 14v1.5"/></svg> Dự: <strong style="color:var(--text)">${rec.predicted.home}-${rec.predicted.away}</strong></span>
           <span>⚽ Thực: <strong style="color:var(--text)">${rec.actual.home}-${rec.actual.away}</strong></span>
           <span>Bàn dự báo: <strong style="color:var(--text)">${(rec.predicted.hXG||0).toFixed(1)}–${(rec.predicted.aXG||0).toFixed(1)}</strong></span>
         </div>
@@ -2924,7 +2925,7 @@ async function toggleHighlights(eventId, mid, btn) {
   if(!opening) return;
   if(_hlCache[eventId]) { panel.innerHTML = _hlCache[eventId]; return; }
 
-  panel.innerHTML = '<div class="hl-loading">🎬 Đang tìm highlights...</div>';
+  panel.innerHTML = '<div class="hl-loading"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16"/><path d="M17 4v16"/><path d="M3 9h4"/><path d="M17 9h4"/><path d="M3 15h4"/><path d="M17 15h4"/></svg> Đang tìm highlights...</div>';
 
   const card = btn.closest('.match-card');
   const names = card?.querySelectorAll('.team-name');
@@ -3009,8 +3010,8 @@ function renderMatchCard(event) {
   if(finished && homeScore !== '' && awayScore !== '') updatePredictionResult(mid, +homeScore, +awayScore);
 
   // Hot match badge
-  const hotBadge = (!live && p.isHot) ? `<span class="badge hot">🔥 HOT</span>` : '';
-  const upsetBadge = (!live && p.isUpset) ? `<span class="badge upset">🚨 UPSET?</span>` : '';
+  const hotBadge = (!live && p.isHot) ? `<span class="badge hot"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> HOT</span>` : '';
+  const upsetBadge = (!live && p.isUpset) ? `<span class="badge upset"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#f04444" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1 10 0"/><path d="M4 21h16"/><path d="M12 4V2"/><path d="m5 7-1-1"/><path d="m19 7 1-1"/></svg> UPSET?</span>` : '';
   // MUST WATCH / BIG MATCH — detect elite matchups by ELO
   const hElo = getTS(homeN).r, aElo = getTS(awayN).r;
   const avgElo = (hElo + aElo) / 2, eloGap = Math.abs(hElo - aElo);
@@ -3055,18 +3056,18 @@ function renderMatchCard(event) {
   // Urgency: late game close matches — clock blinks
   const isUrgent = intensity==='critical';
   // Heat badge — surface intensity level as visible text badge
-  const heatBadge = live && intensity ? `<span class="fh-heat ${intensity}" style="padding:2px 7px;font-size:9px">${intensity==='critical'?'🔥 CRITICAL':'⚡ HOT'}</span>` : '';
+  const heatBadge = live && intensity ? `<span class="fh-heat ${intensity}" style="padding:2px 7px;font-size:9px">${intensity==='critical'?'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> CRITICAL':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> HOT'}</span>` : '';
   // Watchability score
   const ws = watchabilityScore(homeN, awayN, stageTier, intensity, live, homeScore, awayScore);
   const wsClass = ws>=8.5?'hot':ws>=7?'warm':'cool';
-  const wsLabel = ws>=8.5?'🔥 Đỉnh':ws>=7?'⭐ Hay':'📺 Xem';
+  const wsLabel = ws>=8.5?'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> Đỉnh':ws>=7?'⭐ Hay':'📺 Xem';
   const wsChip = !finished ? `<span class="ws-chip ${wsClass}" title="Độ hấp dẫn ${ws}/10">${wsLabel}</span>` : '';
   // Commentary pool for live rotation (stored as JSON in data-lines attr)
   const commentLines = live ? [
     liveInsight(homeN,awayN,p,homeScore,awayScore,comp.status?.displayClock||'',sName),
-    `📊 Dự báo bàn: ${homeN.split(' ').pop()} ${p.hXG} – ${p.aXG} ${awayN.split(' ').pop()} · Tỷ số ${p.pHome}-${p.pAway}`,
-    `⚡ Gôl trong 10p tới: ${p.next10}% · Tài 2.5 bàn: ${p.over25}%`,
-    `🧠 Tỷ số khả thi nhất: ${(p.topScores||[])[0]?.label||'?'} (${(p.topScores||[])[0]?.pct||'?'}%) · Cả hai cùng ghi: ${p.btts}%`,
+    `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> Dự báo bàn: ${homeN.split(' ').pop()} ${p.hXG} – ${p.aXG} ${awayN.split(' ').pop()} · Tỷ số ${p.pHome}-${p.pAway}`,
+    `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> Gôl trong 10p tới: ${p.next10}% · Tài 2.5 bàn: ${p.over25}%`,
+    `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 0 0-5.9-.8A3 3 0 0 0 3.5 9a3 3 0 0 0 .5 5.5A2.5 2.5 0 0 0 7 19a2.5 2.5 0 0 0 5 .5Z"/><path d="M12 5a3 3 0 0 1 5.9-.8A3 3 0 0 1 20.5 9a3 3 0 0 1-.5 5.5A2.5 2.5 0 0 1 17 19a2.5 2.5 0 0 1-5 .5Z"/></svg> Tỷ số khả thi nhất: ${(p.topScores||[])[0]?.label||'?'} (${(p.topScores||[])[0]?.pct||'?'}%) · Cả hai cùng ghi: ${p.btts}%`,
     p.momentum>58?`🔴 ${homeN.split(' ').pop()} đang áp đảo (${p.momentum}% momentum)`:`🔵 ${awayN.split(' ').pop()} kiểm soát bóng · Chú ý phản công`,
   ] : [];
   const commentData = live ? ` data-lines="${JSON.stringify(commentLines).replace(/"/g,'&quot;')}"` : '';
@@ -3101,13 +3102,13 @@ function renderMatchCard(event) {
       <div class="match-teams">
         <div class="team${predictedHome?' predicted-win':''}">
           <span class="team-flag">${flag(homeN)}</span>
-          <span class="team-name">${homeN}${predictedHome?'<span class="pick-crown">👑</span>':''}</span>
+          <span class="team-name">${homeN}${predictedHome?'<span class="pick-crown"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 4.5 4L12 4l4.5 6L21 6l-1.8 12H4.8L3 6Z"/><path d="M4.8 18h14.4"/></svg></span>':''}</span>
           <div class="team-form">${formDots(p.homeForm)}</div>
         </div>
         <div class="score-box">${scoreHTML}</div>
         <div class="team${predictedAway?' predicted-win':''}">
           <span class="team-flag">${flag(awayN)}</span>
-          <span class="team-name">${awayN}${predictedAway?'<span class="pick-crown">👑</span>':''}</span>
+          <span class="team-name">${awayN}${predictedAway?'<span class="pick-crown"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 4.5 4L12 4l4.5 6L21 6l-1.8 12H4.8L3 6Z"/><path d="M4.8 18h14.4"/></svg></span>':''}</span>
           <div class="team-form">${formDots(p.awayForm)}</div>
         </div>
       </div>
@@ -3122,14 +3123,14 @@ function renderMatchCard(event) {
     </div>
     ${liveScorers}
     ${resultBannerHTML}
-    ${finished ? `<div class="hl-btn" id="hlb_${mid}" data-event="${event.id}" onclick="toggleHighlights('${event.id}','${mid}',this)"><span>🎬 Highlights</span><span class="hl-arr">▼</span></div><div class="hl-panel" id="hlp_${mid}"></div>` : ''}
+    ${finished ? `<div class="hl-btn" id="hlb_${mid}" data-event="${event.id}" onclick="toggleHighlights('${event.id}','${mid}',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16"/><path d="M17 4v16"/><path d="M3 9h4"/><path d="M17 9h4"/><path d="M3 15h4"/><path d="M17 15h4"/></svg> Highlights</span><span class="hl-arr">▼</span></div><div class="hl-panel" id="hlp_${mid}"></div>` : ''}
     ${chipHTML}
     ${verdictHTML}
     ${oddsRow}
     ${liveStatsBlock}
     <div class="reactions" id="rx_${mid}">${rxHTML(mid)}</div>
     <div class="ai-toggle" id="ait_${mid}" onclick="toggleAI('${mid}',this)">
-      <span class="ai-toggle-lbl">🧠 Chi tiết phân tích & Thống kê đối đầu</span>
+      <span class="ai-toggle-lbl"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 0 0-5.9-.8A3 3 0 0 0 3.5 9a3 3 0 0 0 .5 5.5A2.5 2.5 0 0 0 7 19a2.5 2.5 0 0 0 5 .5Z"/><path d="M12 5a3 3 0 0 1 5.9-.8A3 3 0 0 1 20.5 9a3 3 0 0 1-.5 5.5A2.5 2.5 0 0 1 17 19a2.5 2.5 0 0 1-5 .5Z"/></svg> Chi tiết phân tích & Thống kê đối đầu</span>
       <span class="ai-arr">▼</span>
     </div>
     ${aiPanelHTML(mid, homeN, awayN, p, live, homeScore, awayScore)}
@@ -3240,16 +3241,16 @@ async function loadScores() {
     if(luEl){ luEl.dataset.base=`🔄 ${now}`; luEl.textContent=`🔄 ${now}`; }
     // Update AI accuracy badge in header (builds trust + return visits)
     const accB=document.getElementById('ai-accuracy-badge');
-    if(accB){const acc=getPredictionAccuracy();if(acc&&acc.total>=3){const col=acc.pct>=60?'#4ade80':acc.pct>=40?'#fbbf24':'#f87171';accB.innerHTML=`🧠 AI: <span style="color:${col};font-weight:800">${acc.pct}% chính xác</span> · ${acc.correct}/${acc.total} trận`;accB.style.display='block';}else accB.style.display='none';}
+    if(accB){const acc=getPredictionAccuracy();if(acc&&acc.total>=3){const col=acc.pct>=60?'#4ade80':acc.pct>=40?'#fbbf24':'#f87171';accB.innerHTML=`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 0 0-5.9-.8A3 3 0 0 0 3.5 9a3 3 0 0 0 .5 5.5A2.5 2.5 0 0 0 7 19a2.5 2.5 0 0 0 5 .5Z"/><path d="M12 5a3 3 0 0 1 5.9-.8A3 3 0 0 1 20.5 9a3 3 0 0 1-.5 5.5A2.5 2.5 0 0 1 17 19a2.5 2.5 0 0 1-5 .5Z"/></svg> AI: <span style="color:${col};font-weight:800">${acc.pct}% chính xác</span> · ${acc.correct}/${acc.total} trận`;accB.style.display='block';}else accB.style.display='none';}
   } catch(e) {
     _nextInterval = 30;
     const errBtn=`<br><button onclick="loadScores()" style="margin-top:9px;padding:6px 14px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button>`;
     if(_firstLoad){
-      document.getElementById('live-content').innerHTML=`<div class="error-box">⚠️ Không thể tải kết quả.${errBtn}</div>`;
-      document.getElementById('results-content').innerHTML=`<div class="error-box">⚠️ Không thể tải kết quả.${errBtn}</div>`;
+      document.getElementById('live-content').innerHTML=`<div class="error-box"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> Không thể tải kết quả.${errBtn}</div>`;
+      document.getElementById('results-content').innerHTML=`<div class="error-box"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> Không thể tải kết quả.${errBtn}</div>`;
     } else {
       const luEl=document.getElementById('last-update');
-      if(luEl) luEl.textContent='⚠️ Lỗi tải — đang thử lại...';
+      if(luEl) luEl.textContent='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> Lỗi tải — đang thử lại...';
     }
   } finally {
     // Bug #6 fix: always reset _isLoading even if render phase throws
@@ -3433,7 +3434,7 @@ function renderLive(events) {
     const hClk = hComp?.status?.displayClock||'';
     const hSN = hComp?.status?.type?.name||'';
     const hIntens = calcIntensity(hClk, hHome?.score||0, hAway?.score||0, hSN);
-    const heatPill = hIntens?`<span class="fh-heat ${hIntens}">${hIntens==='critical'?'🔥 CRITICAL':'⚡ HOT'}</span>`:'';
+    const heatPill = hIntens?`<span class="fh-heat ${hIntens}">${hIntens==='critical'?'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg> CRITICAL':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 13h7l-1 9 9-11h-7l1-9Z"/></svg> HOT'}</span>`:'';
     const hGroup = heroEv.season?.slug||hComp?.groups?.[0]?.name||hComp?.notes?.[0]?.headline||'';
     const hStage = parseStageLabel(hGroup)||'FIFA World Cup 2026';
     const hMid = heroEv.id;
@@ -3466,7 +3467,7 @@ function renderResults(events) {
   const openPanels=saveOpenPanels('results-content');
 
   if(!done.length){
-    el.innerHTML='<div class="loading" style="padding:44px 20px">📋 Chưa có trận nào kết thúc.<br><span style="font-size:12px;color:var(--muted)">Kết quả sẽ xuất hiện sau khi các trận kết thúc.</span></div>';
+    el.innerHTML='<div class="loading" style="padding:44px 20px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1.2"/><path d="M16 5h1.5A1.5 1.5 0 0 1 19 6.5v13A1.5 1.5 0 0 1 17.5 21h-11A1.5 1.5 0 0 1 5 19.5v-13A1.5 1.5 0 0 1 6.5 5H8"/></svg> Chưa có trận nào kết thúc.<br><span style="font-size:12px;color:var(--muted)">Kết quả sẽ xuất hiện sau khi các trận kết thúc.</span></div>';
     return;
   }
 
@@ -3561,7 +3562,7 @@ async function loadSchedule() {
     renderSchedule(events);
     document.getElementById('schedule-content').dataset.loaded='1';
   } catch(e) {
-    document.getElementById('schedule-content').innerHTML=`<div class="error-box">⚠️ Không thể tải lịch thi đấu.<br><button onclick="loadSchedule()" style="margin-top:8px;padding:5px 12px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button></div>`;
+    document.getElementById('schedule-content').innerHTML=`<div class="error-box"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> Không thể tải lịch thi đấu.<br><button onclick="loadSchedule()" style="margin-top:8px;padding:5px 12px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:12px">🔄 Thử lại</button></div>`;
   }
 }
 
@@ -3569,7 +3570,7 @@ function renderSchedule(events) {
   const el=document.getElementById('schedule-content');
   // Only show upcoming (STATUS_SCHEDULED) — live and finished matches belong to their own tabs
   const upcoming=events.filter(e=>e.competitions?.[0]?.status?.type?.name==='STATUS_SCHEDULED');
-  if(!upcoming.length){el.innerHTML='<div class="loading" style="padding:44px 20px">✅ Không còn trận nào sắp thi đấu trong 7 ngày tới.</div>';return;}
+  if(!upcoming.length){el.innerHTML='<div class="loading" style="padding:44px 20px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Không còn trận nào sắp thi đấu trong 7 ngày tới.</div>';return;}
   const byDate={};
   upcoming.forEach(e=>{
     const d=new Date(e.date).toLocaleDateString('vi-VN',{weekday:'short',day:'2-digit',month:'2-digit',timeZone:'Asia/Ho_Chi_Minh'});
@@ -3597,7 +3598,7 @@ async function loadGroups() {
     el.dataset.loaded='1';
   } catch(e) {
     el.innerHTML=`
-      <div class="error-box">⚠️ Bảng xếp hạng chưa có dữ liệu (giải đấu mới bắt đầu).<br>Quay lại sau khi vòng bảng có kết quả nhé! <button onclick="document.getElementById('groups-content').dataset.loaded='';loadGroups()" style="margin-left:8px;padding:4px 10px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:11px">🔄 Thử lại</button></div>
+      <div class="error-box"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> Bảng xếp hạng chưa có dữ liệu (giải đấu mới bắt đầu).<br>Quay lại sau khi vòng bảng có kết quả nhé! <button onclick="document.getElementById('groups-content').dataset.loaded='';loadGroups()" style="margin-left:8px;padding:4px 10px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:transparent;color:#fca5a5;cursor:pointer;font-size:11px">🔄 Thử lại</button></div>
       <div style="margin-top:14px;color:var(--muted);font-size:12px;text-align:center">
         👀 Xem bảng xếp hạng chi tiết tại:<br><br>
         <a href="https://www.fifa.com/fifaplus/en/tournament-hub/worldcup" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:700">fifa.com ↗</a>
@@ -3615,7 +3616,7 @@ function renderGroups(data) {
   const maxPct=odds[0]?.pct||1;
   const colors=['linear-gradient(90deg,#f59e0b,#fde68a)','linear-gradient(90deg,#c0a0ff,#c4b5fd)','linear-gradient(90deg,#93c5fd,#60a5fa)'];
   let html=`<div class="champ-card">
-    <div class="champ-header">🏆 Dự đoán Nhà Vô Địch — World Cup 2026</div>
+    <div class="champ-header"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> Dự đoán Nhà Vô Địch — World Cup 2026</div>
     <div class="champ-body">
       ${odds.map((t,i)=>`<div class="champ-row">
         <span class="champ-rank">#${i+1}</span>
@@ -3630,7 +3631,7 @@ function renderGroups(data) {
   groups.forEach(group=>{
     const name=group.name||group.abbreviation||'Bảng';
     const entries=group.standings?.entries||group.entries||[];
-    html+=`<div class="group-card"><div class="group-header">🏆 ${name}</div>
+    html+=`<div class="group-card"><div class="group-header"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.7 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2 1.2.5 2 2 2 3.8"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> ${name}</div>
       <table class="group-table"><thead><tr><th>Đội</th><th>Trận</th><th>T</th><th>H</th><th>B</th><th>GĐ</th><th>Điểm</th></tr></thead><tbody>`;
     entries.forEach((entry,i)=>{
       const stats=entry.stats||[];
@@ -3865,8 +3866,8 @@ function saveOddsKey() {
   fetchMarketOdds().then(()=>{
     const cnt = Object.keys(_marketOdds).length;
     if(st) st.textContent = cnt > 0
-      ? `✅ Đã tải kèo ${cnt} trận sắp diễn ra`
-      : '⚠️ Không có kèo — có thể hôm nay không có trận nào sắp đá, hoặc bookmaker chưa mở kèo';
+      ? `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Đã tải kèo ${cnt} trận sắp diễn ra`
+      : '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> Không có kèo — có thể hôm nay không có trận nào sắp đá, hoặc bookmaker chưa mở kèo';
   });
 }
 
@@ -3881,7 +3882,7 @@ function showAdminSettings() {
   const evList = _oddsDebug.events.length
     ? `<br><small style="color:var(--muted);font-size:9px">Sport key: <b>${_oddsDebug.sportKey}</b> · ${_oddsDebug.status}<br>Trận có kèo: ${_oddsDebug.events.join(' | ') || '(không có)'}</small>`
     : `<br><small style="color:var(--muted);font-size:9px">Sport key: <b>${_oddsDebug.sportKey||'chưa tải'}</b> · ${_oddsDebug.status||'chưa fetch'}</small>`;
-  st.innerHTML = cnt > 0 ? `✅ Đang dùng kèo <b>${cnt}</b> trận${evList}` : `⚠️ Chưa có kèo${evList}`;
+  st.innerHTML = cnt > 0 ? `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Đang dùng kèo <b>${cnt}</b> trận${evList}` : `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.3 2.5 18a1.8 1.8 0 0 0 1.6 2.7h15.8a1.8 1.8 0 0 0 1.6-2.7L13.7 4.3a1.8 1.8 0 0 0-3.4 0Z"/><path d="M12 9v4.5"/><path d="M12 17.5h.01"/></svg> Chưa có kèo${evList}`;
 }
 
 // ── AI PREDICTION STATS (Admin) ──
@@ -3923,7 +3924,7 @@ function renderPredictionStats() {
   if(!adminDash || document.getElementById('adm-pred-stats')) return;
   const sec = document.createElement('div');
   sec.style.cssText = 'margin-top:18px';
-  sec.innerHTML = `<div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:10px">📊 AI Prediction Performance</div><div id="adm-pred-stats"></div>
+  sec.innerHTML = `<div style="font-size:10px;font-weight:800;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:10px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16v-4"/><path d="M12 16V8"/><path d="M17 16v-7"/></svg> AI Prediction Performance</div><div id="adm-pred-stats"></div>
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="if(confirm('Xóa toàn bộ cache dự đoán chưa có kết quả?')){const s=_loadPredStore();Object.keys(s).forEach(k=>{if(s[k].actual===null||s[k].actual===undefined)delete s[k]});_savePredStore(s);alert('Đã xóa predictions chưa kết thúc. App sẽ tính lại khi refresh.');}" style="background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer">🗑️ Xóa cache dự đoán chưa kết thúc</button>
       <button onclick="if(confirm('Xóa TẤT CẢ lịch sử dự đoán?')){localStorage.removeItem('wc2026_predictions');alert('Đã xóa toàn bộ.');}" style="background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer">🗑️ Xóa tất cả lịch sử</button>
