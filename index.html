@@ -1066,7 +1066,27 @@ function getPredictionAccuracy() {
 }
 
 function getPredictionRecord(mid) {
-  return _loadPredStore()[mid] || null;
+  const rec = _loadPredStore()[mid] || null;
+  // Self-heal: record has a final result but missing accuracy/analysis
+  // (saved by an older code version, or before analysis existed). Backfill + persist.
+  if(rec && rec.actual && (!rec.analysis || rec.accuracy == null)) {
+    const p = rec.predicted;
+    const aH = rec.actual.home, aA = rec.actual.away;
+    const predW = p.home > p.away ? 'H' : p.away > p.home ? 'A' : 'D';
+    const realW = aH > aA ? 'H' : aA > aH ? 'A' : 'D';
+    if(rec.accuracy == null) {
+      const cwinner = predW === realW;
+      if(p.home === aH && p.away === aA) rec.accuracy = 'exact';
+      else if(cwinner && Math.abs(aH-p.home)<=1 && Math.abs(aA-p.away)<=1) rec.accuracy = 'close';
+      else if(cwinner) rec.accuracy = 'winner';
+      else if(Math.abs(aH-p.home)<=1 && Math.abs(aA-p.away)<=1) rec.accuracy = 'near';
+      else rec.accuracy = 'wrong';
+    }
+    rec.analysis = _postMatchAnalysis(rec, aH, aA, predW, realW);
+    const s = _loadPredStore();
+    if(s[mid]) { s[mid].accuracy = rec.accuracy; s[mid].analysis = rec.analysis; _savePredStore(s); }
+  }
+  return rec;
 }
 
 function getPredictionHistoryHTML() {
