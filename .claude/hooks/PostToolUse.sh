@@ -1,26 +1,5 @@
 #!/bin/bash
-# Tự động validate JS sau khi Edit/Write index.html
-
-# Chỉ chạy khi file index.html bị thay đổi
-if [[ "$CLAUDE_TOOL_NAME" == "Edit" || "$CLAUDE_TOOL_NAME" == "Write" ]]; then
-  if [[ "$CLAUDE_FILE_PATH" == *"index.html"* ]]; then
-    node -e "
-const fs = require('fs');
-try {
-  const html = fs.readFileSync('index.html','utf8');
-  const m = html.match(/<script>([\s\S]*?)<\/script>/g);
-  let ok = true;
-  m && m.forEach((s,i) => {
-    const code = s.replace(/<\/?script>/g,'');
-    try { new Function(code); } catch(e) {
-      console.error('⚠️ JS Error block ' + i + ':', e.message);
-      ok = false;
-    }
-  });
-  if(ok) console.log('✅ index.html JS syntax OK');
-} catch(e) {
-  console.error('❌ Cannot read index.html:', e.message);
-}
-" 2>&1
-  fi
-fi
+# Cấp 6 — Hook CHẶN: tự validate JS syntax của index.html sau mỗi Edit/Write.
+# Nếu JS lỗi -> block (Claude không được commit/push cho tới khi fix).
+# Đọc hook input JSON từ stdin và chuyển thẳng cho validator node.
+node "$(dirname "$0")/validate-js.cjs"
