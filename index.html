@@ -276,6 +276,36 @@ main{padding:0 13px 100px;max-width:680px;margin:0 auto}
 .hl-btn.open .hl-arr{transform:rotate(180deg)}
 .hl-panel{display:none;border-top:1px solid rgba(234,179,8,0.15);background:rgba(0,0,0,0.3);animation:fadeSlide .25s ease}
 .hl-panel.open{display:block}
+/* ── Lineups / đội hình ── */
+.lu-btn{display:flex;align-items:center;gap:8px;padding:10px 15px;cursor:pointer;border-top:1px solid rgba(74,222,128,0.25);background:linear-gradient(90deg,rgba(74,222,128,0.10),rgba(74,222,128,0.04));transition:background .15s;font-size:12px;font-weight:800;color:#bbf7d0;letter-spacing:.3px;user-select:none}
+.lu-btn:hover{background:linear-gradient(90deg,rgba(74,222,128,0.18),rgba(74,222,128,0.08))}
+.lu-btn .lu-arr{font-size:11px;color:var(--muted);transition:transform .25s;margin-left:auto}
+.lu-btn.open .lu-arr{transform:rotate(180deg)}
+.lu-panel{display:none;border-top:1px solid rgba(74,222,128,0.15);background:rgba(0,0,0,0.3);animation:fadeSlide .25s ease}
+.lu-panel.open{display:block}
+.lu-loading,.lu-nodata{padding:16px 15px;font-size:12px;color:var(--muted);text-align:center}
+.lu-head{display:flex;justify-content:space-between;align-items:center;padding:9px 14px 4px;font-size:10.5px;font-weight:800}
+.lu-head .lu-form{color:#4ade80;letter-spacing:.4px}
+.lu-head .lu-team{color:#e5e7eb;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pitch{position:relative;margin:6px 10px 12px;aspect-ratio:68/104;max-width:340px;margin-inline:auto;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#15803d 0%,#166534 50%,#15803d 100%);border:1px solid rgba(255,255,255,0.10)}
+.pitch::before,.pitch::after{content:'';position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,0.18)}
+.pitch::before{top:50%}
+.pitch-stripe{position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(255,255,255,0.035) 0 8.33%,transparent 8.33% 16.66%);pointer-events:none}
+.pitch-circle{position:absolute;top:50%;left:50%;width:20%;aspect-ratio:1;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,0.18);border-radius:50%}
+.pitch-box{position:absolute;left:22%;right:22%;height:15%;border:1px solid rgba(255,255,255,0.16);border-top:none}
+.pitch-box.top{top:0}
+.pitch-box.bot{bottom:0;border:1px solid rgba(255,255,255,0.16);border-bottom:none}
+.lu-half{position:absolute;left:0;right:0;display:flex;flex-direction:column;justify-content:space-evenly}
+.lu-half.home{top:50%;bottom:0}
+.lu-half.away{top:0;bottom:50%}
+.lu-row{display:flex;justify-content:space-evenly;align-items:center}
+.lu-p{display:flex;flex-direction:column;align-items:center;gap:2px;width:19%;text-align:center}
+.lu-num{width:23px;height:23px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#0b0f17;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.lu-half.home .lu-num{background:#4ade80}
+.lu-half.away .lu-num{background:#fbbf24}
+.lu-nm{font-size:8.5px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9);line-height:1.05;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lu-subs{padding:2px 14px 12px;font-size:10px;color:var(--muted);line-height:1.5}
+.lu-subs b{color:#9ca3af;font-weight:700}
 .hl-loading{padding:16px;text-align:center;font-size:12px;color:var(--muted)}
 .hl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0;border-bottom:1px solid var(--border)}
 .hl-item{position:relative;cursor:pointer;background:#000;border-right:1px solid var(--border)}
@@ -1781,7 +1811,9 @@ function saveOpenPanels(containerId='live-content'){
   const ai=new Set([...container.querySelectorAll('.ai-panel.open')].map(el=>el.id.replace('aip_','')));
   const hl=new Set([...container.querySelectorAll('.hl-btn.open')].map(el=>el.dataset.event||''));
   hl.delete('');
-  return {ai, hl};
+  const lu=new Set([...container.querySelectorAll('.lu-btn.open')].map(el=>el.dataset.event||''));
+  lu.delete('');
+  return {ai, hl, lu};
 }
 function restoreOpenPanels(state, containerId='live-content'){
   const container=document.getElementById(containerId);
@@ -1813,6 +1845,18 @@ function restoreOpenPanels(state, containerId='live-content'){
     if(!btn||!panel) return;
     if(!panel.classList.contains('open')) panel.innerHTML=_hlCache[eventId];
     // Always restore both panel AND button open state (Bug #2 fix)
+    panel.classList.add('open');
+    btn.classList.add('open');
+  });
+  // Restore lineup panels from cache
+  const luIds = state.lu;
+  if(!luIds) return;
+  luIds.forEach(eventId=>{
+    if(!_lineupCache[eventId]) return;
+    const btn=container.querySelector(`.lu-btn[data-event="${eventId}"]`);
+    const panel=btn?.nextElementSibling;
+    if(!btn||!panel) return;
+    if(!panel.classList.contains('open')) panel.innerHTML=_lineupCache[eventId];
     panel.classList.add('open');
     btn.classList.add('open');
   });
@@ -2970,6 +3014,73 @@ async function toggleHighlights(eventId, mid, btn) {
   }
 }
 
+// ── LINEUPS / đội hình ──
+const _lineupCache = {};
+function _posRank(pos){
+  pos=(pos||'').toUpperCase();
+  if(pos[0]==='G') return 0;                                   // GK
+  if(pos.startsWith('DM')) return 2;                           // def-mid
+  if(pos.startsWith('AM')) return 4;                           // att-mid
+  if(/^(CB|CD|LB|RB|LWB|RWB|SW)/.test(pos)||pos==='D') return 1; // defenders
+  if(/^(CM|LM|RM|WM|M)/.test(pos)) return 3;                   // midfielders
+  return 5;                                                     // F/ST/CF/W/SS
+}
+function renderPitch(rosters){
+  let home=rosters.find(t=>t.homeAway==='home'), away=rosters.find(t=>t.homeAway==='away');
+  if(!home||!away){ home=rosters[0]; away=rosters[1]; }
+  if(!home||!away) return null;
+  const starters=t=>(t.roster||[]).filter(p=>p.starter);
+  const subsIn=t=>(t.roster||[]).filter(p=>!p.starter&&p.subbedIn);
+  const hS=starters(home), aS=starters(away);
+  if(hS.length<7||aS.length<7) return null;
+  const lastName=n=>(n||'').split(' ').filter(Boolean).pop()||'';
+  function lines(list){
+    const g={};
+    list.forEach(p=>{ const r=_posRank(p.position?.abbreviation); (g[r]=g[r]||[]).push(p); });
+    return Object.keys(g).map(Number).sort((a,b)=>a-b).map(k=>
+      g[k].slice().sort((x,y)=>(x.formationPlace||0)-(y.formationPlace||0)));
+  }
+  const pHTML=p=>`<div class="lu-p"><div class="lu-num">${p.jersey||''}</div><div class="lu-nm">${lastName(p.athlete?.displayName)}</div></div>`;
+  function rows(list,reverse){
+    let ls=lines(list);
+    if(reverse) ls=ls.slice().reverse();
+    return ls.map(row=>`<div class="lu-row">${row.map(pHTML).join('')}</div>`).join('');
+  }
+  const subLine=(label,list)=> list.length?`<div class="lu-subs"><b>${label}:</b> ${list.map(p=>`${p.jersey||''} ${lastName(p.athlete?.displayName)}`).join(' · ')}</div>`:'';
+  const hN=home.team?.displayName||'', aN=away.team?.displayName||'';
+  return `
+   <div class="lu-head"><span class="lu-team">${aN}</span><span class="lu-form">${away.formation||''}</span></div>
+   <div class="pitch">
+     <div class="pitch-stripe"></div><div class="pitch-circle"></div>
+     <div class="pitch-box top"></div><div class="pitch-box bot"></div>
+     <div class="lu-half away">${rows(aS,false)}</div>
+     <div class="lu-half home">${rows(hS,true)}</div>
+   </div>
+   <div class="lu-head"><span class="lu-team">${hN}</span><span class="lu-form">${home.formation||''}</span></div>
+   ${subLine('Dự bị vào sân · '+lastName(hN), subsIn(home))}
+   ${subLine('Dự bị vào sân · '+lastName(aN), subsIn(away))}`;
+}
+async function toggleLineup(eventId, mid, btn){
+  const panel=document.getElementById('lup_'+mid);
+  if(!panel||!eventId) return;
+  const opening=!panel.classList.contains('open');
+  btn.classList.toggle('open',opening);
+  panel.classList.toggle('open',opening);
+  if(!opening) return;
+  if(_lineupCache[eventId]){ panel.innerHTML=_lineupCache[eventId]; return; }
+  panel.innerHTML='<div class="lu-loading">Đang tải đội hình...</div>';
+  try{
+    const r=await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${eventId}&_=${Date.now()}`,{cache:'no-store'});
+    if(!r.ok) throw new Error('ESPN '+r.status);
+    const data=await r.json();
+    const pitch=(data.rosters&&data.rosters.length>=2)?renderPitch(data.rosters):null;
+    if(pitch){ _lineupCache[eventId]=pitch; panel.innerHTML=pitch; }
+    else panel.innerHTML='<div class="lu-nodata">Đội hình chưa công bố — thường cập nhật ~1 giờ trước giờ bóng lăn.</div>';
+  }catch(e){
+    panel.innerHTML='<div class="lu-nodata">Không tải được đội hình. Thử lại sau.</div>';
+  }
+}
+
 // ── RENDER MATCH CARD ──
 function renderMatchCard(event) {
   const comp = event.competitions?.[0]; if(!comp) return '';
@@ -3123,6 +3234,7 @@ function renderMatchCard(event) {
     </div>
     ${liveScorers}
     ${resultBannerHTML}
+    ${(finished||live) ? `<div class="lu-btn" id="lub_${mid}" data-event="${event.id}" onclick="toggleLineup('${event.id}','${mid}',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"/><circle cx="5.5" cy="12" r="2"/><circle cx="18.5" cy="12" r="2"/><circle cx="8.5" cy="19" r="2"/><circle cx="15.5" cy="19" r="2"/></svg> Đội hình</span><span class="lu-arr">▼</span></div><div class="lu-panel" id="lup_${mid}"></div>` : ''}
     ${finished ? `<div class="hl-btn" id="hlb_${mid}" data-event="${event.id}" onclick="toggleHighlights('${event.id}','${mid}',this)"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16"/><path d="M17 4v16"/><path d="M3 9h4"/><path d="M17 9h4"/><path d="M3 15h4"/><path d="M17 15h4"/></svg> Highlights</span><span class="hl-arr">▼</span></div><div class="hl-panel" id="hlp_${mid}"></div>` : ''}
     ${chipHTML}
     ${verdictHTML}
